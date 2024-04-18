@@ -1,0 +1,68 @@
+originalCategory,DIPACategory
+a1_age_approx,Person
+a10_face_partial,Person
+a102_vehicle_ownership,Vehicle Plate
+a103_license_plate_complete,Vehicle Plate
+a104_license_plate_partial,Vehicle Plate
+a11_tattoo,Person
+a12_semi_nudity,Person
+a13_full_nudity,Person
+a16_race,Person
+a17_color,Others
+a18_ethnic_clothing,Clothing
+a19_name_full,Identity
+a2_weight_approx,Person
+a20_name_first,Identity
+a21_name_last,Identity
+a23_birth_city,Place Identifier
+a24_birth_date,Identity
+a25_nationality,Identity
+a26_handwriting,Printed Material
+a27_marital_status,Identity
+a29_ausweis,Identity
+a3_height_approx,Person
+a30_credit_card,Identity
+a31_passport,Identity
+a32_drivers_license,Identity
+a33_student_id,Identity
+a35_mail,Printed Material
+a37_receipt,Printed Material
+a38_ticket,Printed Material
+a39_disability_physical,Person
+a4_gender,Person
+a41_injury,Person
+a43_medicine,Others
+a46_occupation,Identity
+a48_occassion_work,Place Identifier
+a49_phone,Electronic Devices
+a5_eye_color,Person
+a55_religion,Identity
+a56_sexual_orientation,Identity
+a57_culture,Person
+a58_hobbies,Person
+a59_sports,Person
+a6_hair_color,Person
+a60_occassion_personal,Place Identifier
+a61_opinion_general,Person
+a62_opinion_political,Person
+a64_rel_personal,Person
+a65_rel_social,Person
+a66_rel_professional,Person
+a67_rel_competitors,Person
+a68_rel_spectators,Person
+a69_rel_views,Person
+a7_fingerprint,Identity
+a70_education_history,Identity
+a73_landmark,Place Identifier
+a74_address_current_complete,Place Identifier
+a75_address_current_partial,Place Identifier
+a78_address_home_complete,Place Identifier
+a79_address_home_partial,Place Identifier
+a8_signature,Identity
+a82_date_time,Printed Material
+a85_username,Identity
+a9_face_complete,Person
+a90_email,Identity
+a92_email_content,Printed Material
+a97_online_conversation,Screen
+a99_legal_involvement,Identity
