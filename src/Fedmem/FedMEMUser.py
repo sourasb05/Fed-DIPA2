@@ -15,14 +15,28 @@ import copy
 import pandas as pd
 import numpy as np
 from src.Optimizer.Optimizer import Fedmem
-from src.utils.data_process import FeatureDataset
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import KFold
+from sklearn.preprocessing import LabelEncoder
+from torch.utils.data import DataLoader
+from dipa2.ML_baseline.Study2.inference_dataset import ImageMaskDataset
+from dipa2.ML_baseline.Study2.inference_model import BaseModel
+from sklearn.preprocessing import LabelEncoder
+from torch.utils.data import DataLoader
+import pytorch_lightning as pl
+import io
+from PIL import Image
+import json
+from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, CalibrationError
+import wandb
+from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+
 
 class Fedmem_user():
 
     def __init__(self,device, model, args, id, exp_no, current_directory):
-
+        torch.set_default_tensor_type('torch.cuda.FloatTensor')
         self.device = device
         
         self.id = id  # integer
@@ -42,116 +56,96 @@ class Fedmem_user():
         self.target = args.target
         self.num_users = args.total_users * args.users_frac 
         self.fixed_user_id = args.fixed_user_id
-        """
-        DataLoaders
-        """
-
-        # Load dataset
-        features_folder = '/proj/sourasb-220503/FedMEM/dataset/r3_mem_ResNet50_features'
-        # List all files in the directory
-        files = glob.glob(os.path.join(features_folder, '*'))
-
-        # Count the files
-        total_samples = len(files)
-
         
-
-        if self.data_silo == 100:
-            if args.target == 10:
-                annotations_file_train = '/proj/sourasb-220503/FedMEM/dataset/clients/data_silo/mem_s/' + str(self.data_silo) + '/' + 'Client_ID_' + str(self.id) +'_training.csv'
-                annotations_file_test = '/proj/sourasb-220503/FedMEM/dataset/clients/data_silo/mem_s/' + str(self.data_silo) + '/' + 'Client_ID_' + str(self.id) +'_validation.csv'
-
-            else:
-                annotations_file_train = '/proj/sourasb-220503/FedMEM/dataset/clients/data_silo/A1/' + str(self.data_silo) + '/'+ 'Client_ID_' + str(self.id) +'_training.csv'
-                annotations_file_test = '/proj/sourasb-220503/FedMEM/dataset/clients/data_silo/A1/' + str(self.data_silo) + '/'+ 'Client_ID_' + str(self.id) +'_validation.csv'
         
+        
+        
+        self.bigfives = ["extraversion", "agreeableness", "conscientiousness",
+                         "neuroticism", "openness"]
+        self.basic_info = [ "age", "gender", 'nationality', 'frequency']
+        self.category = ['category']
+        self.privacy_metrics = ['informationType', 'informativeness', 'sharingOwner', 'sharingOthers']
+        if self.country == "japan" and self.id < 300:
+            self.mega_table = pd.read_csv(current_directory + '/clients_annotations/fed-dipa2_dataset/new_annotations_annotator' + str(self.id) + '.csv')
         else:
-            if args.target == 10:
-                annotations_file_train = '/proj/sourasb-220503/FedMEM/dataset/clients/data_silo/mem_s/' + str(self.data_silo) + '/' + 'Client_ID_' + str(self.id) + '/' +  'Client_ID_training_' + str(self.exp_no) + '.csv'
-                annotations_file_test = '/proj/sourasb-220503/FedMEM/dataset/clients/data_silo/mem_s/' + str(self.data_silo) + '/' + 'Client_ID_' + str(self.id) + '/' + 'Client_ID_' + str(self.id) +'_validation.csv'
+            self.mega_table = pd.read_csv(current_directory + '/clients_annotations/fed-dipa2_dataset/new_annotations_annotator' + str(self.id + 300) + '.csv')
 
-            else:
-                annotations_file_train = '/proj/sourasb-220503/FedMEM/dataset/clients/data_silo/A1/' + str(self.data_silo) + '/' + 'Client_ID_' + str(self.id) + '/' +  'Client_ID_training_' + str(self.exp_no) + '.csv'
-                annotations_file_test = '/proj/sourasb-220503/FedMEM/dataset/clients/data_silo/A1/' + str(self.data_silo) + '/' + 'Client_ID_' + str(self.id) + '/' + 'Client_ID_' + str(self.id) +'_validation.csv'
+        self.description = {'informationType': ['It tells personal information', 
+                                                'It tells location of shooting',
+                                                'It tells individual preferences/pastimes',
+                                                'It tells social circle', 
+                                                'It tells others\' private/confidential information',
+                                                'Other things'],
+                                                'informativeness':['Strongly disagree',
+                                                                   'Disagree',
+                                                                   'Slightly disagree',
+                                                                   'Neither', 'Slightly agree',
+                                                                   'Agree','Strongly agree'],
+                            'sharingOwner': ['I won\'t share it', 
+                                             'Close relationship',
+                                             'Regular relationship',
+                                            'Acquaintances', 
+                                            'Public', 
+                                            'Broadcast program', 
+                                            'Other recipients'],
+                            'sharingOthers': ['I won\'t allow others to share it',
+                                            'Close relationship',
+                                            'Regular relationship',
+                                            'Acquaintances',
+                                            'Public',
+                                            'Broadcast program',
+                                            'Other recipients']}
+    
+        self.encoder = LabelEncoder()
+        self.mega_table['category'] = self.encoder.fit_transform(self.mega_table['category'])
+        self.mega_table['gender'] = self.encoder.fit_transform(self.mega_table['gender'])
+        self.mega_table['platform'] = self.encoder.fit_transform(self.mega_table['platform'])
+        self.mega_table['originalDataset'] = self.encoder.fit_transform(self.mega_table['originalDataset'])
+        self.mega_table['nationality'] = self.encoder.fit_transform(self.mega_table['nationality'])
+
+        self.input_channel = []
+        self.input_channel.extend(self.basic_info)
+        self.input_channel.extend(self.category)
+        self.input_channel.extend(self.bigfives)
+        input_dim = len(self.input_channel)
+        self.output_name = self.privacy_metrics
+        self.output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+
+
+        self.local_model = BaseModel(input_dim= input_dim)
+        self.eval_model = copy.deepcopy(self.local_model)
+
+        image_size = (224, 224)
+        image_folder = self.current_directory + '/dipa2_dataset/images/'
+
+        num_rows = len(self.mega_table)
+        train_size = int(0.8 * num_rows)
+        test_size = num_rows - train_size
+
+        # Split the dataframe into two
+        train_df = self.mega_table.sample(n=train_size, random_state=0)
+        val_df = self.mega_table.drop(train_df.index)
+
+        train_dataset = ImageMaskDataset(train_df, image_folder, self.input_channel, image_size, flip = True)
+        val_dataset = ImageMaskDataset(val_df, image_folder, self.input_channel, image_size)    
+
+        self.train_loader = DataLoader(train_dataset, batch_size=96, generator=torch.Generator(device='cuda'), shuffle=True)
+        self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=32)
+    
+        self.wandb_logger = WandbLogger(project="DIPA2.0 baseline", name = 'Resnet50')
+        self.checkpoint_callback = ModelCheckpoint(dirpath='./ML baseline/Study2/models/Resnet50/', save_last=True, monitor='val loss')
+
+        self.acc, self.pre, self.rec, self.f1, self.conf = [], [], [], [], []
         
         
-        print(annotations_file_train)
-        print(annotations_file_test)
         
         
-        self.train_dataset = FeatureDataset(features_folder, annotations_file_train)
-        self.test_dataset = FeatureDataset(features_folder, annotations_file_test)
-
-        # Split dataset into training and validation
-
-        # train_set, val_set = train_test_split(self.train_dataset, test_size=0.2, random_state=self.exp_no)
-
-
-        self.train_samples = len(self.train_dataset)
-        self.test_samples = len(self.test_dataset)
-
-        self.ratio = (self.train_samples + self.test_samples)/total_samples
         
-        # DataLoaders
-        torch.manual_seed(self.exp_no)
-
-        self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
-        self.test_loader = DataLoader(self.test_dataset, batch_size=len(self.test_dataset), shuffle=False)
-
         
-        self.trainloaderfull = DataLoader(self.train_dataset, self.train_samples)
         
         
 
-        # those parameters are for persionalized federated learing.
         
-        self.local_model = copy.deepcopy(model)
-        self.eval_model = copy.deepcopy(model)
-        self.best_local_model = copy.deepcopy(model)
-        self.local_model.to(self.device)
-        self.eval_model.to(self.device)
-        self.best_local_model.to(self.device)
-        # print(self.local_model)
-        # print(self.eval_model)
-
-        # Freeze all layers
-        for param in self.local_model.parameters():
-            param.requires_grad = False
-
-        # Unfreeze the second last layer
-        for param in self.local_model.fc1.parameters():
-            param.requires_grad = True
-
-        # Unfreeze the last layer
-        for param in self.local_model.fc2.parameters():
-            param.requires_grad = True
-
-        """
-        Loss
-        """
-
-        self.loss = nn.CrossEntropyLoss()
-
-        self.minimum_loss = 0.0
-        self.maximum_per_accuracy = 0.0
-        self.maximum_per_f1 = 0.0
-
-        self.list_accuracy = []
-        self.list_f1 = []
-        self.list_val_loss = []
-
-        """
-        Optimizer
-        """
-        # self.optimizer = torch.optim.SGD(self.local_model.parameters(), lr=bb_step)
-        self.optimizer = torch.optim.SGD([{'params': self.local_model.fc1.parameters()},{'params': self.local_model.fc2.parameters()}
-                                        ], lr=self.learning_rate, weight_decay=0.001)  # Only optimize the last layer
-
-        #self.optimizer = Fedmem(self.local_model.parameters(), self.learning_rate, self.eta)
-
-
-    #def bb_step(optimizer, grad, step_size):
-
     def set_parameters(self, cluster_model):
         for param, glob_param in zip(self.local_model.parameters(), cluster_model):
             param.data = glob_param.data.clone()
@@ -160,14 +154,6 @@ class Fedmem_user():
             
     def get_parameters(self):
         return self.local_model.parameters()
-
-    def clone_model_paramenter(self, param, clone_param):
-        for param, clone_param in zip(param, clone_param):
-            clone_param.data = param.data.clone()
-        return clone_param
-
-    def get_updated_parameters(self):
-        return self.local_weight_updated
 
     def update_parameters(self, new_params):
         for param, new_param in zip(self.eval_model.parameters(), new_params):
@@ -323,104 +309,86 @@ class Fedmem_user():
                 
         return accuracy, train_loss
 
-    
-    def load_model(self):
-        model_path = os.path.join("models", self.dataset)
-        self.local_model = torch.load(os.path.join(model_path, "server" + ".pt"))
-
-    
+        
 #    @staticmethod
 #    def model_exists():
 #        return os.path.exists(os.path.join("models", "server" + ".pt"))
-    def evaluate_model(self, epoch, t):
-        self.local_model.eval()  # Set the model to evaluation mode
-        y_true = []
-        y_pred = []
-        total_loss = 0.0
-        with torch.no_grad():  # Inference mode, gradients not needed
-            for inputs, labels in self.test_loader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
-                outputs = self.local_model(inputs)
-                loss = self.loss(outputs, labels)
-                total_loss += loss.item()
-                _, predicted = torch.max(outputs.data, 1)
-                # total += labels.size(0)
-                # correct += (predicted == labels).sum().item()
-                y_true.extend(labels.cpu().numpy())  # Collect true labels
-                y_pred.extend(predicted.cpu().numpy())  # Collect predicted labels
-
-        # Convert collected labels to numpy arrays for metric calculation
-        y_true = np.array(y_true)
-        y_pred = np.array(y_pred)
     
-        # Calculate metrics
-        accuracy = accuracy_score(y_true, y_pred)
-        validation_loss = total_loss / len(self.test_loader)
-        # precision = precision_score(y_true, y_pred, average='weighted')  # Use 'macro' for unweighted
-        # recall = recall_score(y_true, y_pred, average='weighted')  # Use 'macro' for unweighted
-        f1 = f1_score(y_true, y_pred, average='weighted')  # Use 'macro' for unweighted
+    def l1_distance_loss(prediction, target):
+        loss = np.abs(prediction - target)
+        return np.mean(loss)
         
-        if epoch == 0:
-            self.maximum_per_accuracy = accuracy
-            self.maximum_per_f1 = f1
-            for best_param, param in zip(self.best_local_model.parameters(), self.local_model.parameters()):
-                best_param.data = param.data.clone()
-            cm = confusion_matrix(y_true, y_pred)
-            # print(f"new maximum personalized accuracy of client {self.id} found at global round {t} local epoch {epoch}")
-            self.save_local_model(epoch, cm, t)
-        else:
-            if accuracy > self.maximum_per_accuracy:
-                self.maximum_per_accuracy = accuracy
-                self.maximum_per_f1 = f1
-                # print(f"new maximum personalized accuracy of client {self.id} found at global round {t} local epoch {epoch}")
-                cm = confusion_matrix(y_true, y_pred)
-                for best_param, param in zip(self.best_local_model.parameters(), self.local_model.parameters()):
-                    best_param.data = param.data.clone()
-                self.save_local_model(epoch, cm, t)
+    def evaluate_model(self):
+        self.local_model.to('cuda')
+        for i, vdata in enumerate(self.val_loader):
+            image, mask, information, informativeness, sharingOwner, sharingOthers = vdata
+            y_preds = self.local_model(image.to('cuda'), mask.to('cuda'))
+            print(y_preds[:, :6].shape, information.shape)
+
+            self.acc[0].update(y_preds[:, :6], information.to('cuda'))
+            self.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to('cuda'))
+            self.rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to('cuda'))
+            self.f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to('cuda'))
+            self.conf[0].update(y_preds[:, :6], information.to('cuda'))
+
+            distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
+
+            self.acc[1].update(y_preds[:, 7:14], sharingOwner.to('cuda'))
+            self.pre[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to('cuda'))
+            self.rec[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to('cuda'))
+            self.f1[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to('cuda'))
+            self.conf[1].update(y_preds[:, 7:14], sharingOwner.to('cuda'))
+
+            self.acc[2].update(y_preds[:, 14:21], sharingOthers.to('cuda'))
+            self.pre[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to('cuda'))
+            self.rec[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to('cuda'))
+            self.f1[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to('cuda'))
+            self.conf[2].update(y_preds[:, 14:21], sharingOthers.to('cuda'))
+
+
+        distance = distance / len(self.val_loader)
+
+        pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
+                    'Precision' : [i.compute().detach().cpu().numpy() for i in self.pre], 
+                    'Recall': [i.compute().detach().cpu().numpy() for i in self.rec], 
+                    'f1': [i.compute().detach().cpu().numpy() for i in self.f1]}
+
+        print(pandas_data)
+
+        # df = pd.DataFrame(pandas_data, index=output_channel.keys())
+        # print(df.round(3))
+        # df.to_csv('./result.csv', index =False)
+        # with open('./distance', 'w') as w:
+        #     w.write(str(distance))
+        
+        if 'informativeness' in self.output_channel.keys():
+            print('informativenss distance: ', distance)
+        
+    def train(self):
+
+        wandb_logger = WandbLogger(project="DIPA2.0 baseline", name = 'Resnet50')
+        checkpoint_callback = ModelCheckpoint(dirpath=self.current_directory + '/models/local_models/annotator_' + str(),save_last=True, monitor='val loss')
+
+        trainer = pl.Trainer(accelerator='gpu', devices=[0],logger=wandb_logger, 
+        auto_lr_find=True, max_epochs = 100, callbacks=[checkpoint_callback])
+        lr_finder = trainer.tuner.lr_find(self.local_model, self.train_loader)
+        self.local_model.hparams.learning_rate = lr_finder.suggestion()
+        print(f'lr auto: {lr_finder.suggestion()}')
+        trainer.fit(self.local_model, train_dataloaders = self.train_loader, val_dataloaders = self.val_loader) 
+        
+        threshold = 0.5
+        average_method = 'micro'
+        self.acc = [Accuracy(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.pre = [Precision(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.rec = [Recall(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.f1 = [F1Score(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.conf = [ConfusionMatrix(task="multilabel", num_labels=output_dim) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.distance = 0.0
+        
+        self.evaluate_model()
                 
-                
-        
-    
-    def save_local_model(self, iter, cm, t):
-        cm_df = pd.DataFrame(cm)
-        
-        # file = "per_model_user"+ str(self.id) +"_exp_no_" + str(self.exp_no) + "_LR_" + str(iter) + "_GR_" + str(t) 
-        file = "per_model_user_" + str(self.id)
-        file_cm = "cm_user_" + str(self.id)
-        #print(file)
-       
-        # directory_name =  "fixed_client_" + str(self.fixed_user_id) + "/" + str(self.global_model_name) + "/" + str(self.algorithm) + "/data_silo_" + str(self.data_silo) + "/" + "target_" + str(self.target) + "/" + str(self.cluster_type) + "/" + str(self.num_users) + "/" + str(self.exp_no)
-        directory_name =  "Cemnet" + str(self.fixed_user_id) + "/" + str(self.global_model_name) + "/" + str(self.algorithm) + "/data_silo_" + str(self.data_silo) + "/" + "target_" + str(self.target) + "/" + str(self.cluster_type) + "/" + str(self.num_users) + "/" + str(self.exp_no)
-
-        
-        
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/models/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/models/"+ directory_name)
-        if not os.path.exists(self.current_directory + "/results/confusion_matrix/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/confusion_matrix/"+ directory_name)
-        
-        torch.save(self.local_model.state_dict(),self.current_directory + "/models/"+ directory_name + "/" + file + ".pt")
-        cm_df.to_csv(self.current_directory + "/results/confusion_matrix/"+ directory_name + "/" + file_cm + ".csv", index=False)
-
-        # print(f"local model saved at global round :{t} local round :{iter}")
-
-    def train(self, cluster_model, t):
-
-        for epoch in range(self.local_iters):  # Loop over the dataset multiple times
-            self.local_model.train()
-            running_loss = 0.0
-            for inputs, labels in self.train_loader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
-                # Zero the parameter gradients
-                self.optimizer.zero_grad()
-                # Forward + backward + optimize
-                outputs = self.local_model(inputs)
-                loss = self.loss(outputs, labels)              
-                loss.backward()
-                self.optimizer.step()
-                running_loss += loss.item()
-            self.evaluate_model(epoch, t)
-            

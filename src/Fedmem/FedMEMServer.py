@@ -199,13 +199,6 @@ class Fedmem():
 
 
 
-    def pearson_correlation(self, tensor1, tensor2):
-        mean1, mean2 = torch.mean(tensor1), torch.mean(tensor2)
-        numerator = torch.sum((tensor1 - mean1) * (tensor2 - mean2))
-        denominator = torch.sqrt(torch.sum((tensor1 - mean1) ** 2)) * torch.sqrt(torch.sum((tensor2 - mean2) ** 2))
-        return numerator / denominator
-
-
     def flatten_params(self, parameters):
         params = []
         for param in parameters:
