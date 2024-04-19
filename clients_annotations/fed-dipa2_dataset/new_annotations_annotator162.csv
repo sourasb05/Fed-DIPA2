@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Object 0,"[1, 1, 0, 0, 0, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",57,Male,0,CrowdWorks,2,6,10,8,5,278796.jpg,LVIS,"[[208, 93, 112, 91]]",Others,Japan,640,480,annotator162,278796_Object 0_0
+signboard,"[0, 1, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",57,Male,0,CrowdWorks,2,6,10,8,5,278796.jpg,LVIS,"[[573, 275, 34, 47], [354, 278, 69, 73]]",Place Identifier,Japan,640,480,annotator162,278796_signboard_1-2

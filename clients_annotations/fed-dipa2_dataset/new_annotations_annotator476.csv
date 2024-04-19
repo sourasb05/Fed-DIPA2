@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Vehicle registration plate,"[0, 1, 0, 0, 0, 0]",2,"[0, 1, 1, 1, 0, 0, 0]","[0, 1, 1, 1, 0, 0, 0]",29,Male,3,Prolific,4,7,6,9,6,0ee91c4938b6e7ee.jpg,OpenImages,"[[0, 172, 19, 9], [301, 565, 140, 68]]",Vehicle Plate,UK,765,1024,annotator476,0ee91c4938b6e7ee_Vehicle registration plate_4-5

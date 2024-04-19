@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Human body,"[1, 0, 0, 0, 0, 0]",4,"[0, 0, 0, 1, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",28,Male,0,CrowdWorks,7,5,6,8,7,207206c41c624c21.jpg,OpenImages,"[[1, 474, 689, 487]]",Person,Japan,691,1024,annotator78,207206c41c624c21_Human body_22
+identity,"[0, 1, 0, 0, 0, 0]",2,"[0, 0, 0, 0, 1, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",28,Male,0,CrowdWorks,7,5,6,8,7,0fbb5a946ee0b869.jpg,OpenImages,"[[49, 316, 975, 708], [25, 0, 872, 587]]",Others,Japan,1024,1024,annotator78,0fbb5a946ee0b869_identity_0-1

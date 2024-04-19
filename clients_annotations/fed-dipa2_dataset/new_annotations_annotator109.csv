@@ -1,0 +1,6 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Manual Label,"[1, 0, 0, 0, 0, 0]",5,"[0, 0, 1, 0, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",35,Female,1,CrowdWorks,6,6,6,7,6,12224.jpg,LVIS,"[[222, 90, 241, 203]]",Others,Japan,480,640,annotator109,12224_Manual Label_0
+Manual Label,"[1, 0, 0, 0, 0, 0]",6,"[0, 0, 1, 0, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",35,Female,1,CrowdWorks,6,6,6,7,6,122046.jpg,LVIS,"[[56, 155, 168, 182]]",Others,Japan,427,640,annotator109,122046_Manual Label_0
+Object 0,"[1, 1, 0, 0, 0, 0]",4,"[0, 0, 1, 0, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",35,Female,1,CrowdWorks,6,6,6,7,6,213829.jpg,LVIS,"[[121, 113, 292, 92]]",Others,Japan,640,427,annotator109,213829_Object 0_0
+Office building,"[0, 1, 0, 0, 0, 0]",4,"[0, 0, 1, 0, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",35,Female,1,CrowdWorks,6,6,6,7,6,590f63eb87ae3901.jpg,OpenImages,"[[0, 0, 1024, 576]]",Place Identifier,Japan,1024,576,annotator109,590f63eb87ae3901_Office building_2
+identity,"[1, 0, 0, 0, 0, 0]",6,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",35,Female,1,CrowdWorks,6,6,6,7,6,08291533e355af39.jpg,OpenImages,"[[19, 12, 1043, 1068]]",Others,Japan,1080,1080,annotator109,08291533e355af39_identity_0

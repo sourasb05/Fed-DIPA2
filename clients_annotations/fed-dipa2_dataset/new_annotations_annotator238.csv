@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Human hair,"[1, 0, 0, 0, 0, 0]",1,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",30,Female,4,CrowdWorks,4,6,8,8,9,017b690dbb7552db.jpg,OpenImages,"[[229, 173, 51, 45], [847, 164, 13, 19]]",Person,Japan,1024,683,annotator238,017b690dbb7552db_Human hair_0-1
+Manual Label,"[1, 0, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",30,Female,4,CrowdWorks,4,6,8,8,9,31620.jpg,LVIS,"[[297, 50, 14, 164]]",Others,Japan,480,640,annotator238,31620_Manual Label_0
+Object 0,"[1, 0, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",30,Female,4,CrowdWorks,4,6,8,8,9,31620.jpg,LVIS,"[[186, 218, 135, 223]]",Others,Japan,480,640,annotator238,31620_Object 0_0

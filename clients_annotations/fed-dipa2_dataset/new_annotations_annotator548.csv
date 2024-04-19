@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+license_plate,"[0, 0, 0, 0, 1, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",40,Female,1,Prolific,3,6,8,8,6,111768.jpg,LVIS,"[[314, 163, 30, 16], [397, 81, 5, 2]]",Vehicle Plate,UK,480,640,annotator548,111768_license_plate_4-5

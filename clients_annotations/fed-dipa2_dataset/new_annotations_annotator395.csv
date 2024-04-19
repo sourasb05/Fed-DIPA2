@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+binder,"[1, 0, 0, 0, 1, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",43,Female,2,Prolific,9,8,6,4,7,143186.jpg,LVIS,"[[350, 120, 149, 209]]",Others,UK,500,400,annotator395,143186_binder_0
+choker,"[1, 1, 0, 0, 0, 0]",6,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",43,Female,2,Prolific,9,8,6,4,7,115885.jpg,LVIS,"[[484, 227, 15, 21]]",Others,UK,500,375,annotator395,115885_choker_4
+laptop_computer,"[0, 0, 0, 1, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",43,Female,2,Prolific,9,8,6,4,7,143186.jpg,LVIS,"[[23, 0, 273, 246]]",Screen,UK,500,400,annotator395,143186_laptop_computer_1

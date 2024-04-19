@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Car,"[0, 0, 0, 0, 0, 1]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",58,Male,3,Prolific,8,9,9,4,10,0c756c9366a8cb10.jpg,OpenImages,"[[27, 347, 89, 32], [185, 331, 152, 116], [240, 315, 708, 452]]",Others,UK,1024,768,annotator410,0c756c9366a8cb10_Car_0-1-2
+Vehicle,"[0, 1, 0, 0, 0, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",58,Male,3,Prolific,8,9,9,4,10,0c756c9366a8cb10.jpg,OpenImages,"[[0, 307, 944, 460]]",Others,UK,1024,768,annotator410,0c756c9366a8cb10_Vehicle_3

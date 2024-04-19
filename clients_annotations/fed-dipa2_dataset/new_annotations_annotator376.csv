@@ -1,0 +1,7 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Man,"[1, 0, 1, 0, 0, 0]",5,"[0, 1, 1, 1, 1, 0, 0]","[0, 1, 1, 1, 1, 0, 0]",22,Male,0,Prolific,4,6,7,8,10,3eda3ee510e2afb0.jpg,OpenImages,"[[76, 117, 461, 563]]",Person,UK,1024,759,annotator376,3eda3ee510e2afb0_Man_1
+Manual Label,"[1, 1, 0, 0, 0, 0]",4,"[0, 1, 1, 1, 1, 1, 0]","[0, 1, 1, 1, 1, 0, 0]",22,Male,0,Prolific,4,6,7,8,10,117321.jpg,LVIS,"[[362, 93, 111, 83]]",Others,UK,640,426,annotator376,117321_Manual Label_0
+Object 0,"[1, 0, 0, 1, 0, 0]",5,"[0, 1, 1, 1, 0, 0, 0]","[0, 1, 1, 0, 0, 0, 0]",22,Male,0,Prolific,4,6,7,8,10,111031.jpg,LVIS,"[[260, 113, 205, 140]]",Others,UK,598,640,annotator376,111031_Object 0_0
+Object 0,"[1, 0, 1, 0, 0, 0]",4,"[0, 1, 1, 1, 1, 0, 0]","[0, 1, 1, 1, 0, 0, 0]",22,Male,0,Prolific,4,6,7,8,10,20188.jpg,LVIS,"[[91, 28, 194, 193]]",Others,UK,451,640,annotator376,20188_Object 0_2
+cake,"[1, 0, 0, 0, 0, 0]",1,"[0, 1, 1, 1, 1, 1, 0]","[0, 1, 1, 1, 1, 1, 0]",22,Male,0,Prolific,4,6,7,8,10,104564.jpg,LVIS,"[[137, 20, 339, 336]]",Food,UK,640,360,annotator376,104564_cake_0
+person,"[1, 1, 1, 0, 0, 0]",1,"[0, 1, 1, 1, 1, 1, 0]","[0, 1, 1, 1, 1, 1, 0]",22,Male,0,Prolific,4,6,7,8,10,163385.jpg,LVIS,"[[284, 145, 68, 113]]",Person,UK,640,340,annotator376,163385_person_0

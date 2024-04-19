@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+identity,"[1, 0, 0, 0, 1, 0]",1,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",29,Male,0,Prolific,5,10,10,6,8,1b5d7772b9350086.jpg,OpenImages,"[[13, 8, 2552, 1920]]",Others,UK,1024,768,annotator442,1b5d7772b9350086_identity_0

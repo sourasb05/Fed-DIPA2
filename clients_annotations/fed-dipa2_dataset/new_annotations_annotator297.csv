@@ -1,0 +1,5 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Building,"[0, 1, 1, 0, 0, 0]",5,"[0, 0, 0, 1, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",49,Male,0,CrowdWorks,5,3,6,8,8,363b20c1602ae5fb.jpg,OpenImages,"[[0, 0, 1024, 683]]",Others,Japan,1024,683,annotator297,363b20c1602ae5fb_Building_0
+Human nose,"[1, 0, 0, 0, 0, 0]",3,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",49,Male,0,CrowdWorks,5,3,6,8,8,115150a6ba4eb0ca.jpg,OpenImages,"[[454, 235, 47, 55]]",Person,Japan,1024,762,annotator297,115150a6ba4eb0ca_Human nose_4
+Man,"[0, 0, 0, 1, 1, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",49,Male,0,CrowdWorks,5,3,6,8,8,106c8de22ed8d1d4.jpg,OpenImages,"[[142, 131, 462, 721]]",Person,Japan,683,1024,annotator297,106c8de22ed8d1d4_Man_0
+Object 1,"[0, 1, 0, 1, 0, 0]",4,"[0, 0, 1, 0, 0, 0, 0]","[0, 0, 0, 1, 0, 0, 0]",49,Male,0,CrowdWorks,5,3,6,8,8,375004.jpg,LVIS,"[[360, 166, 66, 92]]",Others,Japan,612,612,annotator297,375004_Object 1_1

@@ -1,0 +1,7 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Building,"[0, 1, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",71,Male,1,CrowdWorks,3,4,8,9,9,3a689e83e0e9f6e9.jpg,OpenImages,"[[0, 0, 766, 1019]]",Others,Japan,768,1024,annotator290,3a689e83e0e9f6e9_Building_0
+Object 0,"[0, 1, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",71,Male,1,CrowdWorks,3,4,8,9,9,18809.jpg,LVIS,"[[76, 16, 549, 64]]",Others,Japan,640,486,annotator290,18809_Object 0_1
+Object 0,"[1, 0, 0, 0, 0, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",71,Male,1,CrowdWorks,3,4,8,9,9,108762.jpg,LVIS,"[[180, 104, 171, 114]]",Others,Japan,640,480,annotator290,108762_Object 0_2
+Object 1,"[1, 0, 0, 0, 0, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",71,Male,1,CrowdWorks,3,4,8,9,9,108762.jpg,LVIS,"[[208, 120, 125, 255]]",Others,Japan,640,480,annotator290,108762_Object 1_7
+guitar,"[0, 0, 0, 1, 0, 0]",4,"[0, 0, 1, 0, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",71,Male,1,CrowdWorks,3,4,8,9,9,18809.jpg,LVIS,"[[7, 162, 374, 120]]",Musical instrument,Japan,640,486,annotator290,18809_guitar_0
+ring,"[0, 0, 0, 1, 0, 0]",4,"[0, 0, 1, 0, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",71,Male,1,CrowdWorks,3,4,8,9,9,140640.jpg,LVIS,"[[403, 352, 11, 8], [264, 405, 7, 9], [552, 331, 5, 7]]",Accessory,Japan,640,426,annotator290,140640_ring_2-3-4

@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+laptop_computer,"[1, 0, 0, 0, 1, 0]",3,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",49,Male,1,Prolific,6,7,6,5,9,131138.jpg,LVIS,"[[314, 142, 134, 117]]",Screen,UK,640,480,annotator375,131138_laptop_computer_0
+notebook,"[0, 0, 0, 0, 1, 0]",3,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",49,Male,1,Prolific,6,7,6,5,9,131138.jpg,LVIS,"[[135, 429, 156, 50]]",Printed Material,UK,640,480,annotator375,131138_notebook_1

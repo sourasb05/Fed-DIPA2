@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+notebook,"[0, 0, 0, 0, 0, 1]",1,"[1, 0, 0, 0, 0, 0, 0]","[0, 0, 0, 0, 1, 0, 0]",46,Male,3,Prolific,6,4,5,7,8,204661.jpg,LVIS,"[[96, 230, 236, 269]]",Printed Material,UK,334,500,annotator344,204661_notebook_6

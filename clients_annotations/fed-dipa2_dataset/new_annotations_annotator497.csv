@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Manual Label,"[1, 0, 0, 0, 0, 0]",4,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",33,Female,1,Prolific,6,4,7,8,9,104564.jpg,LVIS,"[[144, 37, 314, 275]]",Others,UK,640,360,annotator497,104564_Manual Label_0
+cake,"[1, 0, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",33,Female,1,Prolific,6,4,7,8,9,104564.jpg,LVIS,"[[137, 20, 339, 336]]",Food,UK,640,360,annotator497,104564_cake_0

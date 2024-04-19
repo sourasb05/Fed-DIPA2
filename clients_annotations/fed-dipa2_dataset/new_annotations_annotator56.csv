@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+license_plate,"[1, 0, 0, 0, 0, 0]",2,"[1, 0, 0, 0, 0, 0, 0]","[0, 0, 0, 1, 0, 0, 0]",41,Female,0,CrowdWorks,2,7,5,9,6,129462.jpg,LVIS,"[[328, 237, 34, 23]]",Vehicle Plate,Japan,640,428,annotator56,129462_license_plate_0
+ring,"[0, 0, 0, 1, 0, 0]",1,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",41,Female,0,CrowdWorks,2,7,5,9,6,129462.jpg,LVIS,"[[205, 369, 2, 1], [204, 370, 4, 2]]",Accessory,Japan,640,428,annotator56,129462_ring_2-3

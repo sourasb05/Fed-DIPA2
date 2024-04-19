@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Baked goods,"[1, 0, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",20,Female,2,Prolific,4,7,6,8,8,2afcec1f707608d2.jpg,OpenImages,"[[155, 626, 376, 201]]",Others,UK,737,1024,annotator441,2afcec1f707608d2_Baked goods_20
+bus_(vehicle),"[0, 1, 0, 0, 0, 0]",4,"[0, 0, 0, 1, 0, 0, 0]","[0, 0, 0, 1, 0, 0, 0]",20,Female,2,Prolific,4,7,6,8,8,175121.jpg,LVIS,"[[380, 276, 90, 69]]",Others,UK,612,612,annotator441,175121_bus_(vehicle)_1
+license_plate,"[1, 0, 0, 0, 0, 0]",4,"[0, 0, 0, 0, 1, 0, 0]","[0, 0, 0, 0, 1, 0, 0]",20,Female,2,Prolific,4,7,6,8,8,175121.jpg,LVIS,"[[389, 325, 7, 4]]",Vehicle Plate,UK,612,612,annotator441,175121_license_plate_0

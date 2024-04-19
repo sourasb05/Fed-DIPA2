@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Office supplies,"[1, 1, 0, 0, 0, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",49,Female,1,Prolific,4,10,9,6,6,4e8a3deb19536f31.jpg,OpenImages,"[[0, 212, 1024, 555]]",Others,UK,1024,768,annotator306,4e8a3deb19536f31_Office supplies_1

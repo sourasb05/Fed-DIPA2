@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+laptop_computer,"[0, 0, 1, 0, 0, 0]",2,"[0, 0, 0, 1, 0, 0, 0]","[0, 0, 0, 1, 0, 0, 0]",41,Female,0,Prolific,8,9,9,5,8,126696.jpg,LVIS,"[[0, 79, 158, 220]]",Screen,UK,400,300,annotator345,126696_laptop_computer_1

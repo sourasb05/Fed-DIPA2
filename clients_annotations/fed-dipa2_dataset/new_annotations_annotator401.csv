@@ -1,0 +1,8 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Object 0,"[1, 0, 0, 0, 0, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",40,Male,2,Prolific,3,10,9,7,8,0028b67eca22894b.jpg,OpenImages,"[[757, 33, 177, 68]]",Others,UK,996,611,annotator401,0028b67eca22894b_Object 0_1
+Object 0,"[1, 1, 0, 0, 0, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",40,Male,2,Prolific,3,10,9,7,8,124367.jpg,LVIS,"[[167, 37, 148, 119]]",Others,UK,640,427,annotator401,124367_Object 0_12
+identity,"[1, 0, 0, 0, 0, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",40,Male,2,Prolific,3,10,9,7,8,0028b67eca22894b.jpg,OpenImages,"[[3, 0, 993, 604]]",Others,UK,996,611,annotator401,0028b67eca22894b_identity_0
+laptop_computer,"[1, 1, 0, 1, 0, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",40,Male,2,Prolific,3,10,9,7,8,127558.jpg,LVIS,"[[41, 74, 190, 178]]",Screen,UK,640,480,annotator401,127558_laptop_computer_0
+pipe,"[1, 1, 0, 0, 0, 0]",5,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 1, 0, 0, 0, 0]",40,Male,2,Prolific,3,10,9,7,8,205808.jpg,LVIS,"[[307, 120, 50, 23], [262, 227, 13, 61]]",Others,UK,384,640,annotator401,205808_pipe_0-1
+plastic_bag,"[1, 1, 0, 0, 0, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",40,Male,2,Prolific,3,10,9,7,8,127558.jpg,LVIS,"[[556, 183, 73, 72]]",Others,UK,640,480,annotator401,127558_plastic_bag_3
+tag,"[1, 1, 0, 0, 0, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",40,Male,2,Prolific,3,10,9,7,8,125952.jpg,LVIS,"[[154, 426, 45, 47], [274, 315, 34, 37]]",Printed Material,UK,358,640,annotator401,125952_tag_0-1

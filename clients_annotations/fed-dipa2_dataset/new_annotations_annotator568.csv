@@ -1,0 +1,6 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId
+Hat,"[1, 0, 0, 0, 0, 0]",4,"[0, 0, 0, 0, 1, 0, 0]","[0, 0, 0, 0, 1, 0, 0]",22,Male,4,Prolific,2,5,7,3,8,122259cbb3d91b12.jpg,OpenImages,"[[116, 91, 201, 117]]",Others,UK,668,1024,annotator568,122259cbb3d91b12_Hat_0
+House,"[0, 0, 1, 0, 0, 0]",4,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 1, 0, 0, 0, 0]",22,Male,4,Prolific,2,5,7,3,8,37eecbdbbebfef53.jpg,OpenImages,"[[0, 0, 1022, 683]]",Others,UK,1024,685,annotator568,37eecbdbbebfef53_House_2
+Table,"[0, 0, 1, 0, 0, 0]",6,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 1, 0, 0, 0, 0]",22,Male,4,Prolific,2,5,7,3,8,37eecbdbbebfef53.jpg,OpenImages,"[[257, 294, 765, 388]]",Table,UK,1024,685,annotator568,37eecbdbbebfef53_Table_3
+cigarette,"[0, 0, 1, 0, 0, 0]",2,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",22,Male,4,Prolific,2,5,7,3,8,31504.jpg,LVIS,"[[263, 180, 13, 17]]",Cigarettes,UK,500,332,annotator568,31504_cigarette_0
+identity,"[1, 0, 0, 0, 1, 0]",6,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",22,Male,4,Prolific,2,5,7,3,8,12a8cf399d440a92.jpg,OpenImages,"[[143, 45, 640, 488]]",Others,UK,800,533,annotator568,12a8cf399d440a92_identity_0
