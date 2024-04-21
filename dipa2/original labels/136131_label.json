@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "statue_(sculpture)", "bbox": [73.92, 133.58, 196.1, 223.51]}, "1": {"category": "person", "bbox": [73.54, 157.29, 197.05, 199.18]}, "2": {"category": "person", "bbox": [19.49, 485.79, 15.37, 50.85]}, "3": {"category": "person", "bbox": [208.16, 115.26, 50.95, 158.75]}}, "width": 425, "height": 640, "source": "LVIS"}

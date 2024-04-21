@@ -1,5 +1,5 @@
 from src.Fedavg.FedAvgServer import FedAvg
-from src.Fedmem_mm.FedMEMServer import Fedmem_mm
+# from src.Fedmem_mm.FedMEMServer import Fedmem_mm
 from src.Fedmem.FedMEMServer import Fedmem
 from src.FedProx.FedProxServer import FedProx
 from src.pFedme.pFedme_server import pFedme
@@ -22,8 +22,8 @@ def main(args):
     print(current_directory)
     i = args.exp_start
     while i < args.times:
-        if args.model_name == "ResNet50TL":
-            model = ResNet50TL(args.target).to(device)
+        if args.model_name == "Basemodel":
+            model = BaseModel().to(device)
         try:    
             if args.algorithm == "FedAvg":
                 server = FedAvg(device, model, args,i, current_directory)
@@ -31,13 +31,13 @@ def main(args):
                 server = FedProx(device, model, args,i, current_directory)
             elif args.algorithm == "pFedme":
                 server = pFedme(device, model, args, i, current_directory)
-            elif args.algorithm == "Fedmem" and args.contexual == 0: 
+            elif args.algorithm == "Fedmem": # and args.contexual == 0: 
                 server = Fedmem(device, model, args, i, current_directory)
             elif args.algorithm == "FeSEM":
                 server = FeSEM(device, model, args, i, current_directory)
-            elif args.algorithm == "Fedmem" and args.contexual == 1:
-                print("in Fedmem_mm")
-                server = Fedmem_mm(device, args, i, current_directory)
+            # elif args.algorithm == "Fedmem" and args.contexual == 1:
+            #    print("in Fedmem_mm")
+            #    server = Fedmem_mm(device, args, i, current_directory)
             
         except ValueError:
             raise ValueError("Wrong algorithm selected")

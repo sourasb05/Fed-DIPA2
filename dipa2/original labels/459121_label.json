@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "sofa", "bbox": [0.33, 159.62, 76.38, 213.85]}, "1": {"category": "television_set", "bbox": [186.9, 109.1, 115.02, 99.44]}, "2": {"category": "guitar", "bbox": [430.63, 182.15, 51.78, 76.64]}, "3": {"category": "Object 0", "bbox": [210, 121, 97, 203]}}, "width": 500, "height": 375, "source": "LVIS"}

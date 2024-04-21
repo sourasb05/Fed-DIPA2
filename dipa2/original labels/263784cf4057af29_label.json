@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Suit", "bbox": [264, 303, 408, 720]}, "1": {"category": "Suit", "bbox": [709, 262, 314, 761]}, "2": {"category": "Man", "bbox": [260, 171, 408, 850]}, "3": {"category": "Man", "bbox": [707, 129, 316, 890]}}, "width": 1024, "height": 1024, "source": "OpenImages"}

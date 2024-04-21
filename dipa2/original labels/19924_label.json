@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "necktie", "bbox": [269.5, 193.19, 188.5, 146.84]}, "1": {"category": "hat", "bbox": [25.7, 38.41, 259.7, 414.37]}, "2": {"category": "shirt", "bbox": [257.89, 125.75, 200.11, 296.09]}}, "width": 458, "height": 500, "source": "LVIS"}

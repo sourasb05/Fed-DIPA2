@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Human hair", "bbox": [261, 95, 306, 169]}, "1": {"category": "Clothing", "bbox": [167, 235, 451, 608]}, "2": {"category": "Human body", "bbox": [153, 98, 458, 749]}, "3": {"category": "Table", "bbox": [0, 101, 682, 360]}, "4": {"category": "Woman", "bbox": [155, 89, 458, 759]}}, "width": 682, "height": 1024, "source": "OpenImages"}

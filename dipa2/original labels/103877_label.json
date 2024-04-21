@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "faucet", "bbox": [156.57, 41.42, 135.62, 52.92]}, "1": {"category": "cat", "bbox": [281.65, 289.26, 320.11, 163.0]}, "2": {"category": "bath_mat", "bbox": [216.71, 418.15, 423.29, 61.85]}}, "width": 640, "height": 480, "source": "LVIS"}

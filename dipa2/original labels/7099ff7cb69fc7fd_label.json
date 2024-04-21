@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Person", "bbox": [196, 290, 49, 69]}, "1": {"category": "Clothing", "bbox": [196, 324, 46, 36]}, "2": {"category": "Table", "bbox": [302, 379, 700, 205]}, "3": {"category": "Office building", "bbox": [0, 0, 1022, 679]}}, "width": 1024, "height": 683, "source": "OpenImages"}

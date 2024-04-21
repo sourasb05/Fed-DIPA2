@@ -19,7 +19,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import DataLoader
 from dipa2.ML_baseline.Study2.inference_dataset import ImageMaskDataset
-from dipa2.ML_baseline.Study2.inference_model import BaseModel
+# from dipa2.ML_baseline.Study2.inference_model import BaseModel
+from src.TrainModels.trainmodels import BaseModel
 from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
@@ -66,9 +67,9 @@ class Fedmem_user():
         self.category = ['category']
         self.privacy_metrics = ['informationType', 'informativeness', 'sharingOwner', 'sharingOthers']
         if self.country == "japan" and self.id < 300:
-            self.mega_table = pd.read_csv(current_directory + '/clients_annotations/fed-dipa2_dataset/new_annotations_annotator' + str(self.id) + '.csv')
+            self.mega_table = pd.read_csv(current_directory + '/clients/new_annotations_annotator' + str(self.id) + '.csv')
         else:
-            self.mega_table = pd.read_csv(current_directory + '/clients_annotations/fed-dipa2_dataset/new_annotations_annotator' + str(self.id + 300) + '.csv')
+            self.mega_table = pd.read_csv(current_directory + '/clients/new_annotations_annotator' + str(self.id + 300) + '.csv')
 
         self.description = {'informationType': ['It tells personal information', 
                                                 'It tells location of shooting',
@@ -112,7 +113,7 @@ class Fedmem_user():
         self.output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
 
 
-        self.local_model = BaseModel(input_dim= input_dim)
+        self.local_model = BaseModel(input_dim=input_dim)
         self.eval_model = copy.deepcopy(self.local_model)
 
         image_size = (224, 224)

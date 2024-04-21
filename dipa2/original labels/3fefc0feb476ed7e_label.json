@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Human body", "bbox": [30, 63, 581, 616]}, "1": {"category": "Man", "bbox": [24, 64, 587, 613]}, "2": {"category": "Human hair", "bbox": [203, 63, 188, 221]}, "3": {"category": "Laptop", "bbox": [542, 385, 257, 182]}}, "width": 1024, "height": 680, "source": "OpenImages"}

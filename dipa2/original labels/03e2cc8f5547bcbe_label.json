@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Food", "bbox": [0, 573, 129, 277]}, "1": {"category": "Grape", "bbox": [6, 472, 369, 487]}, "2": {"category": "Grape", "bbox": [176, 105, 425, 522]}, "3": {"category": "Fruit", "bbox": [326, 107, 276, 525]}, "4": {"category": "Tree", "bbox": [0, 0, 727, 1024]}}, "width": 727, "height": 1024, "source": "OpenImages"}

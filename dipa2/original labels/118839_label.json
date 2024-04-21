@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "bed", "bbox": [0.61, 4.7, 636.84, 419.66]}, "1": {"category": "brassiere", "bbox": [297.65, 123.4, 48.68, 51.53]}, "2": {"category": "Object 0", "bbox": [250, 181, 177, 178]}}, "width": 640, "height": 425, "source": "LVIS"}

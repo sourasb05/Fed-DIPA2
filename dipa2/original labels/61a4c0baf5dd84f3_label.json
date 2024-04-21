@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Chair", "bbox": [0, 346, 316, 302]}, "1": {"category": "Chair", "bbox": [366, 317, 641, 367]}, "2": {"category": "Furniture", "bbox": [0, 131, 1024, 553]}, "3": {"category": "Building", "bbox": [0, 0, 1024, 685]}}, "width": 1024, "height": 685, "source": "OpenImages"}

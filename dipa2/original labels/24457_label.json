@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "toy", "bbox": [2.75, 196.23, 369.93, 209.71]}, "1": {"category": "pillow", "bbox": [371.82, 59.72, 249.57, 183.86]}, "2": {"category": "pillow", "bbox": [138.94, 221.38, 218.09, 84.21]}}, "width": 640, "height": 429, "source": "LVIS"}

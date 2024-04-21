@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Human leg", "bbox": [220, 447, 796, 320]}, "1": {"category": "Building", "bbox": [0, 1, 1020, 763]}, "2": {"category": "Person", "bbox": [84, 278, 939, 489]}, "3": {"category": "Clothing", "bbox": [80, 299, 944, 435]}}, "width": 1024, "height": 768, "source": "OpenImages"}

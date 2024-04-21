@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "pillow", "bbox": [60.3, 246.81, 132.67, 113.47]}, "1": {"category": "pillow", "bbox": [15.42, 260.29, 110.31, 114.37]}, "2": {"category": "pillow", "bbox": [190.8, 265.27, 23.58, 22.24]}, "3": {"category": "headboard", "bbox": [0.0, 167.66, 178.9, 201.8]}}, "width": 640, "height": 405, "source": "LVIS"}

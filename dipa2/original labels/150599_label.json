@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "laptop_computer", "bbox": [296.3, 185.54, 163.57, 137.84]}, "1": {"category": "bench", "bbox": [0.0, 132.26, 473.5, 347.74]}, "2": {"category": "cigarette", "bbox": [412.37, 244.46, 16.61, 15.54]}, "3": {"category": "Object 0", "bbox": [114, 169, 195, 189]}}, "width": 640, "height": 480, "source": "LVIS"}

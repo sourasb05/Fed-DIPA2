@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "faucet", "bbox": [255.13, 231.26, 94.57, 61.56]}, "1": {"category": "sink", "bbox": [246.11, 276.58, 131.72, 106.34]}}, "width": 640, "height": 480, "source": "LVIS"}

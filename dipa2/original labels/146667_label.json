@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "motor_scooter", "bbox": [0.0, 60.6, 561.18, 478.4]}, "1": {"category": "license_plate", "bbox": [478.76, 402.18, 25.44, 59.56]}}, "width": 640, "height": 539, "source": "LVIS"}

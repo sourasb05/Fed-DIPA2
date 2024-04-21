@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "headscarf", "bbox": [194.87, 83.69, 45.13, 51.27]}, "1": {"category": "handle", "bbox": [239.12, 51.7, 14.8, 23.35]}, "2": {"category": "skirt", "bbox": [145.03, 208.54, 101.48, 61.41]}, "3": {"category": "tennis_racket", "bbox": [235.37, 52.17, 56.69, 101.56]}}, "width": 333, "height": 500, "source": "LVIS"}

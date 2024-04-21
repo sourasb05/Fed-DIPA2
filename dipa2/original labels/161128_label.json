@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "streetlight", "bbox": [40.81, 349.42, 8.42, 7.57]}, "1": {"category": "streetlight", "bbox": [241.04, 362.15, 4.31, 13.88]}, "2": {"category": "streetlight", "bbox": [265.91, 357.87, 4.62, 18.15]}, "3": {"category": "streetlight", "bbox": [285.1, 298.4, 9.68, 3.18]}}, "width": 375, "height": 500, "source": "LVIS"}

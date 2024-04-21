@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Human body", "bbox": [0, 0, 1024, 768]}, "1": {"category": "Cosmetics", "bbox": [0, 99, 219, 379]}, "2": {"category": "Cosmetics", "bbox": [0, 488, 140, 279]}, "3": {"category": "Cosmetics", "bbox": [473, 1, 353, 427]}}, "width": 1024, "height": 768, "source": "OpenImages"}

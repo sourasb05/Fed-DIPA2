@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "handle", "bbox": [267.96, 5.67, 42.03, 33.4]}, "1": {"category": "handle", "bbox": [164.95, 134.51, 28.7, 9.74]}, "2": {"category": "doorknob", "bbox": [267.88, 5.66, 42.12, 33.65]}, "3": {"category": "dispenser", "bbox": [119.26, 0.0, 20.04, 120.91]}}, "width": 500, "height": 375, "source": "LVIS"}

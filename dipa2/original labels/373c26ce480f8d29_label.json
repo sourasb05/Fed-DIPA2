@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Human face", "bbox": [363, 171, 223, 210]}, "1": {"category": "Person", "bbox": [280, 180, 461, 498]}, "2": {"category": "Human body", "bbox": [283, 167, 458, 510]}, "3": {"category": "Office building", "bbox": [0, 0, 1022, 677]}}, "width": 1024, "height": 681, "source": "OpenImages"}

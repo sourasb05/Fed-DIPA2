@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Human face", "bbox": [252, 152, 166, 235]}, "1": {"category": "Man", "bbox": [0, 141, 681, 880]}, "2": {"category": "Clothing", "bbox": [0, 297, 683, 726]}, "3": {"category": "Human body", "bbox": [0, 135, 683, 888]}, "4": {"category": "Human mouth", "bbox": [278, 305, 66, 48]}}, "width": 683, "height": 1024, "source": "OpenImages"}

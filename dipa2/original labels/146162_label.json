@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "ring", "bbox": [382.86, 204.68, 14.02, 16.14]}, "1": {"category": "tennis_racket", "bbox": [325.26, 175.69, 220.7, 210.86]}, "2": {"category": "visor", "bbox": [224.04, 17.85, 201.63, 98.99]}, "3": {"category": "Object 0", "bbox": [217, 15, 210, 227]}}, "width": 640, "height": 574, "source": "LVIS"}

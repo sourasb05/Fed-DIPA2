@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Human face", "bbox": [233, 171, 270, 340]}, "1": {"category": "Human head", "bbox": [212, 169, 300, 329]}, "2": {"category": "Human eye", "bbox": [271, 281, 68, 30]}, "3": {"category": "Human eye", "bbox": [399, 289, 67, 32]}, "4": {"category": "Man", "bbox": [0, 76, 768, 947]}}, "width": 768, "height": 1024, "source": "OpenImages"}

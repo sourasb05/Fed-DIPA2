@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "painting", "bbox": [256.27, 0.35, 174.26, 121.89]}, "1": {"category": "television_set", "bbox": [133.17, 26.91, 100.96, 78.38]}, "2": {"category": "lamp", "bbox": [235.28, 113.92, 30.73, 50.91]}, "3": {"category": "lamp", "bbox": [408.67, 103.44, 26.13, 53.31]}}, "width": 640, "height": 426, "source": "LVIS"}

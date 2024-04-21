@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "laptop_computer", "bbox": [422.16, 141.86, 181.63, 191.86]}, "1": {"category": "book", "bbox": [134.41, 140.68, 240.03, 219.21]}, "2": {"category": "aquarium", "bbox": [55.16, 24.66, 137.38, 110.48]}}, "width": 640, "height": 480, "source": "LVIS"}

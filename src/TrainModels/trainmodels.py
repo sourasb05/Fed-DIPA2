@@ -8,7 +8,9 @@ import numpy as np
 
 import torch
 from torch import nn
-from torchvision.models import VGG16_Weights, ResNet18_Weights, ResNet50_Weights, MobileNet_V3_Large_Weights, MobileNet_V3_Small_Weights
+# from torchvision.models import VGG16_Weights, ResNet18_Weights, ResNet50_Weights, MobileNet_V3_Large_Weights, MobileNet_V3_Small_Weights
+from torchvision.models import ResNet50_Weights
+
 import pytorch_lightning as pl
 import numpy as np
 import pandas as pd

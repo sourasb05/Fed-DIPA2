@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "mirror", "bbox": [2.3, 268.96, 31.83, 182.65]}, "1": {"category": "refrigerator", "bbox": [132.33, 298.75, 88.83, 120.68]}, "2": {"category": "cigarette", "bbox": [206.63, 248.78, 29.21, 53.01]}}, "width": 480, "height": 640, "source": "LVIS"}

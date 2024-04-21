@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Person", "bbox": [0, 20, 1024, 595]}, "1": {"category": "Mammal", "bbox": [70, 20, 458, 594]}, "2": {"category": "Mammal", "bbox": [697, 83, 156, 531]}, "3": {"category": "Mammal", "bbox": [886, 100, 136, 481]}}, "width": 1024, "height": 616, "source": "OpenImages"}

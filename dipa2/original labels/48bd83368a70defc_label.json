@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Building", "bbox": [0, 0, 1024, 576]}, "1": {"category": "Person", "bbox": [820, 173, 185, 308]}, "2": {"category": "Object 0", "bbox": [362, 16, 286, 232]}, "3": {"category": "Object 1", "bbox": [6, 91, 90, 67]}}, "width": 1024, "height": 576, "source": "OpenImages"}

@@ -1,0 +1,1 @@
+{"source": "LVIS", "workerId": "annotator412", "defaultAnnotation": {"curtain": {"category": "curtain", "informationType": [0, 1, 1, 0, 0, 0], "informationTypeInput": "", "informativeness": "6", "sharingOwner": [0, 1, 0, 0, 0, 0, 0], "sharingOwnerInput": "", "sharingOthers": [1, 0, 0, 0, 0, 0, 0], "sharingOthersInput": "", "ifNoPrivacy": false}}, "manualAnnotation": {}}

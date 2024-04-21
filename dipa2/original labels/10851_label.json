@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "cellular_telephone", "bbox": [390.78, 220.54, 119.51, 239.58]}, "1": {"category": "receipt", "bbox": [22.09, 205.86, 66.78, 104.12]}, "2": {"category": "receipt", "bbox": [271.1, 134.79, 179.0, 116.35]}, "3": {"category": "passport", "bbox": [293.0, 221.06, 299.48, 257.94]}}, "width": 640, "height": 479, "source": "LVIS"}

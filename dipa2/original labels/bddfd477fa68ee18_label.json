@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Lipstick", "bbox": [136, 73, 273, 541]}, "1": {"category": "Lipstick", "bbox": [297, 90, 252, 553]}, "2": {"category": "Lipstick", "bbox": [472, 103, 228, 547]}, "3": {"category": "Lipstick", "bbox": [649, 108, 206, 565]}, "4": {"category": "Cosmetics", "bbox": [135, 75, 712, 594]}}, "width": 1024, "height": 677, "source": "LVIS"}

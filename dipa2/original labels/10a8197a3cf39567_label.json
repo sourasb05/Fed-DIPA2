@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Plant", "bbox": [0, 319, 1024, 448]}, "1": {"category": "Skyscraper", "bbox": [0, 48, 206, 440]}, "2": {"category": "Skyscraper", "bbox": [392, 89, 203, 321]}, "3": {"category": "Building", "bbox": [646, 208, 256, 212]}}, "width": 1024, "height": 768, "source": "OpenImages"}

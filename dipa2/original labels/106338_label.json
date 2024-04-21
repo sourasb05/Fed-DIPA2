@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "beer_can", "bbox": [0.32, 256.46, 29.86, 66.6]}, "1": {"category": "beer_can", "bbox": [17.53, 239.97, 19.08, 35.21]}, "2": {"category": "headband", "bbox": [357.32, 198.73, 62.5, 59.7]}, "3": {"category": "ring", "bbox": [268.35, 158.05, 10.62, 9.01]}}, "width": 640, "height": 480, "source": "LVIS"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "person", "bbox": [173.68, 140.31, 234.32, 339.69]}, "1": {"category": "person", "bbox": [358.31, 17.02, 281.69, 462.98]}, "2": {"category": "bench", "bbox": [0.0, 143.07, 565.39, 173.79]}, "3": {"category": "bench", "bbox": [226.81, 104.75, 260.47, 48.08]}}, "width": 640, "height": 480, "source": "LVIS"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "license_plate", "bbox": [165.23, 380.06, 16.75, 11.78]}, "1": {"category": "license_plate", "bbox": [355.98, 356.49, 8.85, 4.77]}, "2": {"category": "license_plate", "bbox": [614.25, 365.89, 15.2, 7.4]}}, "width": 640, "height": 427, "source": "LVIS"}

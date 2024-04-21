@@ -1,0 +1,1 @@
+{"source": "LVIS", "workerId": "annotator431", "defaultAnnotation": {"highchair": {"category": "highchair", "informationType": [1, 0, 0, 0, 0, 0], "informationTypeInput": "", "informativeness": "6", "sharingOwner": [0, 1, 1, 0, 0, 0, 0], "sharingOwnerInput": "", "sharingOthers": [0, 1, 0, 0, 0, 0, 0], "sharingOthersInput": "", "ifNoPrivacy": false}}, "manualAnnotation": {}}

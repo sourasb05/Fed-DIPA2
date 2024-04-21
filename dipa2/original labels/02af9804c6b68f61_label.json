@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Car", "bbox": [0, 166, 431, 226]}, "1": {"category": "Car", "bbox": [67, 110, 892, 456]}, "2": {"category": "Person", "bbox": [135, 104, 234, 513]}, "3": {"category": "Person", "bbox": [626, 108, 122, 441]}}, "width": 1024, "height": 683, "source": "OpenImages"}

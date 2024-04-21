@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Guitar", "bbox": [75, 227, 948, 540]}, "1": {"category": "Person", "bbox": [0, 0, 923, 768]}, "2": {"category": "Clothing", "bbox": [41, 257, 697, 508]}, "3": {"category": "Microphone", "bbox": [500, 108, 212, 62]}, "4": {"category": "Microphone", "bbox": [502, 113, 187, 48]}}, "width": 1024, "height": 768, "source": "OpenImages"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "hair_dryer", "bbox": [512.37, 124.84, 27.29, 69.25]}, "1": {"category": "hair_dryer", "bbox": [429.78, 140.41, 25.79, 53.84]}, "2": {"category": "camera", "bbox": [146.99, 180.76, 25.08, 18.02]}}, "width": 640, "height": 429, "source": "LVIS"}

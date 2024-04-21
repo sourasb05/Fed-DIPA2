@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "magazine", "bbox": [246.12, 295.33, 35.72, 15.22]}, "1": {"category": "magazine", "bbox": [255.37, 305.43, 27.3, 11.21]}, "2": {"category": "magazine", "bbox": [275.74, 286.59, 38.62, 17.17]}, "3": {"category": "coffee_table", "bbox": [238.34, 258.37, 85.93, 82.38]}}, "width": 546, "height": 366, "source": "LVIS"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Table", "bbox": [83, 645, 179, 164]}, "1": {"category": "Table", "bbox": [317, 700, 706, 323]}, "2": {"category": "Desk", "bbox": [85, 652, 103, 92]}, "3": {"category": "Desk", "bbox": [330, 700, 687, 317]}, "4": {"category": "Office building", "bbox": [0, 0, 1024, 1022]}}, "width": 1024, "height": 1024, "source": "OpenImages"}
