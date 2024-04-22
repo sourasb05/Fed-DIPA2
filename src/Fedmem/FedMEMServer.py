@@ -18,7 +18,7 @@ import statistics
 
 
 class Fedmem():
-    def __init__(self,device, model, args, exp_no, current_directory):
+    def __init__(self,device, args, exp_no, current_directory):
                 
         self.device = device
         self.num_glob_iters = args.num_global_iters
@@ -26,9 +26,9 @@ class Fedmem():
         self.batch_size = args.batch_size
         self.learning_rate = args.alpha
         self.eta = args.eta
-        self.user_ids = args.user_ids
-        print(f"user ids : {self.user_ids}")
-        self.total_users = len(self.user_ids)
+        # self.user_ids = args.user_ids
+        # print(f"user ids : {self.user_ids}")
+        self.total_users = 300
         print(f"total users : {self.total_users}")
         self.num_users = self.total_users * args.users_frac    #selected users
         self.num_teams = args.num_teams
@@ -60,17 +60,17 @@ class Fedmem():
         
         """
 
-        self.global_model = copy.deepcopy(model)
+        # self.global_model = copy.deepcopy(model)
         # print(self.global_model)
-        self.global_model.to(self.device)
-        self.global_model_name = args.model_name
+        # self.global_model.to(self.device)
+        # self.global_model_name = args.model_name
 
         """
         Clusterhead models
         """
 
-        for _ in range(self.n_clusters):
-            self.c.append(copy.deepcopy(list(self.global_model.parameters())))
+        # for _ in range(self.n_clusters):
+        #    self.c.append(copy.deepcopy(list(self.global_model.parameters())))
             
 
         self.users = []
@@ -117,16 +117,27 @@ class Fedmem():
 
         for i in trange(self.total_users, desc="Data distribution to clients"):
             # id, train, test = read_user_data(i, data)
-            user = Fedmem_user(device, self.global_model, args, self.user_ids[i], exp_no, current_directory)
+            user = Fedmem_user(device, args, i, exp_no, current_directory)
             self.users.append(user)
             self.total_train_samples += user.train_samples
-
+        
             if self.user_ids[i] == str(self.fixed_user_id):
                 self.fixed_user = user
                 print(f'id found : {self.fixed_user.id}')
         # print("Finished creating Fedmem server.")
 
+        #Create Global_model
+
+        self.global_model = copy.deepcopy(self.users[0].local_model)
         
+        """
+        Clusterhead models
+        """
+
+        for _ in range(self.n_clusters):
+            self.c.append(copy.deepcopy(list(self.global_model.parameters())))
+            
+
     def send_global_parameters(self):
         assert (self.users is not None and len(self.users) > 0)
         for user in self.users:
@@ -795,8 +806,8 @@ class Fedmem():
 
     def train(self):
         loss = []
-        if self.cluster_type == "apriori_hsgd":
-            self.apriori_clusters()
+        # if self.cluster_type == "apriori_hsgd":
+        #    self.apriori_clusters()
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} cluster type : {self.cluster_type} number of clients: {self.num_users} Global Rounds :"):
             
             

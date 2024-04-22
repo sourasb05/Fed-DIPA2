@@ -36,7 +36,7 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 class Fedmem_user():
 
-    def __init__(self,device, model, args, id, exp_no, current_directory):
+    def __init__(self,device, args, id, exp_no, current_directory):
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
         self.device = device
         
@@ -57,6 +57,7 @@ class Fedmem_user():
         self.target = args.target
         self.num_users = args.total_users * args.users_frac 
         self.fixed_user_id = args.fixed_user_id
+        self.country = "japan"
         
         
         

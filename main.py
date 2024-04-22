@@ -22,19 +22,20 @@ def main(args):
     print(current_directory)
     i = args.exp_start
     while i < args.times:
-        if args.model_name == "Basemodel":
-            model = BaseModel().to(device)
+        # if args.model_name == "Basemodel":
+        #    model = BaseModel(224).to(device)
+        
         try:    
             if args.algorithm == "FedAvg":
-                server = FedAvg(device, model, args,i, current_directory)
+                server = FedAvg(device, args,i, current_directory)
             elif args.algorithm == "FedProx":
-                server = FedProx(device, model, args,i, current_directory)
+                server = FedProx(device, args,i, current_directory)
             elif args.algorithm == "pFedme":
-                server = pFedme(device, model, args, i, current_directory)
+                server = pFedme(device, args, i, current_directory)
             elif args.algorithm == "Fedmem": # and args.contexual == 0: 
-                server = Fedmem(device, model, args, i, current_directory)
+                server = Fedmem(device, args, i, current_directory)
             elif args.algorithm == "FeSEM":
-                server = FeSEM(device, model, args, i, current_directory)
+                server = FeSEM(device, args, i, current_directory)
             # elif args.algorithm == "Fedmem" and args.contexual == 1:
             #    print("in Fedmem_mm")
             #    server = Fedmem_mm(device, args, i, current_directory)
@@ -60,7 +61,6 @@ if __name__ == "__main__":
     print("Cluster type: {}".format(args.cluster))
     print("eta         : {}".format(args.eta))
     print("Number of global rounds       : {}".format(args.num_global_iters))
-    print("Number of team rounds          : {}".format(args.num_team_iters))
     print("Number of local rounds       : {}".format(args.local_iters))
     print("Local Model       : {}".format(args.model_name))
 
