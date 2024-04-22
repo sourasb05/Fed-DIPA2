@@ -30,7 +30,7 @@ class Fedmem():
         self.eta = args.eta
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[0]
+            self.user_ids = args.user_ids[2]
         else:
             self.user_ids = args.user_ids[1]
 

@@ -10,6 +10,7 @@ import torch
 from torch import nn
 # from torchvision.models import VGG16_Weights, ResNet18_Weights, ResNet50_Weights, MobileNet_V3_Large_Weights, MobileNet_V3_Small_Weights
 from torchvision.models import ResNet50_Weights
+from torchvision.models import resnet50
 
 import pytorch_lightning as pl
 import numpy as np
@@ -18,7 +19,7 @@ from sklearn import metrics
 from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, CalibrationError
 import json
 
-class BaseModel(pl.LightningModule):
+"""class BaseModel(pl.LightningModule):
     def __init__(self, input_dim, learning_rate = 1e-4, dropout_prob=0.2):
         ## output_channel: key: output_name value: output_dim
         super().__init__()
@@ -61,7 +62,49 @@ class BaseModel(pl.LightningModule):
         # optimizer = 
         return optimizer
 
-    
+    def compute_loss(self, y_preds, information, informativeness, sharingOwner, sharingOthers):
+        TypeLoss = self.entropy_loss1(y_preds[:, :6], information.type(torch.FloatTensor).cuda())
+        informativenessLosses = self.reg_loss(y_preds[:,6] * 100, informativeness.type(torch.FloatTensor).cuda() * 100)
+        sharingOwnerLoss = self.entropy_loss2(y_preds[:,7:14], sharingOwner.type(torch.FloatTensor).cuda())
+        sharingOthersLoss = self.entropy_loss2(y_preds[:,14:21], sharingOthers.type(torch.FloatTensor).cuda())
+        total_loss = TypeLoss + informativenessLosses + sharingOwnerLoss + sharingOthersLoss
+        return total_loss
+"""  
+
+
+class BaseModel(nn.Module):
+    def __init__(self, input_dim, learning_rate=1e-4, dropout_prob=0.2):
+        super(BaseModel, self).__init__()
+        self.learning_rate = learning_rate
+        self.net = resnet50(pretrained=True)
+        self.net.fc = nn.Identity()
+        w0 = self.net.conv1.weight.data.clone()
+        self.net.conv1 = nn.Conv2d(3 + input_dim, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        self.net.conv1.weight.data[:,:3,:,:] = w0
+        self.fc1 = nn.Linear(2048, 256)
+        self.fc2 = nn.Linear(256, 21)
+        self.dropout = nn.Dropout(p=dropout_prob)
+        self.act = nn.SiLU()
+        self.reg_loss = nn.L1Loss()
+        self.sigmoid = nn.Sigmoid()
+        self.entropy_loss1 = nn.BCEWithLogitsLoss(reduction='sum', pos_weight=torch.tensor([1.,1.,1.,1.,1.,0.]))
+        self.entropy_loss2 = nn.BCEWithLogitsLoss(reduction='sum', pos_weight=torch.tensor([1.,1.,1.,1.,1.,1.,0.]))
+
+    def forward(self, image, mask):
+        x = self.net(torch.cat((image, mask), dim=1))
+        x = self.dropout(x)
+        x = self.act(self.fc1(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
+        return x
+
+    def compute_loss(self, y_preds, information, informativeness, sharingOwner, sharingOthers):
+        TypeLoss = self.entropy_loss1(y_preds[:, :6], information.type(torch.FloatTensor).cuda())
+        informativenessLosses = self.reg_loss(y_preds[:,6] * 100, informativeness.type(torch.FloatTensor).cuda() * 100)
+        sharingOwnerLoss = self.entropy_loss2(y_preds[:,7:14], sharingOwner.type(torch.FloatTensor).cuda())
+        sharingOthersLoss = self.entropy_loss2(y_preds[:,14:21], sharingOthers.type(torch.FloatTensor).cuda())
+        total_loss = TypeLoss + informativenessLosses + sharingOwnerLoss + sharingOthersLoss
+        return total_loss
 
 
 #==============================================================================================

@@ -1,5 +1,3 @@
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -113,11 +111,11 @@ class Fedmem_user():
         self.output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
 
 
-        self.local_model = BaseModel(input_dim=self.input_dim)
+        self.local_model = BaseModel(input_dim=self.input_dim).to(self.device)
         self.eval_model = copy.deepcopy(self.local_model)
 
         image_size = (224, 224)
-        image_folder = self.current_directory + '/dipa2_dataset/images/'
+        image_folder = self.current_directory + '/dipa2/images/'
 
         num_rows = len(self.mega_table)
         train_size = int(0.8 * num_rows)
@@ -138,7 +136,7 @@ class Fedmem_user():
 
         self.acc, self.pre, self.rec, self.f1, self.conf = [], [], [], [], []
         
-        
+        self.optimizer= torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
         
         
         
@@ -320,21 +318,24 @@ class Fedmem_user():
         return np.mean(loss)
         
     def evaluate_model(self):
-        self.local_model.to('cuda')
+        self.local_model
+        total_loss=0.0
         for i, vdata in enumerate(self.val_loader):
             image, mask, information, informativeness, sharingOwner, sharingOthers = vdata
-            y_preds = self.local_model(image.to('cuda'), mask.to('cuda'))
-            print(y_preds[:, :6].shape, information.shape)
+            y_preds = self.local_model(image.to(self.device), mask.to(self.device))
+            loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
+            total_loss += loss.item()
+            """print(y_preds[:, :6].shape, information.shape)
 
             self.acc[0].update(y_preds[:, :6], information.to('cuda'))
             self.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to('cuda'))
             self.rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to('cuda'))
             self.f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to('cuda'))
             self.conf[0].update(y_preds[:, :6], information.to('cuda'))
+            """
+            # distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
 
-            distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
-
-            self.acc[1].update(y_preds[:, 7:14], sharingOwner.to('cuda'))
+            """self.acc[1].update(y_preds[:, 7:14], sharingOwner.to('cuda'))
             self.pre[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to('cuda'))
             self.rec[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to('cuda'))
             self.f1[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to('cuda'))
@@ -346,15 +347,18 @@ class Fedmem_user():
             self.f1[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to('cuda'))
             self.conf[2].update(y_preds[:, 14:21], sharingOthers.to('cuda'))
 
+            """
+        #  distance = distance / len(self.val_loader)
 
-        distance = distance / len(self.val_loader)
-
-        pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
+        """pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
                     'Precision' : [i.compute().detach().cpu().numpy() for i in self.pre], 
                     'Recall': [i.compute().detach().cpu().numpy() for i in self.rec], 
                     'f1': [i.compute().detach().cpu().numpy() for i in self.f1]}
+        """
+        # print(pandas_data)
+        avg_loss = total_loss / len(self.val_loader)
+        print(f"Validation loss: {avg_loss}")
 
-        print(pandas_data)
 
         # df = pd.DataFrame(pandas_data, index=output_channel.keys())
         # print(df.round(3))
@@ -362,21 +366,38 @@ class Fedmem_user():
         # with open('./distance', 'w') as w:
         #     w.write(str(distance))
         
-        if 'informativeness' in self.output_channel.keys():
-            print('informativenss distance: ', distance)
+        # if 'informativeness' in self.output_channel.keys():
+        #    print('informativenss distance: ', distance)
         
     def train(self):
-
+        print(f"user id : {self.id}")
         wandb_logger = WandbLogger(project="DIPA2.0 baseline", name = 'Resnet50')
         checkpoint_callback = ModelCheckpoint(dirpath=self.current_directory + '/models/local_models/annotator_' + str(),save_last=True, monitor='val loss')
+        self.local_model.train()
+        for iter in range(self.local_iters):
+            for batch in self.train_loader:
+                image, mask, information, informativeness, sharingOwner, sharingOthers = batch
+                self.optimizer.zero_grad()
+                y_preds = self.local_model(image.to(self.device), mask.to(self.device))
+                loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
+                loss.backward()
+                self.optimizer.step()
+                print(f"Epoch : {iter} Training loss: {loss.item()}")
+                self.evaluate_model()
 
+        """    
         trainer = pl.Trainer(accelerator='gpu', devices=[0],logger=wandb_logger, 
         auto_lr_find=True, max_epochs = 100, callbacks=[checkpoint_callback])
+
         lr_finder = trainer.tuner.lr_find(self.local_model, self.train_loader)
+
         self.local_model.hparams.learning_rate = lr_finder.suggestion()
         print(f'lr auto: {lr_finder.suggestion()}')
         trainer.fit(self.local_model, train_dataloaders = self.train_loader, val_dataloaders = self.val_loader) 
         
+        
+        
+
         threshold = 0.5
         average_method = 'micro'
         self.acc = [Accuracy(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
@@ -390,6 +411,5 @@ class Fedmem_user():
         self.conf = [ConfusionMatrix(task="multilabel", num_labels=output_dim) \
                 for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
         self.distance = 0.0
-        
-        self.evaluate_model()
+        """
                 

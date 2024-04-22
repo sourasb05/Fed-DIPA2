@@ -50,7 +50,8 @@ def args_parser():
                                                          '333', '454', '309', '553', '415', '322', '357', '375', '521', '572', '528', '302', '362', '510', '477', 
                                                          '520', '355', '399', '411', '317', '456', '352', '389', '541', '402', '344', '350', '583', '452', '444', 
                                                          '321', '419', '337', '474', '467', '476', '548', '359', '499', '546', '301', '367', '421', '379', '314', 
-                                                         '556', '495', '496', '480']])
+                                                         '556', '495', '496', '480'],
+                                                         ['71', '7', '189', '202', '208', '0']])
     parser.add_argument("--country", type=str, default="japan", choices=["japan", "uk"])
     
     parser.add_argument("--lambda_1", type=float, default=0.25, 
@@ -85,7 +86,7 @@ def args_parser():
                         help="Number of teams")
     parser.add_argument("--p_teams", type=int, default=1,
                         help="number of team selected per global round")
-    parser.add_argument("--cluster", type = str, default="apriori", choices=["apriori_hsgd", "dynamic", "apriori"])
+    parser.add_argument("--cluster", type = str, default="dynamic", choices=["apriori_hsgd", "dynamic", "apriori"])
     parser.add_argument("--target", type=int, default=10, choices=[3,10], help="number of target classes")
 
     parser.add_argument("--fixed_user_id", type=int, default=16)
