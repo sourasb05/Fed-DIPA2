@@ -67,11 +67,8 @@ class Fedmem_user():
         self.basic_info = [ "age", "gender", 'nationality', 'frequency']
         self.category = ['category']
         self.privacy_metrics = ['informationType', 'informativeness', 'sharingOwner', 'sharingOthers']
-        if self.country == "japan" and self.id < 300:
-            self.mega_table = pd.read_csv(current_directory + '/clients/new_annotations_annotator' + str(self.id) + '.csv')
-        else:
-            self.mega_table = pd.read_csv(current_directory + '/clients/new_annotations_annotator' + str(self.id + 300) + '.csv')
-
+        self.mega_table = pd.read_csv(current_directory + '/clients/new_annotations_annotator' + str(self.id) + '.csv')
+        
         self.description = {'informationType': ['It tells personal information', 
                                                 'It tells location of shooting',
                                                 'It tells individual preferences/pastimes',
