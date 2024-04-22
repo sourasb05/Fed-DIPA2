@@ -113,8 +113,8 @@ class Fedmem_user():
         self.output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
 
 
-#        self.local_model = BaseModel(input_dim=input_dim)
-#        self.eval_model = copy.deepcopy(self.local_model)
+        self.local_model = BaseModel(input_dim=self.input_dim)
+        self.eval_model = copy.deepcopy(self.local_model)
 
         image_size = (224, 224)
         image_folder = self.current_directory + '/dipa2_dataset/images/'
