@@ -19,7 +19,7 @@ from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, 
 import json
 
 class BaseModel(pl.LightningModule):
-    def __init__(self, input_dim, learning_rate = 1e-4, dropout_prob=0.2,  global_model):
+    def __init__(self, input_dim, learning_rate = 1e-4, dropout_prob=0.2):
         ## output_channel: key: output_name value: output_dim
         super().__init__()
         self.learning_rate = learning_rate
@@ -57,8 +57,8 @@ class BaseModel(pl.LightningModule):
         return x
     
     def configure_optimizers(self):
-        # optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        optimizer = 
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        # optimizer = 
         return optimizer
 
     
