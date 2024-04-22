@@ -47,7 +47,7 @@ class BaseModel(pl.LightningModule):
         self.entropy_loss1 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,0.]))
         self.entropy_loss2 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,1.,0.]))
 
-        self.global_model = global_model 
+        # self.global_model = global_model 
     def forward(self, image, mask):
         x = self.net(torch.cat((image, mask), dim = 1))
         x = self.dropout(x)
