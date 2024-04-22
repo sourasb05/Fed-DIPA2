@@ -26,9 +26,14 @@ class Fedmem():
         self.batch_size = args.batch_size
         self.learning_rate = args.alpha
         self.eta = args.eta
-        # self.user_ids = args.user_ids
+        self.country = args.country
+        if args.country == "japan":
+            self.user_ids = args.user_ids[0]
+        else:
+            self.user_ids = args.user_ids[1]
+
         # print(f"user ids : {self.user_ids}")
-        self.total_users = 300
+        self.total_users = len(self.user_ids
         print(f"total users : {self.total_users}")
         self.num_users = self.total_users * args.users_frac    #selected users
         self.num_teams = args.num_teams
@@ -117,7 +122,7 @@ class Fedmem():
 
         for i in trange(self.total_users, desc="Data distribution to clients"):
             # id, train, test = read_user_data(i, data)
-            user = Fedmem_user(device, args, i, exp_no, current_directory)
+            user = Fedmem_user(device, args, self.user_ids[i], exp_no, current_directory)
             self.users.append(user)
             self.total_train_samples += user.train_samples
         
