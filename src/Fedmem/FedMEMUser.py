@@ -123,7 +123,7 @@ class Fedmem_user():
         num_rows = len(self.mega_table)
         train_size = int(0.8 * num_rows)
         test_size = num_rows - train_size
-
+        self.train_samples = train_size
         # Split the dataframe into two
         train_df = self.mega_table.sample(n=train_size, random_state=0)
         val_df = self.mega_table.drop(train_df.index)
