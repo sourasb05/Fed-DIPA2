@@ -33,7 +33,7 @@ class Fedmem():
             self.user_ids = args.user_ids[1]
 
         # print(f"user ids : {self.user_ids}")
-        self.total_users = len(self.user_ids
+        self.total_users = len(self.user_ids)
         print(f"total users : {self.total_users}")
         self.num_users = self.total_users * args.users_frac    #selected users
         self.num_teams = args.num_teams
