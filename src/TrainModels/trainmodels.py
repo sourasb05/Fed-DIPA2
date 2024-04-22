@@ -19,7 +19,7 @@ from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, 
 import json
 
 class BaseModel(pl.LightningModule):
-    def __init__(self, input_dim, learning_rate = 1e-4, dropout_prob=0.2):
+    def __init__(self, input_dim, learning_rate = 1e-4, dropout_prob=0.2,  global_model):
         ## output_channel: key: output_name value: output_dim
         super().__init__()
         self.learning_rate = learning_rate
@@ -47,6 +47,7 @@ class BaseModel(pl.LightningModule):
         self.entropy_loss1 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,0.]))
         self.entropy_loss2 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,1.,0.]))
 
+        self.global_model = global_model 
     def forward(self, image, mask):
         x = self.net(torch.cat((image, mask), dim = 1))
         x = self.dropout(x)
@@ -54,6 +55,14 @@ class BaseModel(pl.LightningModule):
         x = self.dropout(x)
         x = self.fc2(x)
         return x
+    
+    def configure_optimizers(self):
+        # optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        optimizer = 
+        return optimizer
+
+    
+
 
 #==============================================================================================
 class ResNet50TL(nn.Module):

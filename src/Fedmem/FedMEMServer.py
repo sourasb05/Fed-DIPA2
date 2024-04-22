@@ -837,9 +837,9 @@ class Fedmem():
                 clust_id = self.find_cluster_id(user.id)
                 print(f"clust_id : {clust_id}")
                 if clust_id is not None:
-                    user.train(self.c[clust_id], t)
+                    user.train()
                 else:
-                    user.train(self.global_model.parameters(), t)
+                    user.train()
 
             if self.cluster_type == "dynamic":
                 similarity_matrix = self.similarity_check()
