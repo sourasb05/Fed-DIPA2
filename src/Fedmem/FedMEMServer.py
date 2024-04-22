@@ -1,3 +1,5 @@
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 import torch
 import os
 import h5py
@@ -122,6 +124,7 @@ class Fedmem():
 
         for i in trange(self.total_users, desc="Data distribution to clients"):
             # id, train, test = read_user_data(i, data)
+            print(f"client id : {self.user_ids[i]}")
             user = Fedmem_user(device, args, self.user_ids[i], exp_no, current_directory)
             self.users.append(user)
             self.total_train_samples += user.train_samples
