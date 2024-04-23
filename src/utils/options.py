@@ -51,7 +51,7 @@ def args_parser():
                                                          '520', '355', '399', '411', '317', '456', '352', '389', '541', '402', '344', '350', '583', '452', '444', 
                                                          '321', '419', '337', '474', '467', '476', '548', '359', '499', '546', '301', '367', '421', '379', '314', 
                                                          '556', '495', '496', '480'],
-                                                         ['71', '7', '189', '202', '208', '0']])
+                                                         ['71', '7', '189', '202', '208', '0', '160', '10', '105', '68']])
     parser.add_argument("--country", type=str, default="japan", choices=["japan", "uk"])
     
     parser.add_argument("--lambda_1", type=float, default=0.25, 
@@ -66,7 +66,7 @@ def args_parser():
                         help="personalization parameter for Fedmem")
     
     parser.add_argument("--num_global_iters", type=int, default=20)
-    parser.add_argument("--local_iters", type=int, default=20)
+    parser.add_argument("--local_iters", type=int, default=10)
     parser.add_argument("--optimizer", type=str, default="SGD")
     
     parser.add_argument("--times", type=int, default=1, 

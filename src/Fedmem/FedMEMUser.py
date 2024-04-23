@@ -59,7 +59,7 @@ class Fedmem_user():
         self.fixed_user_id = args.fixed_user_id
         self.country = "japan"
         
-        
+        self.distance = 0.0
         
         
         self.bigfives = ["extraversion", "agreeableness", "conscientiousness",
@@ -134,9 +134,35 @@ class Fedmem_user():
         self.wandb_logger = WandbLogger(project="DIPA2.0 baseline", name = 'Resnet50')
         self.checkpoint_callback = ModelCheckpoint(dirpath='./ML baseline/Study2/models/Resnet50/', save_last=True, monitor='val loss')
 
-        self.acc, self.pre, self.rec, self.f1, self.conf = [], [], [], [], []
+      
         
         self.optimizer= torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
+        
+        # metrics
+
+        threshold = 0.5
+        average_method = 'micro'
+        self.acc = [Accuracy(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.pre = [Precision(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.rec = [Recall(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.f1 = [F1Score(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.conf = [ConfusionMatrix(task="multilabel", num_labels=output_dim) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        
+        self.global_acc = [Accuracy(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.global_pre = [Precision(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.global_rec = [Recall(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.global_f1 = [F1Score(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
+        self.global_conf = [ConfusionMatrix(task="multilabel", num_labels=output_dim) \
+                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
         
         
         
@@ -161,159 +187,55 @@ class Fedmem_user():
 
     def test(self, global_model, t):
         # Set the model to evaluation mode
-        self.eval_model.eval()
+        self.local_model.eval()
         self.update_parameters(global_model)
-        y_true = []
-        y_pred = []
-        
-        total_loss = 0.0
-        with torch.no_grad():  # Inference mode, gradients not needed
-            for inputs, labels in self.test_loader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
-                outputs = self.eval_model(inputs)
-                loss = self.loss(outputs, labels)
-                total_loss += loss.item()
-                _, predicted = torch.max(outputs.data, 1)
-                # total += labels.size(0)
-                # correct += (predicted == labels).sum().item()
-                y_true.extend(labels.cpu().numpy())  # Collect true labels
-                y_pred.extend(predicted.cpu().numpy())  # Collect predicted labels
+        total_loss=0.0
+        distance = 0.0
+        for i, vdata in enumerate(self.val_loader):
+            image, mask, information, informativeness, sharingOwner, sharingOthers = vdata
+            y_preds = self.local_model(image.to(self.device), mask.to(self.device))
+            loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
+            total_loss += loss.item()
+            
+            print(y_preds[:, :6].shape, information.shape)
 
-        # Convert collected labels to numpy arrays for metric calculation
-        y_true = np.array(y_true)
-        y_pred = np.array(y_pred)
-    
-        # Calculate metrics
-        accuracy = accuracy_score(y_true, y_pred)
-        validation_loss = total_loss / len(self.test_loader)
-        precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)  # Use 'macro' for unweighted
-        recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)  # Use 'macro' for unweighted
-        f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)  # Use 'macro' for unweighted
-        cm = confusion_matrix(y_true,y_pred)  
-        
-        file_cm = "cm_user_" + str(self.id) + "_GR_" + str(t)
-        #print(file)
+            self.global_acc[0].update(y_preds[:, :6], information.to(self.device))
+            self.global_pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
+            self.global_rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
+            self.global_f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
+            self.global_conf[0].update(y_preds[:, :6], information.to(self.device))
+            
+            self.distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
+            # print(f"disance: {self.distance}")
+
+            self.global_acc[1].update(y_preds[:, 7:14], sharingOwner.to(self.device))
+            self.global_pre[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(self.device))
+            self.global_rec[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(self.device))
+            self.global_f1[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(self.device))
+            self.global_conf[1].update(y_preds[:, 7:14], sharingOwner.to(self.device))
+
+            self.global_acc[2].update(y_preds[:, 14:21], sharingOthers.to(self.device))
+            self.global_pre[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
+            self.global_rec[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
+            self.global_f1[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
+            self.global_conf[2].update(y_preds[:, 14:21], sharingOthers.to(self.device))
+
+            
+        distance = distance / len(self.val_loader)
+
+        pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
+                    'Precision' : [i.compute().detach().cpu().numpy() for i in self.pre], 
+                    'Recall': [i.compute().detach().cpu().numpy() for i in self.rec], 
+                    'f1': [i.compute().detach().cpu().numpy() for i in self.f1]}
        
-        directory_name = "global" 
-        cm_df = pd.DataFrame(cm)
-
-        if not os.path.exists(self.current_directory + "/results/confusion_matrix/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/confusion_matrix/"+ directory_name)
+        # print(pandas_data)
+        avg_loss = total_loss / len(self.val_loader)
+        # print(f"Global iter {t}: Validation loss: {avg_loss}")
+        # print(f"distance: {distance}")
+        # input("press")
+        return avg_loss, distance
         
-        cm_df.to_csv(self.current_directory + "/results/confusion_matrix/"+ directory_name + "/" + file_cm + ".csv", index=False)
-
-        # print(f"local model saved at global round :{t} local round :{iter}")       
-        return accuracy, validation_loss, precision, recall, f1, cm
-
-    def test_local(self, t):
-        self.best_local_model.eval()
-        loss = 0
-    
-        y_true = []
-        y_pred = []
-        
-        total_loss = 0.0
-        with torch.no_grad():  # Inference mode, gradients not needed
-            for inputs, labels in self.test_loader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
-                outputs = self.best_local_model(inputs)
-                loss = self.loss(outputs, labels)
-                total_loss += loss.item()
-                _, predicted = torch.max(outputs.data, 1)
-                y_true.extend(labels.cpu().numpy())  # Collect true labels
-                y_pred.extend(predicted.cpu().numpy())  # Collect predicted labels
-
-        # Convert collected labels to numpy arrays for metric calculation
-        y_true = np.array(y_true)
-        y_pred = np.array(y_pred)
-    
-        # Calculate metrics
-        accuracy = accuracy_score(y_true, y_pred)
-        validation_loss = total_loss / len(self.test_loader)
-        precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)  # Use 'macro' for unweighted
-        recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)  # Use 'macro' for unweighted
-        f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)  # Use 'macro' for unweighted
-        cm = confusion_matrix(y_true,y_pred)
-        self.list_accuracy.append([accuracy, t])
-        self.list_f1.append([f1, t]) 
-        self.list_val_loss.append([validation_loss,t])       
-        return accuracy, validation_loss, precision, recall, f1, cm
-
-
-    def train_error_and_loss(self, global_model):
-      
-        # Set the model to evaluation mode
-        self.eval_model.eval()
-        self.update_parameters(global_model)
-        y_true = []
-        y_pred = []
-        
-        total_loss = 0.0
-        with torch.no_grad():  # Inference mode, gradients not needed
-            for inputs, labels in self.trainloaderfull:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
-                outputs = self.eval_model(inputs)
-                loss = self.loss(outputs, labels)
-                total_loss += loss.item()
-                _, predicted = torch.max(outputs.data, 1)
-                # total += labels.size(0)
-                # correct += (predicted == labels).sum().item()
-                y_true.extend(labels.cpu().numpy())  # Collect true labels
-                y_pred.extend(predicted.cpu().numpy())  # Collect predicted labels
-
-        # Convert collected labels to numpy arrays for metric calculation
-        y_true = np.array(y_true)
-        y_pred = np.array(y_pred)
-    
-        # Calculate metrics
-        accuracy = accuracy_score(y_true, y_pred)
-        train_loss = total_loss / len(self.trainloaderfull)
-        # precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)  # Use 'macro' for unweighted
-        # recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)  # Use 'macro' for unweighted
-        # f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)  # Use 'macro' for unweighted
-                
-        return accuracy, train_loss
-
-    def train_error_and_loss_local(self):
-        self.best_local_model.eval()
-        loss = 0
-    
-        y_true = []
-        y_pred = []
-        
-        total_loss = 0.0
-        with torch.no_grad():  # Inference mode, gradients not needed
-            for inputs, labels in self.trainloaderfull:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
-                outputs = self.local_model(inputs)
-                loss = self.loss(outputs, labels)
-                total_loss += loss.item()
-                _, predicted = torch.max(outputs.data, 1)
-                # total += labels.size(0)
-                # correct += (predicted == labels).sum().item()
-                y_true.extend(labels.cpu().numpy())  # Collect true labels
-                y_pred.extend(predicted.cpu().numpy())  # Collect predicted labels
-
-        # Convert collected labels to numpy arrays for metric calculation
-        y_true = np.array(y_true)
-        y_pred = np.array(y_pred)
-    
-        # Calculate metrics
-        accuracy = accuracy_score(y_true, y_pred)
-        train_loss = total_loss / len(self.trainloaderfull)
-        # precision = precision_score(y_true, y_pred, average='weighted')  # Use 'macro' for unweighted
-        # recall = recall_score(y_true, y_pred, average='weighted')  # Use 'macro' for unweighted
-        # f1 = f1_score(y_true, y_pred, average='weighted')  # Use 'macro' for unweighted
-                
-        return accuracy, train_loss
-
-        
-#    @staticmethod
-#    def model_exists():
-#        return os.path.exists(os.path.join("models", "server" + ".pt"))
-    
-    def l1_distance_loss(prediction, target):
+    def l1_distance_loss(self, prediction, target):
         loss = np.abs(prediction - target)
         return np.mean(loss)
         
@@ -325,39 +247,44 @@ class Fedmem_user():
             y_preds = self.local_model(image.to(self.device), mask.to(self.device))
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
             total_loss += loss.item()
-            """print(y_preds[:, :6].shape, information.shape)
+            
+            print(y_preds[:, :6].shape, information.shape)
 
-            self.acc[0].update(y_preds[:, :6], information.to('cuda'))
-            self.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to('cuda'))
-            self.rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to('cuda'))
-            self.f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to('cuda'))
-            self.conf[0].update(y_preds[:, :6], information.to('cuda'))
-            """
-            # distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
+            self.acc[0].update(y_preds[:, :6], information.to(self.device))
+            self.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
+            self.rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
+            self.f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
+            self.conf[0].update(y_preds[:, :6], information.to(self.device))
+            
+            self.distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
+            # print(f"disance: {self.distance}")
 
-            """self.acc[1].update(y_preds[:, 7:14], sharingOwner.to('cuda'))
-            self.pre[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to('cuda'))
-            self.rec[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to('cuda'))
-            self.f1[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to('cuda'))
-            self.conf[1].update(y_preds[:, 7:14], sharingOwner.to('cuda'))
+            self.acc[1].update(y_preds[:, 7:14], sharingOwner.to(self.device))
+            self.pre[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(self.device))
+            self.rec[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(self.device))
+            self.f1[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(self.device))
+            self.conf[1].update(y_preds[:, 7:14], sharingOwner.to(self.device))
 
-            self.acc[2].update(y_preds[:, 14:21], sharingOthers.to('cuda'))
-            self.pre[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to('cuda'))
-            self.rec[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to('cuda'))
-            self.f1[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to('cuda'))
-            self.conf[2].update(y_preds[:, 14:21], sharingOthers.to('cuda'))
+            self.acc[2].update(y_preds[:, 14:21], sharingOthers.to(self.device))
+            self.pre[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
+            self.rec[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
+            self.f1[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
+            self.conf[2].update(y_preds[:, 14:21], sharingOthers.to(self.device))
 
-            """
-        #  distance = distance / len(self.val_loader)
+            
+        self.distance = self.distance / len(self.val_loader)
 
-        """pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
+        pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
                     'Precision' : [i.compute().detach().cpu().numpy() for i in self.pre], 
                     'Recall': [i.compute().detach().cpu().numpy() for i in self.rec], 
                     'f1': [i.compute().detach().cpu().numpy() for i in self.f1]}
-        """
-        # print(pandas_data)
+       
+        print(pandas_data)
         avg_loss = total_loss / len(self.val_loader)
         print(f"Validation loss: {avg_loss}")
+        print(f"distance: {self.distance}")
+        input("press")
+        # print(f"Epoch : {iter}  loss: {loss.item()} acc: {self.acc} pre: {self.pre} f1: {self.f1} conf: {self.conf}")
 
 
         # df = pd.DataFrame(pandas_data, index=output_channel.keys())
@@ -371,6 +298,7 @@ class Fedmem_user():
         
     def train(self):
         print(f"user id : {self.id}")
+        
         wandb_logger = WandbLogger(project="DIPA2.0 baseline", name = 'Resnet50')
         checkpoint_callback = ModelCheckpoint(dirpath=self.current_directory + '/models/local_models/annotator_' + str(),save_last=True, monitor='val loss')
         self.local_model.train()
@@ -382,8 +310,9 @@ class Fedmem_user():
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
                 loss.backward()
                 self.optimizer.step()
-                print(f"Epoch : {iter} Training loss: {loss.item()}")
-                self.evaluate_model()
+                # print(f"Epoch : {iter} Training loss: {loss.item()}")
+                # self.distance = 0.0
+                # self.evaluate_model()
 
         """    
         trainer = pl.Trainer(accelerator='gpu', devices=[0],logger=wandb_logger, 
@@ -394,22 +323,10 @@ class Fedmem_user():
         self.local_model.hparams.learning_rate = lr_finder.suggestion()
         print(f'lr auto: {lr_finder.suggestion()}')
         trainer.fit(self.local_model, train_dataloaders = self.train_loader, val_dataloaders = self.val_loader) 
-        
+        """
         
         
 
-        threshold = 0.5
-        average_method = 'micro'
-        self.acc = [Accuracy(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
-                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
-        self.pre = [Precision(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
-                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
-        self.rec = [Recall(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
-                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
-        self.f1 = [F1Score(task="multilabel", num_labels=output_dim, threshold = threshold, average=average_method, ignore_index = output_dim - 1) \
-                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
-        self.conf = [ConfusionMatrix(task="multilabel", num_labels=output_dim) \
-                for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
-        self.distance = 0.0
-        """
+        # self.distance = 0.0
+    
                 

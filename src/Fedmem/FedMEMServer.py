@@ -171,13 +171,20 @@ class Fedmem():
         for param in self.global_model.parameters():
             param.data = torch.zeros_like(param.data)
         
-        for cluster_model in self.c:
-            self.add_parameters(cluster_model, 1/len(self.c))
+        for user in self.selected_users:
+            for server_param, local_param in zip(self.global_model.parameters(), user.local_model.parameters()):
+                server_param.data += local_param.data.clone() * (1/len(self.selected_users))
 
+
+        
+        """for cluster_model in self.c:
+            self.add_parameters(cluster_model, 1/len(self.c))
+        """
     def add_parameters_clusters(self, user, cluster_id):
         
         for cluster_param, user_param in zip(self.c[cluster_id], user.get_parameters()):
-            cluster_param.data = cluster_param.data + user.ratio * user_param.data.clone() 
+            # cluster_param.data = cluster_param.data + user.ratio * user_param.data.clone()
+            cluster_param.data = cluster_param.data + 0.1* user_param.data.clone()
         for cluster_param , global_param in zip(self.c[cluster_id], self.global_model.parameters()):
             cluster_param.data += self.eta*(cluster_param.data - global_param.data)
 
@@ -534,117 +541,28 @@ class Fedmem():
             torch.save(self.c[cluster],self.current_directory + "/models/"+ directory_name + "/" + file + ".pt")
 
 
-    def test_error_and_loss(self, evaluate_model, t):
+    def test_error_and_loss(self, t):
         # num_samples = []
         # tot_correct = []
         accs = []
-        losses = []
+        avg_loss = 0.0
+        avg_distance = 0.0
         precisions = []
         recalls = []
         f1s = []
         cms = []
-        if evaluate_model == 'global':
-            for c in self.selected_users:
-                accuracy, loss, precision, recall, f1, cm = c.test(self.global_model.parameters(), t)
-               
-                accs.append(accuracy)
-                losses.append(loss)
-                precisions.append(precision)
-                recalls.append(recall)
-                f1s.append(f1)
-                cms.append(cm)
-            
-        elif evaluate_model == 'local':
-            for c in self.selected_users:
-                accuracy, loss, precision, recall, f1, cm = c.test_local(t)
-                accs.append(accuracy)
-                losses.append(loss)
-                precisions.append(precision)
-                recalls.append(recall)
-                f1s.append(f1)
-                cms.append(cm)
-        else:
-            for clust_id in range(self.num_teams):
-                users = np.array(self.cluster_dict[clust_id])
-                for c in users:
-                    accuracy, loss, precision, recall, f1, cm = c.test(self.c[clust_id])
-                    accs.append(accuracy)
-                    losses.append(loss)
-                    precisions.append(precision)
-                    recalls.append(recall)
-                    f1s.append(f1)
-                    cms.append(cm)
+        for c in self.selected_users:
+            loss, distance = c.test(self.global_model.parameters(), t)
+            avg_loss += (1/len(self.selected_users))*loss
+            avg_distance += (1/len(self.selected_users))*distance
                     
-                    
+        print(f"Global round {t} avg loss {avg_loss} avg distance {avg_distance}")            
 
-            
-        return accs, losses, precisions, recalls, f1s, cms
-
-    def train_error_and_loss(self, evaluate_model):
-        accs = []
-        losses = []
-        
-        if evaluate_model == 'global':
-            for c in self.selected_users:
-                accuracy, loss = c.train_error_and_loss(self.global_model.parameters())
-                
-                accs.append(accuracy)
-                losses.append(loss)
-        elif evaluate_model == 'local':
-            for c in self.selected_users:
-                accuracy, loss = c.train_error_and_loss_local()
-                accs.append(accuracy)
-                losses.append(loss)
-        else:
-            for clust_id in range(self.num_teams):
-                users = np.array(self.cluster_dict[clust_id])
-                for c in users:
-                    accuracy, loss = c.train_error_and_loss(self.c[clust_id])
-                    accs.append(accuracy)
-                    losses.append(loss)
-
-        return accs, losses
-
-
+    
     def evaluate(self, t):
         
-        evaluate_model = "global"
-        test_accs, test_losses, precisions, recalls, f1s, cms = self.test_error_and_loss(evaluate_model, t)
-        train_accs, train_losses  = self.train_error_and_loss(evaluate_model)
+        self.test_error_and_loss(t)
         
-        self.global_train_acc.append(statistics.mean(train_accs))
-        self.global_test_acc.append(statistics.mean(test_accs))
-        self.global_train_loss.append(statistics.mean(train_losses))
-        self.global_test_loss.append(statistics.mean(test_losses))
-        self.global_precision.append(statistics.mean(precisions))
-        self.global_recall.append(statistics.mean(recalls))
-        self.global_f1score.append(statistics.mean(f1s))
-        """try:
-            cm_sum
-        except NameError:
-            cm_sum = np.zeros(cms[0].shape)
-        for cm in cms:
-            cm_sum += 1/len(cms)*cm
-"""
-
-        print(f"Global Trainning Accurancy: {self.global_train_acc[t]}" )
-        print(f"Global Trainning Loss: {self.global_train_loss[t]}")
-        print(f"Global test accurancy: {self.global_test_acc[t]}")
-        print(f"Global test_loss: {self.global_test_loss[t]}")
-        print(f"Global Precision: {self.global_precision[t]}")
-        print(f"Global Recall: {self.global_recall[t]}")
-        print(f"Global f1score: {self.global_f1score[t]}")
-
-
-        if t == 0 and self.minimum_global_loss == 0.0:
-            self.minimum_global_loss = self.global_test_loss[0]
-        else:
-            if self.global_test_loss[t] < self.minimum_global_loss:
-                self.minimum_global_loss = self.global_test_loss[t]
-                # print(f"new minimum loss of local model at client {self.id} found at global round {t} local epoch {epoch}")
-                self.save_global_model(t) #, cm_sum)
-                
-
     def evaluate_clusterhead(self, t):
         evaluate_model = "cluster"
         test_accs, test_losses, precisions, recalls, f1s, cms = self.test_error_and_loss(evaluate_model, t)
@@ -701,110 +619,7 @@ class Fedmem():
         print(f"Local Precision: {self.local_precision[t]}")
         print(f"Local Recall: {self.local_recall[t]}")
         print(f"Local f1score: {self.local_f1score[t]}")
-
     
-    
-    def plot_per_result(self):
-        
-        fig, ax = plt.subplots(1,2, figsize=(12,6))
-
-        ax[0].plot(self.local_train_acc, label= "Train_accuracy")
-        ax[0].plot(self.local_test_acc, label= "Test_accuracy")
-        ax[0].set_xlabel("Global Iteration")
-        ax[0].set_ylabel("accuracy")
-        ax[0].set_xticks(range(0, self.num_glob_iters, int(self.num_glob_iters/5)))#
-        ax[0].legend(prop={"size":12})
-        ax[1].plot(self.local_train_loss, label= "Train_loss")
-        ax[1].plot(self.local_test_loss, label= "Test_loss")
-        ax[1].set_xlabel("Global Iteration")
-        #ax[1].set_xscale('log')
-        ax[1].set_ylabel("Loss")
-        #ax[1].set_yscale('log')
-        ax[1].set_xticks(range(0, self.num_glob_iters, int(self.num_glob_iters/5)))
-        ax[1].legend(prop={"size":12})
-        
-        directory_name = str(self.global_model_name) + "/" + str(self.algorithm) + "/" + str(self.target) + "/" + self.cluster_type  + "/" + str(self.num_users) + "/plot/personalized"
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/results/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/" + directory_name)
-
-        plt.draw()
-       
-        plt.savefig(self.current_directory + "/results/" + directory_name  + "/exp_no_" + str(self.exp_no) + "_global_iters_" + str(self.num_glob_iters) + '.png')
-
-        # Show the graph
-        plt.show()
-
-
-    def plot_cluster_result(self):
-        
-        # print(self.global_train_acc)
-
-        fig, ax = plt.subplots(1,2, figsize=(12,6))
-
-        ax[0].plot(self.cluster_train_acc, label= "Train_accuracy")
-        ax[0].plot(self.cluster_test_acc, label= "Test_accuracy")
-        ax[0].set_xlabel("Global Iteration")
-        ax[0].set_ylabel("accuracy")
-        ax[0].set_xticks(range(0, self.num_glob_iters, int(self.num_glob_iters/5)))#
-        ax[0].legend(prop={"size":12})
-        ax[1].plot(self.cluster_train_loss, label= "Train_loss")
-        ax[1].plot(self.cluster_test_loss, label= "Test_loss")
-        ax[1].set_xlabel("Global Iteration")
-        #ax[1].set_xscale('log')
-        ax[1].set_ylabel("Loss")
-        #ax[1].set_yscale('log')
-        ax[1].set_xticks(range(0, self.num_glob_iters, int(self.num_glob_iters/5)))
-        ax[1].legend(prop={"size":12})
-        
-        directory_name = str(self.global_model_name) + "/" + str(self.algorithm) +  "/" + str(self.target) + "/" + self.cluster_type  +  "/" + str(self.num_users) + "/plot/cluster"
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/results/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/" + directory_name)
-
-        plt.draw()
-       
-        plt.savefig(self.current_directory + "/results/" + directory_name  + "/exp_no_" + str(self.exp_no) + "_global_iters_" + str(self.num_glob_iters) + '.png')
-
-        # Show the graph
-        plt.show()
-
-    def plot_global_result(self):
-        
-        # print(self.global_train_acc)
-
-        fig, ax = plt.subplots(1,2, figsize=(12,6))
-
-        ax[0].plot(self.global_train_acc, label= "Train_accuracy")
-        ax[0].plot(self.global_test_acc, label= "Test_accuracy")
-        ax[0].set_xlabel("Global Iteration")
-        ax[0].set_ylabel("accuracy")
-        ax[0].set_xticks(range(0, self.num_glob_iters, int(self.num_glob_iters/5)))#
-        ax[0].legend(prop={"size":12})
-        ax[1].plot(self.global_train_loss, label= "Train_loss")
-        ax[1].plot(self.global_test_loss, label= "Test_loss")
-        ax[1].set_xlabel("Global Iteration")
-        #ax[1].set_xscale('log')
-        ax[1].set_ylabel("Loss")
-        #ax[1].set_yscale('log')
-        ax[1].set_xticks(range(0, self.num_glob_iters, int(self.num_glob_iters/5)))
-        ax[1].legend(prop={"size":12})
-        
-        directory_name = str(self.global_model_name) + "/" + str(self.algorithm) +  "/data_silo/" + str(self.target) + "/" + self.cluster_type  + "/" + str(self.num_users) + "/" +"plot/global"
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/results/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/" + directory_name)
-
-        plt.draw()
-       
-        plt.savefig(self.current_directory + "/results/" + directory_name  + "/exp_no_" + str(self.exp_no) + "_global_iters_" + str(self.num_glob_iters) + '.png')
-
-        # Show the graph
-        plt.show()
-        
     def find_cluster_id(self, user_id):
         for key, values in self.cluster_dict_user_id.items():
             if user_id in values:
@@ -817,14 +632,14 @@ class Fedmem():
         # if self.cluster_type == "apriori_hsgd":
         #    self.apriori_clusters()
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} cluster type : {self.cluster_type} number of clients: {self.num_users} Global Rounds :"):
-            
-            
+            self.send_global_parameters()
+            """
             if t == 0:
                 self.send_global_parameters()
             else:
                 self.send_cluster_parameters()
+            """
             if self.fix_client_every_GR == 1:
-                
                 self.selected_users = self.select_n_1_users(t, int(self.num_users)-1)
             else:
                 self.selected_users = self.select_users(t, int(self.num_users)).tolist()
@@ -832,30 +647,31 @@ class Fedmem():
             for user in self.selected_users:
                 list_user_id.append(user.id)
             print(f"selected users : {list_user_id}")
-
-            for user in tqdm(self.selected_users, desc=f"total selected users {len(self.selected_users)}"):
-                clust_id = self.find_cluster_id(user.id)
-                print(f"clust_id : {clust_id}")
-                if clust_id is not None:
-                    user.train()
-                else:
-                    user.train()
-
-            if self.cluster_type == "dynamic":
-                similarity_matrix = self.similarity_check()
-                # print(similarity_matrix)
-                clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
-                print(clusters)
-                self.combine_cluster_user(clusters)
-                # self.save_clusters(t)
             
-            self.aggregate_clusterhead()
+            
+            for user in tqdm(self.selected_users, desc=f"total selected users {len(self.selected_users)}"):
+               #  clust_id = self.find_cluster_id(user.id)
+               # print(f"clust_id : {clust_id}")
+               # if clust_id is not None:
+               #     user.train()
+               # else:
+                user.train()
+
+            # if self.cluster_type == "dynamic":
+            #    similarity_matrix = self.similarity_check()
+            #    # print(similarity_matrix)
+            #    clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
+            #    print(clusters)
+            #    self.combine_cluster_user(clusters)
+            #    # self.save_clusters(t)
+            
+            # self.aggregate_clusterhead()
             self.global_update()
 
         
-            self.evaluate_localmodel(t)
+            # self.evaluate_localmodel(t)
             # self.evaluate_clusterhead(t)
-            #self.evaluate(t)
+            self.evaluate(t)
 
         # self.save_results()
         # self.plot_per_result()
