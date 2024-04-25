@@ -60,6 +60,7 @@ class Fedmem():
         self.cluster_dict_user_id = {}
         #self.c = [[] for _ in range(args.num_teams)]
         self.top_accuracies = []
+        self.global_metric = []
 
 
         """
@@ -540,6 +541,14 @@ class Fedmem():
         
             torch.save(self.c[cluster],self.current_directory + "/models/"+ directory_name + "/" + file + ".pt")
 
+    def initialize_or_add(self, dest, src):
+    
+        for key, value in src.items():
+            if key in dest:
+                dest[key] = [x + y for x, y in zip(dest[key], value)]
+            else:
+                dest[key] = value.copy()  # Initialize with a copy of the first list
+
 
     def test_error_and_loss(self, t):
         # num_samples = []
@@ -551,12 +560,21 @@ class Fedmem():
         recalls = []
         f1s = []
         cms = []
+        accumulator = {}
         for c in self.selected_users:
-            loss, distance = c.test(self.global_model.parameters(), t)
+            loss, distance, c_dict = c.test(self.global_model.parameters(), t)
             avg_loss += (1/len(self.selected_users))*loss
             avg_distance += (1/len(self.selected_users))*distance
+            if c_dict:  # Check if test_dict is not None or empty
+                self.initialize_or_add(accumulator, c_dict)
+        average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
+
+        self.global_metric.append(average_dict)
+   
+            
                     
-        print(f"Global round {t} avg loss {avg_loss} avg distance {avg_distance}")            
+        print(f"Global round {t} avg loss {avg_loss} avg distance {avg_distance}") 
+        print(average_dict)           
 
     
     def evaluate(self, t):
@@ -672,7 +690,18 @@ class Fedmem():
             # self.evaluate_localmodel(t)
             # self.evaluate_clusterhead(t)
             self.evaluate(t)
+        
+        #print(self.global_metric)
+        informative_accuracy = [d['Accuracy'][0] for d in self.global_metric if 'Accuracy' in d and len(d['Accuracy']) > 0]
+        informative_precision = [d['Precision'][0] for d in self.global_metric if 'Precision' in d and len(d['Precision']) > 0]
+        informative_recall = [d['Recall'][0] for d in self.global_metric if 'Recall' in d and len(d['Recall']) > 0]
+        informative_f1 = [d['f1'][0] for d in self.global_metric if 'f1' in d and len(d['f1']) > 0]
 
+        print(f"-----Informativeness-----")
+        print(f"Accuracy : {informative_accuracy}")
+        print(f"Precision : {informative_precision}")
+        print(f"Recall : {informative_recall}")
+        print(f"f1 : {informative_f1}")
         # self.save_results()
         # self.plot_per_result()
         # self.plot_cluster_result()

@@ -65,7 +65,7 @@ def args_parser():
     parser.add_argument("--eta", type=float, default=0.01, 
                         help="personalization parameter for Fedmem")
     
-    parser.add_argument("--num_global_iters", type=int, default=20)
+    parser.add_argument("--num_global_iters", type=int, default=5)
     parser.add_argument("--local_iters", type=int, default=10)
     parser.add_argument("--optimizer", type=str, default="SGD")
     

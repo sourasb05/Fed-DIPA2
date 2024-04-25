@@ -164,9 +164,9 @@ class Fedmem_user():
         self.global_conf = [ConfusionMatrix(task="multilabel", num_labels=output_dim) \
                 for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
         
+        # print(self.global_acc)
         
-        
-        
+        # input("press")
         
         
 
@@ -205,7 +205,7 @@ class Fedmem_user():
             self.global_f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.global_conf[0].update(y_preds[:, :6], information.to(self.device))
             
-            self.distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
+            distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
             # print(f"disance: {self.distance}")
 
             self.global_acc[1].update(y_preds[:, 7:14], sharingOwner.to(self.device))
@@ -223,17 +223,20 @@ class Fedmem_user():
             
         distance = distance / len(self.val_loader)
 
-        pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
-                    'Precision' : [i.compute().detach().cpu().numpy() for i in self.pre], 
-                    'Recall': [i.compute().detach().cpu().numpy() for i in self.rec], 
-                    'f1': [i.compute().detach().cpu().numpy() for i in self.f1]}
-       
-        # print(pandas_data)
+        pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.global_acc], 
+                    'Precision' : [i.compute().detach().cpu().numpy() for i in self.global_pre], 
+                    'Recall': [i.compute().detach().cpu().numpy() for i in self.global_rec], 
+                    'f1': [i.compute().detach().cpu().numpy() for i in self.global_f1]}
+        
+        pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
+        #print(pandas_data)
+        
+
         avg_loss = total_loss / len(self.val_loader)
         # print(f"Global iter {t}: Validation loss: {avg_loss}")
         # print(f"distance: {distance}")
         # input("press")
-        return avg_loss, distance
+        return avg_loss, distance, pandas_data
         
     def l1_distance_loss(self, prediction, target):
         loss = np.abs(prediction - target)
@@ -279,11 +282,14 @@ class Fedmem_user():
                     'Recall': [i.compute().detach().cpu().numpy() for i in self.rec], 
                     'f1': [i.compute().detach().cpu().numpy() for i in self.f1]}
        
+        pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
+
         print(pandas_data)
+
         avg_loss = total_loss / len(self.val_loader)
-        print(f"Validation loss: {avg_loss}")
-        print(f"distance: {self.distance}")
-        input("press")
+        # print(f"Validation loss: {avg_loss}")
+        # print(f"distance: {self.distance}")
+        # input("press")
         # print(f"Epoch : {iter}  loss: {loss.item()} acc: {self.acc} pre: {self.pre} f1: {self.f1} conf: {self.conf}")
 
 
@@ -314,19 +320,9 @@ class Fedmem_user():
                 # self.distance = 0.0
                 # self.evaluate_model()
 
-        """    
-        trainer = pl.Trainer(accelerator='gpu', devices=[0],logger=wandb_logger, 
-        auto_lr_find=True, max_epochs = 100, callbacks=[checkpoint_callback])
-
-        lr_finder = trainer.tuner.lr_find(self.local_model, self.train_loader)
-
-        self.local_model.hparams.learning_rate = lr_finder.suggestion()
-        print(f'lr auto: {lr_finder.suggestion()}')
-        trainer.fit(self.local_model, train_dataloaders = self.train_loader, val_dataloaders = self.val_loader) 
-        """
         
         
 
         # self.distance = 0.0
     
-                
+                 
