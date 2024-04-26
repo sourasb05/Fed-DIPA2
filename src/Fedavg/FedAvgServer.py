@@ -53,11 +53,13 @@ class FedAvg():
         self.global_train_loss = []
         self.global_train_distance = []
         self.global_train_mae = []
+
+        self.data_frac = []
         
         self.minimum_test_loss = 0.0
         
         for i in trange(self.total_users, desc="Data distribution to clients"):
-            user = UserAvg(device, args, int(self.user_ids[i]), exp_no)
+            user = UserAvg(device, args, int(self.user_ids[i]), exp_no, current_directory)
             self.users.append(user)
             self.total_train_samples += user.train_samples
 
@@ -67,7 +69,7 @@ class FedAvg():
         print(f"data available {self.data_frac}")
         self.global_model = copy.deepcopy(self.users[0].local_model)
         for param in self.global_model.parameters():
-            param.data.zero()
+            param.data.zero_()
         
         
         print("Finished creating FedAvg server.")
@@ -144,6 +146,15 @@ class FedAvg():
             
         return accs, losses, precisions, recalls, f1s
 
+    def initialize_or_add(self, dest, src):
+    
+        for key, value in src.items():
+            if key in dest:
+                dest[key] = [x + y for x, y in zip(dest[key], value)]
+            else:
+                dest[key] = value.copy()  # Initialize with a copy of the first list
+
+
     def eval_train(self, t):
         avg_loss = 0.0
         avg_distance = 0.0
@@ -199,7 +210,7 @@ class FedAvg():
         
         print(file)
        
-        directory_name = str(self.algorithm) + "/" +"h5" + "/global_model/" + str(self.target)
+        directory_name = str(self.algorithm) + "/" +"h5" + "/global_model/"
         # Check if the directory already exists
         if not os.path.exists(self.current_directory + "/results/"+ directory_name):
         # If the directory does not exist, create it

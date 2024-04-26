@@ -31,7 +31,7 @@ import wandb
 from sklearn.metrics import mean_absolute_error
 
 
-class Fedmem_user():
+class UserAvg():
 
     def __init__(self,device, args, id, exp_no, current_directory):
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
@@ -159,7 +159,7 @@ class Fedmem_user():
         
         
     def set_parameters(self, cluster_model):
-        for param, glob_param in zip(self.local_model.parameters(), cluster_model):
+        for param, glob_param in zip(self.local_model.parameters(), cluster_model.parameters()):
             param.data = glob_param.data.clone()
             # print(f"user {self.id} parameters : {param.data}")
         # input("press")
