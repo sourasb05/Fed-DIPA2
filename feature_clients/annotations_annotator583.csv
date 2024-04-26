@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+calendar,"[0, 0, 1, 1, 1, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",53,Female,3,Prolific,6,9,10,6,10,125821.jpg,LVIS,"[[15, 223, 99, 76]]",Printed Material,UK,480,640,annotator583,125821_calendar_1,125821_calendar_1_annotator583
+pillow,"[0, 0, 1, 0, 0, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",53,Female,3,Prolific,6,9,10,6,10,24457.jpg,LVIS,"[[371, 59, 249, 183], [138, 221, 218, 84]]",Others,UK,640,429,annotator583,24457_pillow_1-2,24457_pillow_1-2_annotator583

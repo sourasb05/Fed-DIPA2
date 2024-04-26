@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+Clothing,"[1, 0, 0, 0, 1, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",23,Male,1,Prolific,6,6,3,6,5,01fe16fca259a75a.jpg,OpenImages,"[[0, 176, 551, 589], [482, 216, 540, 549]]",Clothing,UK,1024,769,annotator585,01fe16fca259a75a_Clothing_6-7,01fe16fca259a75a_Clothing_6-7_annotator585
