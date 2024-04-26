@@ -28,9 +28,6 @@ from PIL import Image
 import json
 from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, CalibrationError
 import wandb
-from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from sklearn.metrics import mean_absolute_error
 
 
@@ -131,9 +128,7 @@ class Fedmem_user():
         self.train_loader = DataLoader(train_dataset, batch_size=96, generator=torch.Generator(device='cuda'), shuffle=True)
         self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=32)
     
-        self.wandb_logger = WandbLogger(project="DIPA2.0 baseline", name = 'Resnet50')
-        self.checkpoint_callback = ModelCheckpoint(dirpath=self.current_directory + "/models/local_model/" + str(self.id) , save_last=True, monitor='val loss')
-
+        
       
         
         self.optimizer= torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
@@ -315,8 +310,6 @@ class Fedmem_user():
     def train(self):
         print(f"user id : {self.id}")
         
-        wandb_logger = WandbLogger(project="DIPA2.0 baseline", name = 'Resnet50')
-        checkpoint_callback = ModelCheckpoint(dirpath=self.current_directory + '/models/local_models/annotator_' + str(),save_last=True, monitor='val loss')
         self.local_model.train()
         for iter in range(self.local_iters):
             mae = 0

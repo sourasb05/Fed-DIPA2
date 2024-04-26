@@ -4,8 +4,8 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--model_name", type=str, default="Basemodel")
-    parser.add_argument("--algorithm", type=str, default="Fedmem",
+    parser.add_argument("--model_name", type=str, default="PrivacyModel")
+    parser.add_argument("--algorithm", type=str, default="FedAvg",
                         choices=["pFedme", "FedAvg", "Fedmem", "FeSEM", "FedProx"])
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--beta", type=float, default=0.7,

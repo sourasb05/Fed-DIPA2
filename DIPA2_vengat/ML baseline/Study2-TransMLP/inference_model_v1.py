@@ -82,17 +82,15 @@ class BaseModel(pl.LightningModule):
         self.max_bboxes = 32
         self.bb_features_channels = self.features_dim[0]
         self.num_additional_input = input_dim
-        self.final_features_dim = 512
-        self.object_mlp_out_dim = 256
+        self.final_features_dim = 1024
 
         # Transformer Config
         self.transformer_input_len = self.max_bboxes
-        self.transformer_latent_dim = self.object_mlp_out_dim
-        self.transformer_hidden_dim = 64
-        self.transformer_nhead = int(self.final_features_dim/self.max_bboxes)
-        self.transformer_nlayers = 1
-
-        self.object_mlp = nn.Linear(self.bb_features_channels, self.object_mlp_out_dim)
+        self.transformer_latent_dim = self.bb_features_channels 
+        self.transformer_hidden_dim = 512
+        #self.transformer_nhead = int(self.final_features_dim/self.transformer_input_len)
+        self.transformer_nhead = 32
+        self.transformer_nlayers = 2
 
         self.transformer = TransformerModel(ntoken  = self.transformer_input_len,
                                             d_model = self.transformer_latent_dim,
@@ -100,6 +98,11 @@ class BaseModel(pl.LightningModule):
                                             d_hid   = self.transformer_hidden_dim,
                                             nlayers = self.transformer_nlayers,
                                             dropout = 0.5)
+        
+        #self.transformer_out_avgpool = nn.AvgPool1d(self.transformer_input_len, stride=1)
+        self.transformer_out_mlp = nn.Linear(self.transformer_nhead *
+                                             self.transformer_input_len,
+                                             self.final_features_dim)
 
         self.mlp_fc1 = nn.Linear(self.num_additional_input, 256)
         self.mlp_fc2 = nn.Linear(256, self.final_features_dim)
@@ -111,6 +114,25 @@ class BaseModel(pl.LightningModule):
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.2)
+
+        # mobilenet v3 
+        # self.net = torch.hub.load('pytorch/vision:v0.14.1', 'mobilenet_v3_large', pretrained=MobileNet_V3_Large_Weights.DEFAULT)
+        # self.net.classifier[3] = nn.Identity()
+        # w0 = self.net.features[0][0].weight.data.clone()
+        # self.net.features[0][0] = nn.Conv2d(3 + input_dim, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        # self.net.features[0][0].weight.data[:,:3,:,:] = w0
+        # self.fc1 = nn.Linear(1280, 256)
+
+        # original resnet 50
+        # self.net = torch.hub.load('pytorch/vision:v0.14.1', 'resnet50', pretrained=ResNet50_Weights.DEFAULT)
+        # self.net.fc = nn.Identity()
+        # w0 = self.net.conv1.weight.data.clone()
+        # self.net.conv1 = nn.Conv2d(3 + input_dim, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        # self.net.conv1.weight.data[:,:3,:,:] = w0
+
+        # self.fc1 = nn.Linear(2048, 256)
+        # self.fc2 = nn.Linear(256, 21)
+        # self.dropout = nn.Dropout(p=dropout_prob)
         self.act = nn.SiLU()
 
         self.reg_loss = nn.L1Loss()
@@ -119,15 +141,12 @@ class BaseModel(pl.LightningModule):
         self.entropy_loss1 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,0.]))
         self.entropy_loss2 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,1.,0.]))
 
-    def forward(self, object_features, additional_input):
+    def forward(self, bb_features, additional_input):
 
-        B, L, C = object_features.shape
-        object_mlp_out = self.object_mlp(object_features.view(B*L, C))
-        object_mlp_out = self.relu(object_mlp_out)
-        object_mlp_out = object_mlp_out.view(B, L, self.object_mlp_out_dim)
-
-        transformer_out = self.transformer(object_mlp_out)
+        transformer_out = self.transformer(bb_features)
         transformer_out = torch.flatten(transformer_out, start_dim=1)
+        #image_features = self.transformer_out_avgpool(transformer_out)
+        image_features = self.transformer_out_mlp(transformer_out)
         image_features = transformer_out
 
         ai_features = self.mlp_fc1(additional_input)
@@ -135,8 +154,8 @@ class BaseModel(pl.LightningModule):
         ai_features = self.mlp_fc2(ai_features)
 
         x = torch.cat((image_features, ai_features), dim=1)
-        x = self.relu(x)
 
+        x = self.relu(x)
         x = self.fusion_fc1(x)
         x = self.act(x)
         x = self.dropout(x)
@@ -179,8 +198,6 @@ class BaseModel(pl.LightningModule):
         sharingOthersLoss /= N
 
         loss = TypeLoss + informativenessLosses + sharingOwenerLoss + sharingOthersLoss
-
-        # print(f'{text} loss', loss)
         self.log(f'{text} loss', loss)
         self.log(f'{text} type loss', TypeLoss)
         self.log(f'{text} informativeness loss', informativenessLosses)

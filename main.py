@@ -1,9 +1,6 @@
 from src.Fedavg.FedAvgServer import FedAvg
-# from src.Fedmem_mm.FedMEMServer import Fedmem_mm
 from src.Fedmem.FedMEMServer import Fedmem
 from src.FedProx.FedProxServer import FedProx
-from src.pFedme.pFedme_server import pFedme
-from src.FeSEM.FeSEM_server import FeSEM
 from src.TrainModels.trainmodels import *
 from src.utils.options import args_parser
 import torchvision.models as models
@@ -30,15 +27,8 @@ def main(args):
                 server = FedAvg(device, args,i, current_directory)
             elif args.algorithm == "FedProx":
                 server = FedProx(device, args,i, current_directory)
-            elif args.algorithm == "pFedme":
-                server = pFedme(device, args, i, current_directory)
-            elif args.algorithm == "Fedmem": # and args.contexual == 0: 
+            elif args.algorithm == "Fedmem": 
                 server = Fedmem(device, args, i, current_directory)
-            elif args.algorithm == "FeSEM":
-                server = FeSEM(device, args, i, current_directory)
-            # elif args.algorithm == "Fedmem" and args.contexual == 1:
-            #    print("in Fedmem_mm")
-            #    server = Fedmem_mm(device, args, i, current_directory)
             
         except ValueError:
             raise ValueError("Wrong algorithm selected")
