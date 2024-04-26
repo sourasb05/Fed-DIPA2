@@ -1,4 +1,5 @@
 dipa2_dataset/images
 dipa2_dataset/original labels
 dipa2_dataset/annotations
+*.DS_Store
 *.pyc

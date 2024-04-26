@@ -8,7 +8,7 @@ import numpy as np
 import copy
 from src.utils.data_process import FeatureDataset
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, confusion_matrix
 
 class UserAvg():
 

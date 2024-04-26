@@ -18,9 +18,8 @@ from src.Optimizer.Optimizer import Fedmem
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import DataLoader
-from dipa2.ML_baseline.Study2.inference_dataset import ImageMaskDataset
-# from dipa2.ML_baseline.Study2.inference_model import BaseModel
-from src.TrainModels.trainmodels import BaseModel
+from dipa2.ML_baseline.Study2TransMLP.inference_dataset import ImageMaskDataset
+from src.TrainModels.trainmodels import PrivacyModel
 from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
@@ -32,6 +31,7 @@ import wandb
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from sklearn.metrics import mean_absolute_error
 
 
 class Fedmem_user():
@@ -67,7 +67,7 @@ class Fedmem_user():
         self.basic_info = [ "age", "gender", 'nationality', 'frequency']
         self.category = ['category']
         self.privacy_metrics = ['informationType', 'informativeness', 'sharingOwner', 'sharingOthers']
-        self.mega_table = pd.read_csv(current_directory + '/clients/new_annotations_annotator' + str(self.id) + '.csv')
+        self.mega_table = pd.read_csv(current_directory + '/feature_clients/annotations_annotator' + str(self.id) + '.csv')
         
         self.description = {'informationType': ['It tells personal information', 
                                                 'It tells location of shooting',
@@ -111,11 +111,11 @@ class Fedmem_user():
         self.output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
 
 
-        self.local_model = BaseModel(input_dim=self.input_dim).to(self.device)
+        self.local_model = PrivacyModel(input_dim=self.input_dim).to(self.device)
         self.eval_model = copy.deepcopy(self.local_model)
 
         image_size = (224, 224)
-        image_folder = self.current_directory + '/dipa2/images/'
+        feature_folder = self.current_directory + '/object_features/resnet50/'
 
         num_rows = len(self.mega_table)
         train_size = int(0.8 * num_rows)
@@ -125,14 +125,14 @@ class Fedmem_user():
         train_df = self.mega_table.sample(n=train_size, random_state=0)
         val_df = self.mega_table.drop(train_df.index)
 
-        train_dataset = ImageMaskDataset(train_df, image_folder, self.input_channel, image_size, flip = True)
-        val_dataset = ImageMaskDataset(val_df, image_folder, self.input_channel, image_size)    
+        train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
+        val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)    
 
         self.train_loader = DataLoader(train_dataset, batch_size=96, generator=torch.Generator(device='cuda'), shuffle=True)
         self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=32)
     
         self.wandb_logger = WandbLogger(project="DIPA2.0 baseline", name = 'Resnet50')
-        self.checkpoint_callback = ModelCheckpoint(dirpath='./ML baseline/Study2/models/Resnet50/', save_last=True, monitor='val loss')
+        self.checkpoint_callback = ModelCheckpoint(dirpath=self.current_directory + "/models/local_model/" + str(self.id) , save_last=True, monitor='val loss')
 
       
         
@@ -181,7 +181,7 @@ class Fedmem_user():
         return self.local_model.parameters()
 
     def update_parameters(self, new_params):
-        for param, new_param in zip(self.eval_model.parameters(), new_params):
+        for param, new_param in zip(self.local_model.parameters(), new_params):
             param.data = new_param.data.clone()
 
 
@@ -192,8 +192,8 @@ class Fedmem_user():
         total_loss=0.0
         distance = 0.0
         for i, vdata in enumerate(self.val_loader):
-            image, mask, information, informativeness, sharingOwner, sharingOthers = vdata
-            y_preds = self.local_model(image.to(self.device), mask.to(self.device))
+            features, additional_information, information, informativeness, sharingOwner, sharingOthers = vdata
+            y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
             total_loss += loss.item()
             
@@ -235,7 +235,7 @@ class Fedmem_user():
         avg_loss = total_loss / len(self.val_loader)
         # print(f"Global iter {t}: Validation loss: {avg_loss}")
         # print(f"distance: {distance}")
-        # input("press")
+        
         return avg_loss, distance, pandas_data
         
     def l1_distance_loss(self, prediction, target):
@@ -245,9 +245,12 @@ class Fedmem_user():
     def evaluate_model(self):
         self.local_model
         total_loss=0.0
+
+        informativeness_gt = []
+        informativeness_pred = []
         for i, vdata in enumerate(self.val_loader):
-            image, mask, information, informativeness, sharingOwner, sharingOthers = vdata
-            y_preds = self.local_model(image.to(self.device), mask.to(self.device))
+            features, additional_information, information, informativeness, sharingOwner, sharingOthers = vdata
+            y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
             total_loss += loss.item()
             
@@ -260,6 +263,9 @@ class Fedmem_user():
             self.conf[0].update(y_preds[:, :6], information.to(self.device))
             
             self.distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
+            """for gt, y_pred in zip(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy()):
+                informativeness_gt.append(int(gt))
+                informativeness_pred.append(int(y_pred))"""
             # print(f"disance: {self.distance}")
 
             self.acc[1].update(y_preds[:, 7:14], sharingOwner.to(self.device))
@@ -274,7 +280,11 @@ class Fedmem_user():
             self.f1[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
             self.conf[2].update(y_preds[:, 14:21], sharingOthers.to(self.device))
 
-            
+        #print(informativeness_gt)
+        #print(informativeness_pred)
+        #precision = precision_score(informativeness_gt, informativeness_pred, labels = np.arange(7))
+        #print(f"precision : {precision}")
+        #input("press")
         self.distance = self.distance / len(self.val_loader)
 
         pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
@@ -309,16 +319,27 @@ class Fedmem_user():
         checkpoint_callback = ModelCheckpoint(dirpath=self.current_directory + '/models/local_models/annotator_' + str(),save_last=True, monitor='val loss')
         self.local_model.train()
         for iter in range(self.local_iters):
+            mae = 0
             for batch in self.train_loader:
-                image, mask, information, informativeness, sharingOwner, sharingOthers = batch
+                features, additional_information, information, informativeness, sharingOwner, sharingOthers = batch
                 self.optimizer.zero_grad()
-                y_preds = self.local_model(image.to(self.device), mask.to(self.device))
+                y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
                 loss.backward()
                 self.optimizer.step()
-                # print(f"Epoch : {iter} Training loss: {loss.item()}")
+                print(f"Epoch : {iter} Training loss: {loss.item()}")
                 # self.distance = 0.0
-                # self.evaluate_model()
+                # MAE calculation
+                
+                true_values = informativeness.cpu().detach().numpy()
+                print(f"true values : {true_values}")
+                predicted_values = y_preds[:, 6].cpu().detach().numpy()
+                print(f"predicted values : {predicted_values}")
+                batch_mae = mean_absolute_error(true_values, predicted_values)
+                mae += batch_mae
+                print(f"MAE : {mae}")
+               
+            self.evaluate_model()
 
         
         

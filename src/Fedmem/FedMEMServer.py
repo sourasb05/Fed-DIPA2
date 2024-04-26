@@ -17,7 +17,7 @@ from sklearn.cluster import KMeans
 # Implementation for FedAvg Server
 import matplotlib.pyplot as plt
 import statistics
-
+import sys
 
 class Fedmem():
     def __init__(self,device, args, exp_no, current_directory):
@@ -30,7 +30,7 @@ class Fedmem():
         self.eta = args.eta
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[2]
+            self.user_ids = args.user_ids[0]
         else:
             self.user_ids = args.user_ids[1]
 
@@ -118,6 +118,8 @@ class Fedmem():
 
         self.minimum_clust_loss = 0.0
         self.minimum_global_loss = 0.0
+
+        self.data_frac = []
         
         # data = read_data(args, current_directory)
         # self.tot_users = len(data[0])
@@ -129,6 +131,7 @@ class Fedmem():
             user = Fedmem_user(device, args, self.user_ids[i], exp_no, current_directory)
             self.users.append(user)
             self.total_train_samples += user.train_samples
+            
         
             if self.user_ids[i] == str(self.fixed_user_id):
                 self.fixed_user = user
@@ -136,7 +139,9 @@ class Fedmem():
         # print("Finished creating Fedmem server.")
 
         #Create Global_model
-
+        for user in self.users:
+            self.data_frac.append(user.train_samples/self.total_train_samples)
+        print(f"data available {self.data_frac}")
         self.global_model = copy.deepcopy(self.users[0].local_model)
         
         """

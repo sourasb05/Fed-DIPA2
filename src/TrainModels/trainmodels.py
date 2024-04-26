@@ -5,12 +5,14 @@ from torchvision import models
 import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
-
+import math
 import torch
 from torch import nn
 # from torchvision.models import VGG16_Weights, ResNet18_Weights, ResNet50_Weights, MobileNet_V3_Large_Weights, MobileNet_V3_Small_Weights
 from torchvision.models import ResNet50_Weights
 from torchvision.models import resnet50
+from torch.nn import TransformerEncoder, TransformerEncoderLayer
+from torch import nn, Tensor
 
 import pytorch_lightning as pl
 import numpy as np
@@ -18,50 +20,142 @@ import pandas as pd
 from sklearn import metrics
 from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, CalibrationError
 import json
+import sys
 
-"""class BaseModel(pl.LightningModule):
-    def __init__(self, input_dim, learning_rate = 1e-4, dropout_prob=0.2):
+
+class PositionalEncoding(nn.Module):
+
+    def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 5000):
+        super().__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        position = torch.arange(max_len).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
+        pe = torch.zeros(max_len, 1, d_model)
+        pe[:, 0, 0::2] = torch.sin(position * div_term)
+        pe[:, 0, 1::2] = torch.cos(position * div_term)
+        self.register_buffer('pe', pe)
+
+    def forward(self, x: Tensor) -> Tensor:
+        """
+        Arguments:
+            x: Tensor, shape ``[seq_len, batch_size, embedding_dim]``
+        """
+        x = x + self.pe[:x.size(0)]
+        return self.dropout(x)
+
+class TransformerModel(nn.Module):
+
+    def __init__(self, ntoken: int, d_model: int, nhead: int, d_hid: int,
+                 nlayers: int, dropout: float = 0.5):
+        super().__init__()
+        self.model_type = 'Transformer' 
+        self.pos_encoder = PositionalEncoding(d_model, dropout)
+        encoder_layers = TransformerEncoderLayer(d_model, nhead, d_hid, dropout)
+        self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
+        self.embedding = nn.Embedding(ntoken, d_model)
+        self.d_model = d_model
+        self.linear = nn.Linear(d_model, nhead)
+
+        self.init_weights()
+
+    def init_weights(self) -> None:
+        initrange = 0.1
+        self.embedding.weight.data.uniform_(-initrange, initrange)
+        self.linear.bias.data.zero_()
+        self.linear.weight.data.uniform_(-initrange, initrange)
+
+    def forward(self, src: Tensor, src_mask: Tensor = None) -> Tensor:
+        """
+        Arguments:
+            src: Tensor, shape ``[seq_len, batch_size]``
+            src_mask: Tensor, shape ``[seq_len, seq_len]``
+
+        Returns:
+            output Tensor of shape ``[seq_len, batch_size, ntoken]``
+        """
+        #src = self.embedding(src) * math.sqrt(self.d_model)
+        src = self.pos_encoder(src)
+        output = self.transformer_encoder(src, src_mask)
+        output = self.linear(output)
+        return output
+
+
+
+class PrivacyModel(nn.Module):
+    def __init__(self, input_dim, learning_rate = 0.01, dropout_prob=0.2):
         ## output_channel: key: output_name value: output_dim
         super().__init__()
         self.learning_rate = learning_rate
+
+        self.features_dim = (2048, 7, 7)
+        self.max_bboxes = 32
+        self.bb_features_channels = self.features_dim[0]
+        self.num_additional_input = input_dim
+        self.final_features_dim = 1024
+
+        # Transformer Config
+        self.transformer_input_len = self.max_bboxes
+        self.transformer_latent_dim = self.bb_features_channels 
+        self.transformer_hidden_dim = 512
+        self.transformer_nhead = 32
+        self.transformer_nlayers = 2
+
+        self.transformer = TransformerModel(ntoken  = self.transformer_input_len,
+                                            d_model = self.transformer_latent_dim,
+                                            nhead   = self.transformer_nhead,
+                                            d_hid   = self.transformer_hidden_dim,
+                                            nlayers = self.transformer_nlayers,
+                                            dropout = 0.5)
         
-        # mobilenet v3 
-        # self.net = torch.hub.load('pytorch/vision:v0.14.1', 'mobilenet_v3_large', pretrained=MobileNet_V3_Large_Weights.DEFAULT)
-        # self.net.classifier[3] = nn.Identity()
-        # w0 = self.net.features[0][0].weight.data.clone()
-        # self.net.features[0][0] = nn.Conv2d(3 + input_dim, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
-        # self.net.features[0][0].weight.data[:,:3,:,:] = w0
-        # self.fc1 = nn.Linear(1280, 256)
-        #resnet 50
-        self.net = torch.hub.load('pytorch/vision:v0.14.1', 'resnet50', pretrained=ResNet50_Weights.DEFAULT)
-        self.net.fc = nn.Identity()
-        w0 = self.net.conv1.weight.data.clone()
-        self.net.conv1 = nn.Conv2d(3 + input_dim, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-        self.net.conv1.weight.data[:,:3,:,:] = w0
-        self.fc1 = nn.Linear(2048, 256)
-        self.fc2 = nn.Linear(256, 21)
-        self.dropout = nn.Dropout(p=dropout_prob)
+        self.transformer_out_mlp = nn.Linear(self.transformer_nhead *
+                                             self.transformer_input_len,
+                                             self.final_features_dim)
+
+        self.mlp_fc1 = nn.Linear(self.num_additional_input, 256)
+        self.mlp_fc2 = nn.Linear(256, self.final_features_dim)
+
+        self.fusion_fc1 = nn.Linear(self.final_features_dim*2, 512)
+        self.fusion_fc2 = nn.Linear(512, 256)
+        self.fusion_fc3 = nn.Linear(256, 21)
+
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=0.2)
+
         self.act = nn.SiLU()
+
         self.reg_loss = nn.L1Loss()
         self.sigmoid = nn.Sigmoid()
         #for information type
         self.entropy_loss1 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,0.]))
         self.entropy_loss2 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,1.,0.]))
 
-        # self.global_model = global_model 
-    def forward(self, image, mask):
-        x = self.net(torch.cat((image, mask), dim = 1))
+    def forward(self, bb_features, additional_input):
+        # print(bb_features)
+        # print(f"additional input : {additional_input}")
+        # sys.exit()
+        transformer_out = self.transformer(bb_features)
+        transformer_out = torch.flatten(transformer_out, start_dim=1)
+        image_features = self.transformer_out_mlp(transformer_out)
+        image_features = transformer_out
+
+        ai_features = self.mlp_fc1(additional_input)
+        ai_features = self.relu(ai_features)
+        ai_features = self.mlp_fc2(ai_features)
+
+        x = torch.cat((image_features, ai_features), dim=1)
+
+        x = self.relu(x)
+        x = self.fusion_fc1(x)
+        x = self.act(x)
         x = self.dropout(x)
-        x = self.act(self.fc1(x))
+        x = self.fusion_fc2(x)
+        x = self.act(x)
         x = self.dropout(x)
-        x = self.fc2(x)
+        x = self.fusion_fc3(x)
+
         return x
     
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        # optimizer = 
-        return optimizer
-
     def compute_loss(self, y_preds, information, informativeness, sharingOwner, sharingOthers):
         TypeLoss = self.entropy_loss1(y_preds[:, :6], information.type(torch.FloatTensor).cuda())
         informativenessLosses = self.reg_loss(y_preds[:,6] * 100, informativeness.type(torch.FloatTensor).cuda() * 100)
@@ -69,9 +163,10 @@ import json
         sharingOthersLoss = self.entropy_loss2(y_preds[:,14:21], sharingOthers.type(torch.FloatTensor).cuda())
         total_loss = TypeLoss + informativenessLosses + sharingOwnerLoss + sharingOthersLoss
         return total_loss
-"""  
 
 
+
+#=================Old code using image=================
 class BaseModel(nn.Module):
     def __init__(self, input_dim, learning_rate=1e-4, dropout_prob=0.2):
         super(BaseModel, self).__init__()
