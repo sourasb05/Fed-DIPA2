@@ -21,7 +21,7 @@ class FedAvg():
         self.learning_rate = args.alpha
         
         self.user_ids = args.user_ids
-        self.total_users = len(self.user_ids[2])
+        self.total_users = len(self.user_ids[0])
         print(f"total users : {self.total_users}")
         self.num_users = self.total_users * args.users_frac    #selected users
         self.total_train_samples = 0
@@ -32,7 +32,7 @@ class FedAvg():
 
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[2]
+            self.user_ids = args.user_ids[0]
         else:
             self.user_ids = args.user_ids[1]
 
@@ -230,7 +230,7 @@ class FedAvg():
             list_user_id = []
             for user in self.selected_users:
                 list_user_id.append(user.id)
-            print(f"Exp no{self.exp_no} : users selected for global iteration {glob_iter} are : {list_user_id}")
+            #print(f"Exp no{self.exp_no} : users selected for global iteration {glob_iter} are : {list_user_id}")
 
             for user in tqdm(self.selected_users, desc="running clients"):
                 user.train()  # * user.train_samples
