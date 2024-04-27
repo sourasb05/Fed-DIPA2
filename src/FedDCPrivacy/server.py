@@ -33,7 +33,7 @@ class Fedmem():
         # print(f"user ids : {self.user_ids}")
         self.total_users = len(self.user_ids)
         print(f"total users : {self.total_users}")
-        elf.total_train_samples = 0
+        self.total_train_samples = 0
         self.exp_no = exp_no
         self.gamma = args.gamma # scale parameter for RBF kernel 
         self.lambda_1 = args.lambda_1 # similarity tradeoff
@@ -102,7 +102,7 @@ class Fedmem():
         
         for i in trange(self.total_users, desc="Data distribution to clients"):
             print(f"client id : {self.user_ids[i]}")
-            user = Fedmem_user(device, args, self.user_ids[i], exp_no, current_directory)
+            user = user(device, args, self.user_ids[i], exp_no, current_directory)
             self.users.append(user)
             self.total_samples += user.samples
             
@@ -122,13 +122,13 @@ class Fedmem():
         threshold = sorted([item[1] for item in self.data_frac])[len(self.data_frac)//2]
 
         # Step 2: Divide into two clusters
-        resourceful = [item[0] for item in data if item[1] >= threshold]
-        resourceless = [item[0] for item in data if item[1] < threshold]
+        resourceful = [item[0] for item in self.data_frac if item[1] >= threshold]
+        resourceless = [item[0] for item in self.data_frac if item[1] < threshold]
         
         self.participated_rf_clients = self.kappa*len(resourceful)  #selected resourceful users
         self.participated_rl_clients = (1-self.kappa)*len(resourceless) #selected resourceful users
         self.num_users = self.participated_rf_clients + self.participated_rl_clients
-        s
+        
         # cluster formation
         self.clusters = [resourceful, resourceless] 
 
@@ -138,7 +138,7 @@ class Fedmem():
         for user in self.cluster[1]:
             self.data_in_cluster[1] += user.samples
             
-       """
+        """
         Clusterhead models
         """
 
