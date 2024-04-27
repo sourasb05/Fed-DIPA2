@@ -48,11 +48,7 @@ class UserAvg():
         self.learning_rate = args.alpha
         self.local_iters = args.local_iters
         self.eta = args.eta
-        self.global_model_name = args.model_name
         self.algorithm = args.algorithm
-        self.cluster_type = args.cluster
-        self.data_silo = args.data_silo
-        self.target = args.target
         self.num_users = args.total_users * args.users_frac 
         self.fixed_user_id = args.fixed_user_id
         self.country = "japan"

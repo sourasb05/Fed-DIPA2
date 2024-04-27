@@ -10,7 +10,7 @@ import numpy as np
 import sys
 import wandb
 import datetime
-
+import json
 class FedAvg():
     def __init__(self,device, args, exp_no, current_directory):
                 
@@ -21,7 +21,7 @@ class FedAvg():
         self.learning_rate = args.alpha
         
         self.user_ids = args.user_ids
-        self.total_users = len(self.user_ids[0])
+        self.total_users = len(self.user_ids[2])
         print(f"total users : {self.total_users}")
         self.num_users = self.total_users * args.users_frac    #selected users
         self.total_train_samples = 0
@@ -32,7 +32,7 @@ class FedAvg():
 
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[0]
+            self.user_ids = args.user_ids[2]
         else:
             self.user_ids = args.user_ids[1]
 
@@ -99,7 +99,7 @@ class FedAvg():
 
     
 
-    """def save_model(self, glob_iter):
+    def save_model(self, glob_iter):
        if self.global_test_loss[glob_iter] < self.minimum_test_loss:
             self.minimum_test_loss = self.global_test_loss[glob_iter]
             model_path = self.current_directory + "/models/" + "/" + self.algorithm + "/global_model/"
@@ -107,10 +107,10 @@ class FedAvg():
                 os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
                         'model_state_dict': self.global_model.state_dict(),
-                        'loss': self.loss
+                        'loss': self.minimum_test_loss
                         }
             torch.save(checkpoint, os.path.join(model_path, "server_checkpoint" + ".pt"))
-"""
+
     def select_users(self, round, subset_users):
 
         if subset_users == len(self.users):
@@ -199,6 +199,8 @@ class FedAvg():
         # If the directory does not exist, create it
             os.makedirs(self.current_directory + "/results/" + directory_name)
 
+        json_test_metric = json.dumps(self.global_test_metric)
+        json_train_metric = json.dumps(self.global_train_metric)
 
 
         with h5py.File(self.current_directory + "/results/" + directory_name + "/" + '{}.h5'.format(file), 'w') as hf:
@@ -206,13 +208,12 @@ class FedAvg():
             hf.create_dataset('Local iters', data=self.local_iters)
             hf.create_dataset('Learning rate', data=self.learning_rate)
             hf.create_dataset('Batch size', data=self.batch_size)
-           
-            hf.create_dataset('global_test_metric',data=self.global_test_metric)
+            hf.create_dataset('global_test_metric', data=[json_test_metric.encode('utf-8')])
             hf.create_dataset('global_test_loss', data=self.global_test_loss)
             hf.create_dataset('global_test_distance', data=self.global_test_distance)
             hf.create_dataset('global_test_mae', data=self.global_test_mae)
 
-            hf.create_dataset('global_train_metric',data=self.global_train_metric)
+            hf.create_dataset('global_train_metric', data=[json_train_metric.encode('utf-8')])
             hf.create_dataset('global_train_loss', data=self.global_train_loss)
             hf.create_dataset('global_train_distance', data=self.global_train_distance)
             hf.create_dataset('global_train_mae', data=self.global_train_mae)
@@ -236,5 +237,5 @@ class FedAvg():
 
             self.aggregate_parameters()
             self.evaluate(glob_iter)
-            # self.save_model(glob_iter)
-        #self.save_results()
+            self.save_model(glob_iter)
+        self.save_results()

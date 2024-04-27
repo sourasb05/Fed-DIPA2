@@ -6,3 +6,4 @@ object_features/
 models/
 *.DS_Store
 *.pyc
+wandb/
