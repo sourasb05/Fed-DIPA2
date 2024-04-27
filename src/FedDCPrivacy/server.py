@@ -1,9 +1,7 @@
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 import torch
 import os
 import h5py
-from src.Fedmem.FedMEMUser import Fedmem_user
+from src.FedDCPrivacy.user import user
 import numpy as np
 import copy
 from datetime import date
@@ -11,10 +9,8 @@ from tqdm import trange
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
-# from sklearn.cluster import SpectralClustering
 import time
 from sklearn.cluster import KMeans
-# Implementation for FedAvg Server
 import matplotlib.pyplot as plt
 import statistics
 import sys
@@ -30,25 +26,20 @@ class Fedmem():
         self.eta = args.eta
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[0]
+            self.user_ids = args.user_ids[2]
         else:
             self.user_ids = args.user_ids[1]
 
         # print(f"user ids : {self.user_ids}")
         self.total_users = len(self.user_ids)
         print(f"total users : {self.total_users}")
-        self.num_users = self.total_users * args.users_frac    #selected users
-        self.num_teams = args.num_teams
-        self.total_train_samples = 0
+        elf.total_train_samples = 0
         self.exp_no = exp_no
-        self.n_clusters = args.num_teams
         self.gamma = args.gamma # scale parameter for RBF kernel 
         self.lambda_1 = args.lambda_1 # similarity tradeoff
         self.lambda_2 = args.lambda_2
         self.current_directory = current_directory
         self.algorithm = args.algorithm
-        self.target = args.target
-        self.cluster_type = args.cluster
         self.data_silo = args.data_silo
         self.fix_client_every_GR = args.fix_client_every_GR
         self.fixed_user_id = args.fixed_user_id
@@ -59,19 +50,8 @@ class Fedmem():
         self.c = []
         self.cluster_dict_user_id = {}
         #self.c = [[] for _ in range(args.num_teams)]
-        self.top_accuracies = []
-        self.global_metric = []
-
-
-        """
-        Global model
         
-        """
-
-        # self.global_model = copy.deepcopy(model)
-        # print(self.global_model)
-        # self.global_model.to(self.device)
-        # self.global_model_name = args.model_name
+        self.global_metric = []
 
         """
         Clusterhead models
@@ -83,54 +63,48 @@ class Fedmem():
 
         self.users = []
         self.selected_users = []
-        self.global_train_acc = []
-        self.global_train_loss = [] 
-        self.global_test_acc = [] 
+
+        """
+        Global model metrics
+        """
+
+        self.global_test_metric = []
         self.global_test_loss = []
-        self.global_precision = []
-        self.global_recall = []
-        self.global_f1score = []
+        self.global_test_distance = []
+        self.global_test_mae = []
 
-
-        """
-        Cluster head evaluation
-        """
-
-        self.cluster_train_acc = []
-        self.cluster_test_acc = []
-        self.cluster_train_loss = []
-        self.cluster_test_loss = []
-        self.cluster_precision = []
-        self.cluster_recall = []
-        self.cluster_f1score = []
+        self.global_train_metric = []
+        self.global_train_loss = []
+        self.global_train_distance = []
+        self.global_train_mae = []
 
         """
         Local model evaluation
         """
 
-        self.local_train_acc = []
-        self.local_test_acc  = []
-        self.local_train_loss  = []
-        self.local_test_loss  = []
-        self.local_precision = []
-        self.local_recall = []
-        self.local_f1score = []
+        self.local_test_metric = []
+        self.local_test_loss = []
+        self.local_test_distance = []
+        self.local_test_mae = []
+
+        self.local_train_metric = []
+        self.local_train_loss = []
+        self.local_train_distance = []
+        self.local_train_mae = []
+
 
         self.minimum_clust_loss = 0.0
         self.minimum_global_loss = 0.0
 
         self.data_frac = []
-        
-        # data = read_data(args, current_directory)
-        # self.tot_users = len(data[0])
-        # print(self.tot_users)
 
+        self.data_in_cluster = [0.0,0.0]
+        
         for i in trange(self.total_users, desc="Data distribution to clients"):
-            # id, train, test = read_user_data(i, data)
             print(f"client id : {self.user_ids[i]}")
             user = Fedmem_user(device, args, self.user_ids[i], exp_no, current_directory)
             self.users.append(user)
-            self.total_train_samples += user.train_samples
+            self.total_samples += user.samples
             
         
             if self.user_ids[i] == str(self.fixed_user_id):
@@ -140,15 +114,35 @@ class Fedmem():
 
         #Create Global_model
         for user in self.users:
-            self.data_frac.append(user.train_samples/self.total_train_samples)
+            self.data_frac.append([user.id, user.samples])
         print(f"data available {self.data_frac}")
         self.global_model = copy.deepcopy(self.users[0].local_model)
         
-        """
+        # Step 1: Determine the threshold (let's use median for simplicity)
+        threshold = sorted([item[1] for item in self.data_frac])[len(self.data_frac)//2]
+
+        # Step 2: Divide into two clusters
+        resourceful = [item[0] for item in data if item[1] >= threshold]
+        resourceless = [item[0] for item in data if item[1] < threshold]
+        
+        self.participated_rf_clients = self.kappa*len(resourceful)  #selected resourceful users
+        self.participated_rl_clients = (1-self.kappa)*len(resourceless) #selected resourceful users
+        self.num_users = self.participated_rf_clients + self.participated_rl_clients
+        s
+        # cluster formation
+        self.clusters = [resourceful, resourceless] 
+
+        for user in self.cluster[0]:
+            self.data_in_cluster[0] += user.samples
+            
+        for user in self.cluster[1]:
+            self.data_in_cluster[1] += user.samples
+            
+       """
         Clusterhead models
         """
 
-        for _ in range(self.n_clusters):
+        for _ in range(len(self.clusters)):
             self.c.append(copy.deepcopy(list(self.global_model.parameters())))
             
 
@@ -190,7 +184,7 @@ class Fedmem():
         
         for cluster_param, user_param in zip(self.c[cluster_id], user.get_parameters()):
             # cluster_param.data = cluster_param.data + user.ratio * user_param.data.clone()
-            cluster_param.data = cluster_param.data + 0.1* user_param.data.clone()
+            cluster_param.data = cluster_param.data + user.samples/self.data_in_cluster[cluster_id]* user_param.data.clone()
         for cluster_param , global_param in zip(self.c[cluster_id], self.global_model.parameters()):
             cluster_param.data += self.eta*(cluster_param.data - global_param.data)
 
@@ -203,17 +197,15 @@ class Fedmem():
                 param.data = torch.zeros_like(param.data)
         
             users = np.array(self.cluster_dict[clust_id])
-            # print(users)
-            # input("press")
-            # print(f"number of users are {len(users)} in cluster {clust_id} ")
+            
             if len(users) != 0:
                 for user in users:
                     self.add_parameters_clusters(user, clust_id)
 
 
-    def select_users(self, round, subset_users):
+    def select_users(self, clust_id, round):
         np.random.seed(round)
-        return np.random.choice(self.users, subset_users, replace=False)
+        return np.random.choice(self.clusters[clust_id], self.participated_rf_clients, replace=False)
 
 
     def select_n_1_users(self, round, subset_users):
@@ -616,43 +608,23 @@ class Fedmem():
                 self.save_cluster_model(t)
 
     
-    def find_cluster_id(self, user_id):
-        for key, values in self.cluster_dict_user_id.items():
-            if user_id in values:
-                return key
-        return None
 
 
     def train(self):
         loss = []
-        if self.cluster_type == "apriori_hsgd":
-            self.apriori_clusters()
-        for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} cluster type : {self.cluster_type} number of clients: {self.num_users} Global Rounds :"):
-            # self.send_global_parameters()
-            
-            if t == 0:
-                self.send_global_parameters()
-            else:
-                self.send_cluster_parameters()
 
-            if self.fix_client_every_GR == 1:
-                self.selected_users = self.select_n_1_users(t, int(self.num_users)-1)
-            else:
-                self.selected_users = self.select_users(t, int(self.num_users)).tolist()
+        for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} cluster type : {self.cluster_type} number of clients: {self.num_users} Global Rounds :"):
+            
+            self.selected_users = self.select_users(t, int(self.participated_clients)).tolist()
+            
             list_user_id = []
             for user in self.selected_users:
                 list_user_id.append(user.id)
             print(f"selected users : {list_user_id}")
             
-            
-            for user in tqdm(self.selected_users, desc=f"total selected users {len(self.selected_users)}"):
-               clust_id = self.find_cluster_id(user.id)
-               print(f"clust_id : {clust_id}")
-               if clust_id is not None:
+            for user in tqdm(self.selected_users[0], desc=f"total selected users  from cluster {len(self.selected_users)}"):
                     user.train()
-               else:
-                    user.train()
-
+               
             if self.cluster_type == "dynamic":
                 similarity_matrix = self.similarity_check()
                 # print(similarity_matrix)

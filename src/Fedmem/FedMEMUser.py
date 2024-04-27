@@ -179,8 +179,7 @@ class Fedmem_user():
         for param, new_param in zip(self.local_model.parameters(), new_params):
             param.data = new_param.data.clone()
 
-
-    def test(self, global_model, t):
+    def train_evaluation(self, global_model, t):
         # Set the model to evaluation mode
         self.local_model.eval()
         self.update_parameters(global_model)
@@ -215,6 +214,17 @@ class Fedmem_user():
             self.global_f1[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
             self.global_conf[2].update(y_preds[:, 14:21], sharingOthers.to(self.device))
 
+            # MAE calculation
+                
+            true_values = informativeness.cpu().detach().numpy()
+            print(f"true values : {true_values}")
+            predicted_values = y_preds[:, 6].cpu().detach().numpy()
+            print(f"predicted values : {predicted_values}")
+            mae = mean_absolute_error(true_values, predicted_values)
+            
+        print(f"MAE : {mae}")
+            
+        mae = mae/len(self.val_loader)
             
         distance = distance / len(self.val_loader)
 
@@ -231,7 +241,74 @@ class Fedmem_user():
         # print(f"Global iter {t}: Validation loss: {avg_loss}")
         # print(f"distance: {distance}")
         
-        return avg_loss, distance, pandas_data
+        return avg_loss, distance, pandas_data, mae
+    
+
+
+    def test(self, global_model, t):
+        # Set the model to evaluation mode
+        self.local_model.eval()
+        self.update_parameters(global_model)
+        total_loss=0.0
+        distance = 0.0
+        mae = 0.0
+        for i, vdata in enumerate(self.val_loader):
+            features, additional_information, information, informativeness, sharingOwner, sharingOthers = vdata
+            y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
+            loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
+            total_loss += loss.item()
+            
+            print(y_preds[:, :6].shape, information.shape)
+
+            self.global_acc[0].update(y_preds[:, :6], information.to(self.device))
+            self.global_pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
+            self.global_rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
+            self.global_f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
+            self.global_conf[0].update(y_preds[:, :6], information.to(self.device))
+            
+            distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
+            # print(f"disance: {self.distance}")
+
+            self.global_acc[1].update(y_preds[:, 7:14], sharingOwner.to(self.device))
+            self.global_pre[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(self.device))
+            self.global_rec[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(self.device))
+            self.global_f1[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(self.device))
+            self.global_conf[1].update(y_preds[:, 7:14], sharingOwner.to(self.device))
+
+            self.global_acc[2].update(y_preds[:, 14:21], sharingOthers.to(self.device))
+            self.global_pre[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
+            self.global_rec[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
+            self.global_f1[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
+            self.global_conf[2].update(y_preds[:, 14:21], sharingOthers.to(self.device))
+
+            # MAE calculation
+                
+            true_values = informativeness.cpu().detach().numpy()
+            print(f"true values : {true_values}")
+            predicted_values = y_preds[:, 6].cpu().detach().numpy()
+            print(f"predicted values : {predicted_values}")
+            mae = mean_absolute_error(true_values, predicted_values)
+            
+        print(f"MAE : {mae}")
+            
+        mae = mae/len(self.val_loader)
+        distance = distance / len(self.val_loader)
+
+        pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.global_acc], 
+                    'Precision' : [i.compute().detach().cpu().numpy() for i in self.global_pre], 
+                    'Recall': [i.compute().detach().cpu().numpy() for i in self.global_rec], 
+                    'f1': [i.compute().detach().cpu().numpy() for i in self.global_f1]}
+        
+        pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
+        #print(pandas_data)
+        
+
+        avg_loss = total_loss / len(self.val_loader)
+        # print(f"Global iter {t}: Validation loss: {avg_loss}")
+        # print(f"distance: {distance}")
+        
+        return avg_loss, distance, pandas_data, mae
+    
         
     def l1_distance_loss(self, prediction, target):
         loss = np.abs(prediction - target)
@@ -321,17 +398,7 @@ class Fedmem_user():
                 loss.backward()
                 self.optimizer.step()
                 print(f"Epoch : {iter} Training loss: {loss.item()}")
-                # self.distance = 0.0
-                # MAE calculation
                 
-                true_values = informativeness.cpu().detach().numpy()
-                print(f"true values : {true_values}")
-                predicted_values = y_preds[:, 6].cpu().detach().numpy()
-                print(f"predicted values : {predicted_values}")
-                batch_mae = mean_absolute_error(true_values, predicted_values)
-                mae += batch_mae
-                print(f"MAE : {mae}")
-               
             self.evaluate_model()
 
         
