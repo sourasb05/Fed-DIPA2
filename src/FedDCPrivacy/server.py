@@ -203,10 +203,12 @@ class Fedmem():
                     self.add_parameters_clusters(user, clust_id)
 
 
-    def select_users(self, clust_id, round):
+    def select_users(self, round, clust_id ):
         np.random.seed(round)
-        return np.random.choice(self.clusters[clust_id], self.participated_rf_clients, replace=False)
-
+        if clust_id == 0:
+            return np.random.choice(self.clusters[clust_id], self.participated_rf_clients, replace=False)
+        elif clust_id == 1:
+            return np.random.choice(self.clusters[clust_id], self.participated_rl_clients, replace=False)
 
     def select_n_1_users(self, round, subset_users):
         # Filter out the permanent user from the list of users
@@ -221,187 +223,8 @@ class Fedmem():
         selected_users.append(self.fixed_user)
         return selected_users
 
-
-
-    def flatten_params(self, parameters):
-        params = []
-        for param in parameters:
-            params.append(param.view(-1))
-        return torch.cat(params)
     
-    def find_similarity(self, similarity_metric, params1, params2, params_g, params_c):
-                            
-        if similarity_metric == "cosign similarity":
-            similarity = torch.nn.functional.cosine_similarity(params1.unsqueeze(0), params2.unsqueeze(0))
-        elif similarity_metric == "euclidian":
-            similarity_u =  torch.exp(-self.gamma * torch.sqrt(torch.sum((params1 - params2) ** 2)))
-            similarity_g =  torch.exp(-self.gamma * torch.sqrt(torch.sum((params1 + params2 - 2* params_g) ** 2)))
-            similarity_c = torch.exp(-self.gamma * torch.sqrt(torch.sum((params1 + params2 - 2*params_c) ** 2)))
-            
-            similarity = (1-self.lambda_1 - self.lambda_2)*similarity_u + self.lambda_1*similarity_g + self.lambda_2*similarity_c
-            # print(f"similarity_u : {similarity_u}, similarity_g : {similarity_g}, similarity : {similarity}")
-            # print("RBF: ",similarity.item())
-
-            #simi = torch.sqrt(torch.sum((params1 - params2) ** 2))
-
-            
-        elif similarity_metric == "manhattan":
-            similarity = torch.sum(torch.abs(params1 - params2))
-        elif similarity_metric == "pearson_correlation":
-            similarity = self.pearson_correlation(params1, params2)
-
-        return similarity
-
-
-    def similarity_check(self):
-        clust_id = 0
-        similarity_matrix = {}
-        # similarity_metric = "manhattan"
-        similarity_metric = "euclidian"
-        #print("computing cosign similarity")
-        params_g = self.flatten_params(self.global_model.parameters())
-        
-        for user in tqdm(self.selected_users, desc="participating clients"):
-            
-            for key, values in self.cluster_dict.items():
-                if user in values:
-                    # print(f"user {user.id} is in cluster {key}")
-                    clust_id = key
-                    break
-            
-            if user.id not in similarity_matrix:
-                similarity_matrix[user.id] = []
-            #print(similarity_matrix)
-            
-
-
-            params1 = self.flatten_params(user.local_model.parameters())
-            params_c = self.flatten_params(self.c[clust_id])
-            
-            for comp_user in self.selected_users:
-                # if user != comp_user:
-                    
-                params2 = self.flatten_params(comp_user.local_model.parameters())
-
-                similarity = self.find_similarity(similarity_metric, params1, params2, params_g, params_c)
-
-
-               #print("user_id["+ str(user.id)+"] and user_id["+str(comp_user.id)+"] = ",similarity.item())
-                    
-
-                similarity_matrix[user.id].extend([similarity.item()])
-                
-        
-        return similarity_matrix
-
-    def eigen_decomposition(self, laplacian_matrix, n_components):
-        eigenvalues, eigenvectors = np.linalg.eigh(laplacian_matrix)
-        # Sort eigenvectors by eigenvalues
-        idx = np.argsort(eigenvalues)
-        eigenvalues, eigenvectors = eigenvalues[idx], eigenvectors[:, idx]
-        return eigenvectors[:, :n_components]
     
-    def compute_laplacian(self, similarity_matrix):
-        degree_matrix = np.diag(similarity_matrix.sum(axis=1))
-        
-        return degree_matrix - similarity_matrix
-
-
-
-    def spectral(self, similarity_dict, n_clusters):
-
-        size = len(similarity_dict)
-        # print(size)
-        matrix = np.zeros((size, size))
-        # print(matrix)
-        i = 0
-        for key, values in similarity_dict.items():
-           # print(key)
-           # print(values)
-            matrix[i] = values
-            i+=1
-        laplacian_matrix = self.compute_laplacian(matrix)
-        # input("laplacian")
-        # print(laplacian_matrix)
-
-        eigenvectors = self.eigen_decomposition(laplacian_matrix, n_clusters)
-        # input("eigenvectors")
-        # print(eigenvectors)
-
-        kmeans = KMeans(n_clusters=n_clusters)
-        kmeans.fit(eigenvectors)
-        return kmeans.labels_
-    
-
-    def reassign_to_new_cluster(self, key, value):
-        found_key = None
-        # print(f"client_id : {value.id}")
-
-        # Now, add the value to the new key
-        if key not in self.cluster_dict:
-            self.cluster_dict[key] = []
-            self.cluster_dict_user_id[key] = []
-    
-        # Search for the value in the dictionary
-        for k, values in self.cluster_dict.items():
-            if value in values:
-                found_key = k
-                # print(f"found key {found_key} for value {value.id}")
-                # input("press")
-            
-                self.cluster_dict[found_key].remove(value)
-                self.cluster_dict_user_id[found_key].remove(value.id)
-                # print(self.cluster_dict_user_id)
-                # input("press")
-                break
-
-        self.cluster_dict[key].append(value)
-        self.cluster_dict_user_id[key].append(value.id)
-        return found_key  # return the original key if the value was reassigned
-
-
-              
-    def combine_cluster_user(self,clusters):
-        
-        user_ids = []
-        for user in self.selected_users:
-            user_ids.append(user.id)
-        for key, value, in zip(clusters, self.selected_users):
-            original_key = self.reassign_to_new_cluster(key, value)
-        #    if original_key is not None:
-                # print(f"Value {value.id} reassigned from {original_key} to {key}.")
-
-        # print(f"Clusters: {self.cluster_dict_user_id}")
-        
-        self.clusters_list.append(list(self.cluster_dict_user_id.values()))
-
-
-    def apriori_clusters(self):
-        if self.target == 10:
-            self.cluster_dict_user_id = { 0 : ['50','25','55','28','30'],
-                                     1 : ['18','52','38','34','60','17','16'],
-                                     2 : ['44','53','45','47','57','41','48'],
-                                     3 : ['56','22','37','35'],
-                                     4 : ['19','32','33','23','26','54','61','43','46','49','31','27','39','29','62','42']
-                                    }
-        elif self.target == 3:
-            self.cluster_dict_user_id = { 0 : ['47', '45', '48', '55', '16', '31', '62', '61', '57', '39', '41', '53', '17', '18'],
-                                     1 : ['27','46', '42', '60', '29', '34', '36','23', '43', '30', '25', '28', '44'],
-                                     2 : ['37', '56', '19', '54', '33', '32', '38', '22', '49', '51', '52', '26', '35']
-                                    }
-            
-        self.cluster_dict = {cluster : [] for cluster in self.cluster_dict_user_id}
-
-
-        for cluster, user_ids in self.cluster_dict_user_id.items():
-            for user in self.users:
-                if user.id in user_ids:
-                    self.cluster_dict[cluster].append(user)
-
-        clustered_users_ids = {cluster: [user.id for user in users] for cluster, users in self.cluster_dict.items()}
-        # print(f" cluster is created : {clustered_users_ids}")
-        
-
     def save_clusters(self, t):
         file = "exp_no" + str(self.exp_no) + "_clusters_at_GR_" + str(t)
         print(file)
@@ -615,11 +438,15 @@ class Fedmem():
 
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} cluster type : {self.cluster_type} number of clients: {self.num_users} Global Rounds :"):
             
-            self.selected_users = self.select_users(t, int(self.participated_clients)).tolist()
+            self.selected_rf_users = self.select_users(t,0).tolist()
+            self.selected_rl_users = self.select_users(t,1).tolist()
             
-            list_user_id = []
-            for user in self.selected_users:
-                list_user_id.append(user.id)
+            list_user_id = [[],[]]
+            for user in self.selected_rf_users:
+                list_user_id[0].append(user.id)
+            for user in self.selected_rl_users:
+                list_user_id[1].append(user.id)
+            
             print(f"selected users : {list_user_id}")
             
             for user in tqdm(self.selected_users[0], desc=f"total selected users  from cluster {len(self.selected_users)}"):
