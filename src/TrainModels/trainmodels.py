@@ -92,14 +92,17 @@ class PrivacyModel(nn.Module):
         self.max_bboxes = 32
         self.bb_features_channels = self.features_dim[0]
         self.num_additional_input = input_dim
-        self.final_features_dim = 1024
+        self.final_features_dim = 512
+        self.object_mlp_out_dim = 256
 
         # Transformer Config
         self.transformer_input_len = self.max_bboxes
-        self.transformer_latent_dim = self.bb_features_channels 
-        self.transformer_hidden_dim = 512
-        self.transformer_nhead = 32
-        self.transformer_nlayers = 2
+        self.transformer_latent_dim = self.object_mlp_out_dim
+        self.transformer_hidden_dim = 64
+        self.transformer_nhead = int(self.final_features_dim/self.max_bboxes)
+        self.transformer_nlayers = 1
+
+        self.object_mlp = nn.Linear(self.bb_features_channels, self.object_mlp_out_dim)
 
         self.transformer = TransformerModel(ntoken  = self.transformer_input_len,
                                             d_model = self.transformer_latent_dim,
@@ -107,21 +110,17 @@ class PrivacyModel(nn.Module):
                                             d_hid   = self.transformer_hidden_dim,
                                             nlayers = self.transformer_nlayers,
                                             dropout = 0.5)
-        
-        self.transformer_out_mlp = nn.Linear(self.transformer_nhead *
-                                             self.transformer_input_len,
-                                             self.final_features_dim)
 
         self.mlp_fc1 = nn.Linear(self.num_additional_input, 256)
         self.mlp_fc2 = nn.Linear(256, self.final_features_dim)
 
+        # self.fusion_fc1 = nn.Linear(self.final_features_dim, 512)
         self.fusion_fc1 = nn.Linear(self.final_features_dim*2, 512)
         self.fusion_fc2 = nn.Linear(512, 256)
         self.fusion_fc3 = nn.Linear(256, 21)
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.2)
-
         self.act = nn.SiLU()
 
         self.reg_loss = nn.L1Loss()
@@ -130,13 +129,15 @@ class PrivacyModel(nn.Module):
         self.entropy_loss1 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,0.]))
         self.entropy_loss2 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,1.,0.]))
 
-    def forward(self, bb_features, additional_input):
-        # print(bb_features)
-        # print(f"additional input : {additional_input}")
-        # sys.exit()
-        transformer_out = self.transformer(bb_features)
+    def forward(self, object_features, additional_input):
+
+        B, L, C = object_features.shape
+        object_mlp_out = self.object_mlp(object_features.view(B*L, C))
+        object_mlp_out = self.relu(object_mlp_out)
+        object_mlp_out = object_mlp_out.view(B, L, self.object_mlp_out_dim)
+
+        transformer_out = self.transformer(object_mlp_out)
         transformer_out = torch.flatten(transformer_out, start_dim=1)
-        image_features = self.transformer_out_mlp(transformer_out)
         image_features = transformer_out
 
         ai_features = self.mlp_fc1(additional_input)
@@ -144,8 +145,8 @@ class PrivacyModel(nn.Module):
         ai_features = self.mlp_fc2(ai_features)
 
         x = torch.cat((image_features, ai_features), dim=1)
-
         x = self.relu(x)
+
         x = self.fusion_fc1(x)
         x = self.act(x)
         x = self.dropout(x)
@@ -155,6 +156,79 @@ class PrivacyModel(nn.Module):
         x = self.fusion_fc3(x)
 
         return x
+
+    # def __init__(self, input_dim, learning_rate = 0.01, dropout_prob=0.2):
+    #     ## output_channel: key: output_name value: output_dim
+    #     super().__init__()
+    #     self.learning_rate = learning_rate
+
+    #     self.features_dim = (2048, 7, 7)
+    #     self.max_bboxes = 32
+    #     self.bb_features_channels = self.features_dim[0]
+    #     self.num_additional_input = input_dim
+    #     self.final_features_dim = 1024
+
+    #     # Transformer Config
+    #     self.transformer_input_len = self.max_bboxes
+    #     self.transformer_latent_dim = self.bb_features_channels 
+    #     self.transformer_hidden_dim = 512
+    #     self.transformer_nhead = 32
+    #     self.transformer_nlayers = 2
+
+    #     self.transformer = TransformerModel(ntoken  = self.transformer_input_len,
+    #                                         d_model = self.transformer_latent_dim,
+    #                                         nhead   = self.transformer_nhead,
+    #                                         d_hid   = self.transformer_hidden_dim,
+    #                                         nlayers = self.transformer_nlayers,
+    #                                         dropout = 0.5)
+        
+    #     self.transformer_out_mlp = nn.Linear(self.transformer_nhead *
+    #                                          self.transformer_input_len,
+    #                                          self.final_features_dim)
+
+    #     self.mlp_fc1 = nn.Linear(self.num_additional_input, 256)
+    #     self.mlp_fc2 = nn.Linear(256, self.final_features_dim)
+
+    #     self.fusion_fc1 = nn.Linear(self.final_features_dim*2, 512)
+    #     self.fusion_fc2 = nn.Linear(512, 256)
+    #     self.fusion_fc3 = nn.Linear(256, 21)
+
+    #     self.relu = nn.ReLU()
+    #     self.dropout = nn.Dropout(p=0.2)
+
+    #     self.act = nn.SiLU()
+
+    #     self.reg_loss = nn.L1Loss()
+    #     self.sigmoid = nn.Sigmoid()
+    #     #for information type
+    #     self.entropy_loss1 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,0.]))
+    #     self.entropy_loss2 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,1.,0.]))
+
+    # def forward(self, bb_features, additional_input):
+    #     # print(bb_features)
+    #     # print(f"additional input : {additional_input}")
+    #     # sys.exit()
+    #     transformer_out = self.transformer(bb_features)
+    #     transformer_out = torch.flatten(transformer_out, start_dim=1)
+    #     image_features = self.transformer_out_mlp(transformer_out)
+    #     image_features = transformer_out
+
+    #     ai_features = self.mlp_fc1(additional_input)
+    #     ai_features = self.relu(ai_features)
+    #     ai_features = self.mlp_fc2(ai_features)
+
+    #     x = torch.cat((image_features, ai_features), dim=1)
+
+    #     x = self.relu(x)
+    #     x = self.fusion_fc1(x)
+    #     x = self.act(x)
+    #     x = self.dropout(x)
+    #     x = self.fusion_fc2(x)
+    #     x = self.act(x)
+    #     x = self.dropout(x)
+    #     x = self.fusion_fc3(x)
+
+    #     return x
     
     def compute_loss(self, y_preds, information, informativeness, sharingOwner, sharingOthers):
         TypeLoss = self.entropy_loss1(y_preds[:, :6], information.type(torch.FloatTensor).cuda())

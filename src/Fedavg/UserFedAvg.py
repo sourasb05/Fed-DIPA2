@@ -29,13 +29,14 @@ import json
 from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, CalibrationError
 import wandb
 from sklearn.metrics import mean_absolute_error
-
+import sys
 
 class UserAvg():
 
-    def __init__(self,device, args, id, exp_no, current_directory):
+    def __init__(self,device, args, id, exp_no, current_directory, wandb):
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
         self.device = device
+        self.wandb = wandb
         
         self.id = id  # integer
         self.batch_size = args.batch_size
@@ -177,11 +178,11 @@ class UserAvg():
         self.update_parameters(global_model)
         total_loss=0.0
         distance = 0.0
-        for i, vdata in enumerate(self.val_loader):
+        for i, vdata in enumerate(self.trainloaderfull):
             features, additional_information, information, informativeness, sharingOwner, sharingOthers = vdata
             y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
-            total_loss += loss.item()
+            total_loss += loss.item()/len(features)
             
             print(y_preds[:, :6].shape, information.shape)
 
@@ -209,12 +210,12 @@ class UserAvg():
             # MAE calculation
                 
             true_values = informativeness.cpu().detach().numpy()
-            print(f"true values : {true_values}")
+            # print(f"true values : {true_values}")
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
-            print(f"predicted values : {predicted_values}")
+            # print(f"predicted values : {predicted_values}")
             mae = mean_absolute_error(true_values, predicted_values)
             
-        print(f"MAE : {mae}")
+        # print(f"MAE : {mae}")
             
         mae = mae/len(self.val_loader)
             
@@ -228,12 +229,10 @@ class UserAvg():
         pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
         #print(pandas_data)
         
-
-        avg_loss = total_loss / len(self.val_loader)
         # print(f"Global iter {t}: Validation loss: {avg_loss}")
         # print(f"distance: {distance}")
         
-        return avg_loss, distance, pandas_data, mae
+        return total_loss, distance, pandas_data, mae
     
 
     def test(self, global_model, t):
@@ -245,9 +244,12 @@ class UserAvg():
         mae = 0.0
         for i, vdata in enumerate(self.val_loader):
             features, additional_information, information, informativeness, sharingOwner, sharingOthers = vdata
+            
+            # print("features", features)
+            # print("additional_information", additional_information)
             y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
-            total_loss += loss.item()
+            total_loss += loss.item()/len(features)
             
             print(y_preds[:, :6].shape, information.shape)
 
@@ -275,13 +277,13 @@ class UserAvg():
             # MAE calculation
                 
             true_values = informativeness.cpu().detach().numpy()
-            print(f"true values : {true_values}")
+            # print(f"true values : {true_values}")
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
-            print(f"predicted values : {predicted_values}")
+            # print(f"predicted values : {predicted_values}")
             mae = mean_absolute_error(true_values, predicted_values)
             
-        print(f"MAE : {mae}")
-            
+        # print(f"MAE : {mae}")
+        
         mae = mae/len(self.val_loader)
         distance = distance / len(self.val_loader)
 
@@ -292,13 +294,13 @@ class UserAvg():
         
         pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
         #print(pandas_data)
-        
 
-        avg_loss = total_loss / len(self.val_loader)
+        self.wandb.log(data={ "%02d_val_loss" % (self.id) : total_loss})
+            
         # print(f"Global iter {t}: Validation loss: {avg_loss}")
         # print(f"distance: {distance}")
         
-        return avg_loss, distance, pandas_data, mae
+        return total_loss, distance, pandas_data, mae
         
     def l1_distance_loss(self, prediction, target):
         loss = np.abs(prediction - target)
@@ -364,19 +366,23 @@ class UserAvg():
         print(f"user id : {self.id}")
         
         self.local_model.train()
+        # print(self.local_iters)
+        # sys.exit()
         for iter in range(self.local_iters):
             mae = 0
-            for batch in self.train_loader:
+            for ib, batch in enumerate(self.train_loader):
                 features, additional_information, information, informativeness, sharingOwner, sharingOthers = batch
                 self.optimizer.zero_grad()
                 y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
                 loss.backward()
                 self.optimizer.step()
+
+                self.wandb.log(data={"%02d_train_loss" % (self.id) : loss/len(self.train_loader)})
                 # print(f"Epoch : {iter} Training loss: {loss.item()}")
                 # self.distance = 0.0
                 
-            self.evaluate_model()
+            # self.evaluate_model()
 
         
         

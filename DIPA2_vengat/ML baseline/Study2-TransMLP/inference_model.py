@@ -146,13 +146,6 @@ class BaseModel(pl.LightningModule):
         x = self.fusion_fc3(x)
 
         return x
-            
-        # x = self.net(torch.cat((image, mask), dim = 1))
-        # x = self.dropout(x)
-        # x = self.act(self.fc1(x))
-        # x = self.dropout(x)
-        # x = self.fc2(x)
-        # return x
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)

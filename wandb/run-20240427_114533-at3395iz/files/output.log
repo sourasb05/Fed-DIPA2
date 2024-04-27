@@ -1,0 +1,198 @@
+
+
+
+Data distribution to clients:  91%|████████████████████████████████████████████████████████████████████████████▎       | 10/11 [00:05<00:00,  2.02it/s]
+data available [0.08275862068965517, 0.041379310344827586, 0.12413793103448276, 0.1310344827586207, 0.027586206896551724, 0.0896551724137931, 0.1103448275862069, 0.1310344827586207, 0.07586206896551724, 0.13793103448275862, 0.04827586206896552]
+Finished creating FedAvg server.
+Exp no0 : users selected for global iteration 0 are : [71, 7, 189, 202, 208, 0, 160, 10, 105, 68, 139]
+Data distribution to clients: 100%|████████████████████████████████████████████████████████████████████████████████████| 11/11 [00:06<00:00,  1.79it/s]
+Global Rounds:   0%|                                                                                                             | 0/5 [00:00<?, ?it/s]
+running clients:   0%|                                                                                                          | 0/11 [00:00<?, ?it/s]
+user id : 7
+
+running clients:  18%|█████████████████▊                                                                                | 2/11 [00:02<00:09,  1.05s/it]
+
+running clients:  27%|██████████████████████████▋                                                                       | 3/11 [00:04<00:12,  1.50s/it]
+user id : 208
+
+running clients:  45%|████████████████████████████████████████████▌                                                     | 5/11 [00:06<00:07,  1.27s/it]
+user id : 160
+
+running clients:  64%|██████████████████████████████████████████████████████████████▎                                   | 7/11 [00:09<00:05,  1.36s/it]
+
+running clients:  73%|███████████████████████████████████████████████████████████████████████▎                          | 8/11 [00:11<00:04,  1.56s/it]
+
+running clients:  82%|████████████████████████████████████████████████████████████████████████████████▏                 | 9/11 [00:12<00:02,  1.42s/it]
+user id : 139
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([1, 6]) torch.Size([1, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([3, 6]) torch.Size([3, 6])
+torch.Size([6, 6]) torch.Size([6, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+Global round 0 avg loss 114.50119556080212 avg distance 0.855432923634847
+Exp no0 : users selected for global iteration 1 are : [71, 7, 189, 202, 208, 0, 160, 10, 105, 68, 139]
+Global Rounds:  20%|████████████████████▏                                                                                | 1/5 [00:15<01:03, 15.88s/it]
+running clients:   0%|                                                                                                          | 0/11 [00:00<?, ?it/s]
+user id : 7
+user id : 189
+user id : 202
+user id : 208
+
+running clients:  36%|███████████████████████████████████▋                                                              | 4/11 [00:05<00:11,  1.58s/it]
+
+running clients:  55%|█████████████████████████████████████████████████████▍                                            | 6/11 [00:07<00:05,  1.18s/it]
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'71_val_loss': 154.41384887695312, '_timestamp': 1714211163.3786726}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'07_val_loss': 90.92882537841797, '_timestamp': 1714211163.3983908}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'189_val_loss': 115.0416259765625, '_timestamp': 1714211163.421379}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'202_val_loss': 107.86502075195312, '_timestamp': 1714211163.444081}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'208_val_loss': 28.397565841674805, '_timestamp': 1714211163.461281}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'00_val_loss': 121.68419647216797, '_timestamp': 1714211163.4826357}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'160_val_loss': 193.51519775390625, '_timestamp': 1714211163.5033665}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'10_val_loss': 151.96499633789062, '_timestamp': 1714211163.5252137}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'105_val_loss': 49.42100524902344, '_timestamp': 1714211163.545074}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'68_val_loss': 180.8390655517578, '_timestamp': 1714211163.5681186}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 0 is less than current step: 1450. Dropping entry: {'139_val_loss': 65.44180297851562, '_timestamp': 1714211163.5861716}).
+running clients:  64%|██████████████████████████████████████████████████████████████▎                                   | 7/11 [00:08<00:05,  1.28s/it]
+user id : 105
+
+running clients:  82%|████████████████████████████████████████████████████████████████████████████████▏                 | 9/11 [00:11<00:02,  1.37s/it]
+
+running clients:  91%|████████████████████████████████████████████████████████████████████████████████████████▏        | 10/11 [00:13<00:01,  1.54s/it]
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([1, 6]) torch.Size([1, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([3, 6]) torch.Size([3, 6])
+torch.Size([6, 6]) torch.Size([6, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+Global round 1 avg loss 121.74787278608844 avg distance 0.9315684694232362
+Exp no0 : users selected for global iteration 2 are : [71, 7, 189, 202, 208, 0, 160, 10, 105, 68, 139]
+Global Rounds:  40%|████████████████████████████████████████▍                                                            | 2/5 [00:30<00:45, 15.18s/it]
+running clients:   0%|                                                                                                          | 0/11 [00:00<?, ?it/s]
+user id : 7
+
+running clients:  18%|█████████████████▊                                                                                | 2/11 [00:01<00:07,  1.18it/s]
+
+running clients:  27%|██████████████████████████▋                                                                       | 3/11 [00:03<00:09,  1.19s/it]
+user id : 208
+
+running clients:  55%|█████████████████████████████████████████████████████▍                                            | 6/11 [00:07<00:05,  1.17s/it]
+user id : 160
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 1 is less than current step: 2900. Dropping entry: {'07_val_loss': 136.392578125, '_timestamp': 1714211178.0903115}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 1 is less than current step: 2900. Dropping entry: {'189_val_loss': 132.88536071777344, '_timestamp': 1714211178.1123111}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 1 is less than current step: 2900. Dropping entry: {'202_val_loss': 134.17123413085938, '_timestamp': 1714211178.1343741}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 1 is less than current step: 2900. Dropping entry: {'208_val_loss': 28.385326385498047, '_timestamp': 1714211178.152253}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 1 is less than current step: 2900. Dropping entry: {'00_val_loss': 156.16156005859375, '_timestamp': 1714211178.1734252}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 1 is less than current step: 2900. Dropping entry: {'160_val_loss': 182.01295471191406, '_timestamp': 1714211178.1952639}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 1 is less than current step: 2900. Dropping entry: {'10_val_loss': 116.46817016601562, '_timestamp': 1714211178.2182572}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 1 is less than current step: 2900. Dropping entry: {'105_val_loss': 49.91366195678711, '_timestamp': 1714211178.2391748}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 1 is less than current step: 2900. Dropping entry: {'68_val_loss': 148.90350341796875, '_timestamp': 1714211178.263748}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 1 is less than current step: 2900. Dropping entry: {'139_val_loss': 88.41903686523438, '_timestamp': 1714211178.2820206}).
+running clients:  64%|██████████████████████████████████████████████████████████████▎                                   | 7/11 [00:08<00:05,  1.31s/it]
+
+running clients:  73%|███████████████████████████████████████████████████████████████████████▎                          | 8/11 [00:10<00:04,  1.49s/it]
+
+running clients:  82%|████████████████████████████████████████████████████████████████████████████████▏                 | 9/11 [00:11<00:02,  1.37s/it]
+user id : 139
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([1, 6]) torch.Size([1, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([3, 6]) torch.Size([3, 6])
+torch.Size([6, 6]) torch.Size([6, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+Global round 2 avg loss 122.63434774225408 avg distance 0.9409660267107416
+Exp no0 : users selected for global iteration 3 are : [71, 7, 189, 202, 208, 0, 160, 10, 105, 68, 139]
+Global Rounds:  60%|████████████████████████████████████████████████████████████▌                                        | 3/5 [00:45<00:29, 14.87s/it]
+running clients:   0%|                                                                                                          | 0/11 [00:00<?, ?it/s]
+user id : 7
+
+running clients:  18%|█████████████████▊                                                                                | 2/11 [00:01<00:07,  1.17it/s]
+
+running clients:  27%|██████████████████████████▋                                                                       | 3/11 [00:03<00:10,  1.35s/it]
+user id : 208
+
+running clients:  45%|████████████████████████████████████████████▌                                                     | 5/11 [00:05<00:06,  1.10s/it]
+
+running clients:  55%|█████████████████████████████████████████████████████▍                                            | 6/11 [00:07<00:05,  1.15s/it]
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 2 is less than current step: 4350. Dropping entry: {'07_val_loss': 137.96539306640625, '_timestamp': 1714211192.593205}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 2 is less than current step: 4350. Dropping entry: {'189_val_loss': 133.7022705078125, '_timestamp': 1714211192.615506}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 2 is less than current step: 4350. Dropping entry: {'202_val_loss': 135.24331665039062, '_timestamp': 1714211192.637675}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 2 is less than current step: 4350. Dropping entry: {'208_val_loss': 29.993728637695312, '_timestamp': 1714211192.6548421}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 2 is less than current step: 4350. Dropping entry: {'00_val_loss': 157.83326721191406, '_timestamp': 1714211192.675833}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 2 is less than current step: 4350. Dropping entry: {'160_val_loss': 181.9923553466797, '_timestamp': 1714211192.6974285}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 2 is less than current step: 4350. Dropping entry: {'10_val_loss': 116.23347473144531, '_timestamp': 1714211192.7192922}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 2 is less than current step: 4350. Dropping entry: {'105_val_loss': 51.5640983581543, '_timestamp': 1714211192.7388911}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 2 is less than current step: 4350. Dropping entry: {'68_val_loss': 148.16217041015625, '_timestamp': 1714211192.7619522}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 2 is less than current step: 4350. Dropping entry: {'139_val_loss': 90.15731811523438, '_timestamp': 1714211192.7803023}).
+user id : 105
+user id : 68
+running clients:  82%|████████████████████████████████████████████████████████████████████████████████▏                 | 9/11 [00:11<00:02,  1.34s/it]
+user id : 139
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([1, 6]) torch.Size([1, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([3, 6]) torch.Size([3, 6])
+Global Rounds:  80%|████████████████████████████████████████████████████████████████████████████████▊                    | 4/5 [00:59<00:14, 14.71s/it]
+running clients:   0%|                                                                                                          | 0/11 [00:00<?, ?it/s]
+torch.Size([2, 6]) torch.Size([2, 6])
+Global round 3 avg loss 121.88522217490457 avg distance 0.933377676299124
+Exp no0 : users selected for global iteration 4 are : [71, 7, 189, 202, 208, 0, 160, 10, 105, 68, 139]
+user id : 71
+user id : 7
+
+running clients:  18%|█████████████████▊                                                                                | 2/11 [00:01<00:08,  1.12it/s]
+
+running clients:  27%|██████████████████████████▋                                                                       | 3/11 [00:03<00:11,  1.40s/it]
+
+running clients:  36%|███████████████████████████████████▋                                                              | 4/11 [00:05<00:11,  1.58s/it]
+user id : 0
+
+running clients:  55%|█████████████████████████████████████████████████████▍                                            | 6/11 [00:07<00:05,  1.20s/it]
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 3 is less than current step: 5800. Dropping entry: {'07_val_loss': 136.48269653320312, '_timestamp': 1714211207.0631206}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 3 is less than current step: 5800. Dropping entry: {'189_val_loss': 132.73562622070312, '_timestamp': 1714211207.0849345}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 3 is less than current step: 5800. Dropping entry: {'202_val_loss': 133.82872009277344, '_timestamp': 1714211207.1066496}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 3 is less than current step: 5800. Dropping entry: {'208_val_loss': 28.562929153442383, '_timestamp': 1714211207.1239624}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 3 is less than current step: 5800. Dropping entry: {'00_val_loss': 156.6289520263672, '_timestamp': 1714211207.1444428}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 3 is less than current step: 5800. Dropping entry: {'160_val_loss': 182.06089782714844, '_timestamp': 1714211207.1651673}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 3 is less than current step: 5800. Dropping entry: {'10_val_loss': 117.51806640625, '_timestamp': 1714211207.1871285}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 3 is less than current step: 5800. Dropping entry: {'105_val_loss': 50.239990234375, '_timestamp': 1714211207.2065578}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 3 is less than current step: 5800. Dropping entry: {'68_val_loss': 148.3612823486328, '_timestamp': 1714211207.2298775}).
+[34m[1mwandb[39m[22m: [33mWARNING[39m (User provided step: 3 is less than current step: 5800. Dropping entry: {'139_val_loss': 88.82916259765625, '_timestamp': 1714211207.2483835}).
+user id : 105
+user id : 68
+running clients:  82%|████████████████████████████████████████████████████████████████████████████████▏                 | 9/11 [00:11<00:02,  1.38s/it]
+
+running clients:  91%|████████████████████████████████████████████████████████████████████████████████████████▏        | 10/11 [00:13<00:01,  1.50s/it]
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([1, 6]) torch.Size([1, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([3, 6]) torch.Size([3, 6])
+torch.Size([6, 6]) torch.Size([6, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+
+Global Rounds: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [01:14<00:00, 14.84s/it]

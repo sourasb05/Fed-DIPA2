@@ -2,18 +2,15 @@ import torch
 import os
 import h5py
 from src.Fedavg.UserFedAvg import UserAvg
-#from src.utils.data_process import read_data, read_user_data
 import numpy as np
 import copy
-from datetime import date
 from tqdm import trange
 from tqdm import tqdm
 import numpy as np
-from sklearn.cluster import SpectralClustering
-import time
-# Implementation for FedAvg Server
-import matplotlib.pyplot as plt
-import statistics
+import sys
+import wandb
+import datetime
+
 class FedAvg():
     def __init__(self,device, args, exp_no, current_directory):
                 
@@ -24,8 +21,7 @@ class FedAvg():
         self.learning_rate = args.alpha
         
         self.user_ids = args.user_ids
-        print(f"user ids : {self.user_ids}")
-        self.total_users = len(self.user_ids)
+        self.total_users = len(self.user_ids[0])
         print(f"total users : {self.total_users}")
         self.num_users = self.total_users * args.users_frac    #selected users
         self.total_train_samples = 0
@@ -36,7 +32,7 @@ class FedAvg():
 
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[2]
+            self.user_ids = args.user_ids[0]
         else:
             self.user_ids = args.user_ids[1]
 
@@ -56,10 +52,13 @@ class FedAvg():
 
         self.data_frac = []
         
-        self.minimum_test_loss = 0.0
-        
+        self.minimum_test_loss = 1000000.0
+
+        date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.wandb = wandb.init(project="DIPA2", name="FedAvg_%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
+                
         for i in trange(self.total_users, desc="Data distribution to clients"):
-            user = UserAvg(device, args, int(self.user_ids[i]), exp_no, current_directory)
+            user = UserAvg(device, args, int(self.user_ids[i]), exp_no, current_directory, self.wandb)
             self.users.append(user)
             self.total_train_samples += user.train_samples
 
@@ -71,9 +70,11 @@ class FedAvg():
         for param in self.global_model.parameters():
             param.data.zero_()
         
-        
+
         print("Finished creating FedAvg server.")
 
+    def __del__(self):
+        self.wandb.finish()
         
     def send_parameters(self):
         assert (self.users is not None and len(self.users) > 0)
@@ -98,22 +99,18 @@ class FedAvg():
 
     
 
-    def save_model(self, glob_iter):
-        if glob_iter == 0:
+    """def save_model(self, glob_iter):
+       if self.global_test_loss[glob_iter] < self.minimum_test_loss:
             self.minimum_test_loss = self.global_test_loss[glob_iter]
-        else:
-            print(self.global_test_loss[glob_iter])
-            print(self.minimum_test_loss)
-            if self.global_test_loss[glob_iter] < self.minimum_test_loss:
-                self.minimum_test_loss = self.global_test_loss[glob_iter]
-                model_path = self.current_directory + "/models/" + self.global_model_name + "/" + self.algorithm + "/global_model/"
-                print(model_path)
-                # input("press")
-                if not os.path.exists(model_path):
-                    os.makedirs(model_path)
-                print(f"saving global model at round {glob_iter}")
-                torch.save(self.sv_global_model, os.path.join(model_path, "server_" + ".pt"))
-
+            model_path = self.current_directory + "/models/" + "/" + self.algorithm + "/global_model/"
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.global_model.state_dict(),
+                        'loss': self.loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "server_checkpoint" + ".pt"))
+"""
     def select_users(self, round, subset_users):
 
         if subset_users == len(self.users):
@@ -121,31 +118,12 @@ class FedAvg():
         elif  subset_users < len(self.users):
          
             np.random.seed(round)
-            return np.random.choice(self.users, subset_users, replace=False)  # , p=pk)
+            return np.random.choice(self.users, subset_users, replace=False) 
 
         else: 
             assert (self.subset_users > len(self.users))
             
-    def test_error_and_loss(self):
-        
-        accs = []
-        losses = []
-        precisions = []
-        recalls = []
-        f1s = []
-        
-        for c in self.users:
-            accuracy, loss, precision, recall, f1 = c.test(self.global_model.parameters())
-            # tot_correct.append(ct * 1.0)
-            # num_samples.append(ns)
-            accs.append(accuracy)
-            losses.append(loss)
-            precisions.append(precision)
-            recalls.append(recall)
-            f1s.append(f1)
-            
-        return accs, losses, precisions, recalls, f1s
-
+    
     def initialize_or_add(self, dest, src):
     
         for key, value in src.items():
@@ -166,6 +144,8 @@ class FedAvg():
             if c_dict:  # Check if test_dict is not None or empty
                 self.initialize_or_add(accumulator, c_dict)
         average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
+
+        self.wandb.log(data={ "global_train_loss" : avg_loss})
 
         self.global_train_metric.append(average_dict)
         self.global_train_loss.append(avg_loss)
@@ -189,6 +169,9 @@ class FedAvg():
             if c_dict:  # Check if test_dict is not None or empty
                 self.initialize_or_add(accumulator, c_dict)
         average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
+
+        
+        self.wandb.log(data={ "global_val_loss" : avg_loss})
 
         self.global_test_metric.append(average_dict)
         self.global_test_loss.append(avg_loss)
@@ -236,21 +219,6 @@ class FedAvg():
 
             hf.close()
 
-    def save_global_model(self, t):
-        file = "_exp_no_" + str(self.exp_no) + "_GR_" + str(t) 
-        
-        print(file)
-       
-        directory_name = str(self.algorithm) + "/" +"global_model"
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/models/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/models/"+ directory_name)
-        
-        torch.save(self.global_model,self.current_directory + "/models/"+ directory_name + "/" + file + ".pt")
-
-
-
 
     def train(self):
         loss = []
@@ -268,5 +236,5 @@ class FedAvg():
 
             self.aggregate_parameters()
             self.evaluate(glob_iter)
-            self.save_global_model(glob_iter)
-        self.save_results()
+            # self.save_model(glob_iter)
+        #self.save_results()

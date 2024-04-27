@@ -95,6 +95,8 @@ def args_parser():
     parser.add_argument("--fixed_user_id", type=int, default=16)
     parser.add_argument("--fix_client_every_GR", type=int, default=0, choices=[0,1])
 
+    parser.add_argument("--wandb", action='store_true')
+
     args = parser.parse_args()
 
     return args

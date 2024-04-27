@@ -1,13 +1,12 @@
 from src.Fedavg.FedAvgServer import FedAvg
 from src.Fedmem.FedMEMServer import Fedmem
-from src.FedProx.FedProxServer import FedProx
+# from src.FedProx.FedProxServer import FedProx
 from src.TrainModels.trainmodels import *
 from src.utils.options import args_parser
 import torchvision.models as models
 import torch
 from tqdm import tqdm, trange
 import os
-
 
 torch.manual_seed(0)
 
@@ -39,21 +38,13 @@ if __name__ == "__main__":
     args = args_parser()
     
     print("=" * 80)
-    print("Summary of training process:")
+    print("Summary:")
     print("Algorithm: {}".format(args.algorithm))
     print("Batch size: {}".format(args.batch_size))
     print("alpha       : {}".format(args.alpha))
-    print("beta        : {}".format(args.beta))
-    print("gamma       : {}".format(args.gamma))
-    print("lambda_1       : {}".format(args.lambda_1))
-    print("lambda_2       : {}".format(args.lambda_2))
-    print("number of teams : {}".format(args.num_teams))
-    print("Cluster type: {}".format(args.cluster))
-    print("eta         : {}".format(args.eta))
     print("Number of global rounds       : {}".format(args.num_global_iters))
     print("Number of local rounds       : {}".format(args.local_iters))
-    print("Local Model       : {}".format(args.model_name))
-
+    
     print("=" * 80)
 
     

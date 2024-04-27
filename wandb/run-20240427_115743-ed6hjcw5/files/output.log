@@ -1,0 +1,165 @@
+
+
+
+Data distribution to clients:  82%|█████████████████████████████████████████████████████████████████████▌               | 9/11 [00:05<00:01,  1.95it/s]
+data available [0.08275862068965517, 0.041379310344827586, 0.12413793103448276, 0.1310344827586207, 0.027586206896551724, 0.0896551724137931, 0.1103448275862069, 0.1310344827586207, 0.07586206896551724, 0.13793103448275862, 0.04827586206896552]
+Finished creating FedAvg server.
+Exp no0 : users selected for global iteration 0 are : [71, 7, 189, 202, 208, 0, 160, 10, 105, 68, 139]
+Data distribution to clients: 100%|████████████████████████████████████████████████████████████████████████████████████| 11/11 [00:06<00:00,  1.76it/s]
+Global Rounds:   0%|                                                                                                             | 0/5 [00:00<?, ?it/s]
+running clients:   0%|                                                                                                          | 0/11 [00:00<?, ?it/s]
+user id : 7
+
+running clients:  18%|█████████████████▊                                                                                | 2/11 [00:02<00:10,  1.18s/it]
+
+running clients:  27%|██████████████████████████▋                                                                       | 3/11 [00:04<00:11,  1.50s/it]
+user id : 208
+
+running clients:  45%|████████████████████████████████████████████▌                                                     | 5/11 [00:06<00:07,  1.22s/it]
+
+running clients:  55%|█████████████████████████████████████████████████████▍                                            | 6/11 [00:08<00:06,  1.23s/it]
+
+running clients:  73%|███████████████████████████████████████████████████████████████████████▎                          | 8/11 [00:11<00:04,  1.53s/it]
+user id : 105
+
+running clients:  82%|████████████████████████████████████████████████████████████████████████████████▏                 | 9/11 [00:12<00:02,  1.39s/it]
+
+running clients: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [00:15<00:00,  1.35s/it]
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([1, 6]) torch.Size([1, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([3, 6]) torch.Size([3, 6])
+torch.Size([6, 6]) torch.Size([6, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+Global round 0 avg loss 114.50119556080212 avg distance 0.855432923634847
+Exp no0 : users selected for global iteration 1 are : [71, 7, 189, 202, 208, 0, 160, 10, 105, 68, 139]
+Global Rounds:  20%|████████████████████▏                                                                                | 1/5 [00:15<01:03, 15.85s/it]
+running clients:   0%|                                                                                                          | 0/11 [00:00<?, ?it/s]
+user id : 7
+
+running clients:  18%|█████████████████▊                                                                                | 2/11 [00:01<00:08,  1.10it/s]
+
+running clients:  36%|███████████████████████████████████▋                                                              | 4/11 [00:05<00:10,  1.56s/it]
+user id : 208
+user id : 0
+
+running clients:  55%|█████████████████████████████████████████████████████▍                                            | 6/11 [00:07<00:05,  1.20s/it]
+
+running clients:  64%|██████████████████████████████████████████████████████████████▎                                   | 7/11 [00:09<00:05,  1.34s/it]
+
+running clients:  73%|███████████████████████████████████████████████████████████████████████▎                          | 8/11 [00:11<00:04,  1.56s/it]
+
+running clients:  82%|████████████████████████████████████████████████████████████████████████████████▏                 | 9/11 [00:12<00:02,  1.38s/it]
+user id : 139
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([1, 6]) torch.Size([1, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([3, 6]) torch.Size([3, 6])
+torch.Size([6, 6]) torch.Size([6, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+Global round 1 avg loss 121.74787278608844 avg distance 0.9315684694232362
+Exp no0 : users selected for global iteration 2 are : [71, 7, 189, 202, 208, 0, 160, 10, 105, 68, 139]
+Global Rounds:  40%|████████████████████████████████████████▍                                                            | 2/5 [00:30<00:45, 15.32s/it]
+running clients:   0%|                                                                                                          | 0/11 [00:00<?, ?it/s]
+user id : 7
+
+running clients:  18%|█████████████████▊                                                                                | 2/11 [00:01<00:08,  1.12it/s]
+
+running clients:  27%|██████████████████████████▋                                                                       | 3/11 [00:03<00:10,  1.27s/it]
+user id : 208
+
+running clients:  45%|████████████████████████████████████████████▌                                                     | 5/11 [00:05<00:06,  1.14s/it]
+
+running clients:  64%|██████████████████████████████████████████████████████████████▎                                   | 7/11 [00:08<00:05,  1.29s/it]
+user id : 10
+
+running clients:  73%|███████████████████████████████████████████████████████████████████████▎                          | 8/11 [00:10<00:04,  1.49s/it]
+
+running clients:  82%|████████████████████████████████████████████████████████████████████████████████▏                 | 9/11 [00:11<00:02,  1.37s/it]
+user id : 139
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([1, 6]) torch.Size([1, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+Global Rounds:  60%|████████████████████████████████████████████████████████████▌                                        | 3/5 [00:45<00:30, 15.07s/it]
+running clients:   0%|                                                                                                          | 0/11 [00:00<?, ?it/s]
+torch.Size([3, 6]) torch.Size([3, 6])
+torch.Size([6, 6]) torch.Size([6, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+Global round 2 avg loss 122.63434774225408 avg distance 0.9409660267107416
+Exp no0 : users selected for global iteration 3 are : [71, 7, 189, 202, 208, 0, 160, 10, 105, 68, 139]
+user id : 71
+
+running clients:  18%|█████████████████▊                                                                                | 2/11 [00:02<00:08,  1.05it/s]
+user id : 189
+
+running clients:  27%|██████████████████████████▋                                                                       | 3/11 [00:03<00:10,  1.35s/it]
+
+running clients:  36%|███████████████████████████████████▋                                                              | 4/11 [00:05<00:10,  1.54s/it]
+user id : 0
+
+running clients:  55%|█████████████████████████████████████████████████████▍                                            | 6/11 [00:07<00:05,  1.19s/it]
+
+running clients:  64%|██████████████████████████████████████████████████████████████▎                                   | 7/11 [00:08<00:05,  1.30s/it]
+user id : 105
+
+running clients:  82%|████████████████████████████████████████████████████████████████████████████████▏                 | 9/11 [00:11<00:02,  1.32s/it]
+
+running clients:  91%|████████████████████████████████████████████████████████████████████████████████████████▏        | 10/11 [00:13<00:01,  1.53s/it]
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([1, 6]) torch.Size([1, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([3, 6]) torch.Size([3, 6])
+torch.Size([6, 6]) torch.Size([6, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+Global round 3 avg loss 121.88522217490457 avg distance 0.933377676299124
+Exp no0 : users selected for global iteration 4 are : [71, 7, 189, 202, 208, 0, 160, 10, 105, 68, 139]
+user id : 71
+Global Rounds:  80%|████████████████████████████████████████████████████████████████████████████████▊                    | 4/5 [01:00<00:14, 14.93s/it]
+running clients:   9%|████████▉                                                                                         | 1/11 [00:01<00:11,  1.19s/it]
+
+running clients:  18%|█████████████████▊                                                                                | 2/11 [00:01<00:07,  1.17it/s]
+
+running clients:  27%|██████████████████████████▋                                                                       | 3/11 [00:03<00:10,  1.31s/it]
+user id : 208
+user id : 0
+
+running clients:  55%|█████████████████████████████████████████████████████▍                                            | 6/11 [00:07<00:05,  1.18s/it]
+
+running clients:  64%|██████████████████████████████████████████████████████████████▎                                   | 7/11 [00:08<00:05,  1.27s/it]
+
+running clients:  73%|███████████████████████████████████████████████████████████████████████▎                          | 8/11 [00:10<00:04,  1.50s/it]
+
+running clients:  82%|████████████████████████████████████████████████████████████████████████████████▏                 | 9/11 [00:11<00:02,  1.37s/it]
+user id : 139
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([1, 6]) torch.Size([1, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([4, 6]) torch.Size([4, 6])
+torch.Size([5, 6]) torch.Size([5, 6])
+torch.Size([3, 6]) torch.Size([3, 6])
+torch.Size([6, 6]) torch.Size([6, 6])
+torch.Size([2, 6]) torch.Size([2, 6])
+
+Global Rounds: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [01:14<00:00, 14.99s/it]
