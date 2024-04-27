@@ -232,7 +232,7 @@ class FedAvg():
                 list_user_id.append(user.id)
             #print(f"Exp no{self.exp_no} : users selected for global iteration {glob_iter} are : {list_user_id}")
 
-            for user in tqdm(self.selected_users, desc="running clients"):
+            for user in self.selected_users:
                 user.train()  # * user.train_samples
 
             self.aggregate_parameters()

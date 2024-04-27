@@ -180,7 +180,7 @@ class UserAvg():
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
             total_loss += loss.item()/len(features)
             
-            print(y_preds[:, :6].shape, information.shape)
+            # print(y_preds[:, :6].shape, information.shape)
 
             self.global_acc[0].update(y_preds[:, :6], information.to(self.device))
             self.global_pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
@@ -247,7 +247,7 @@ class UserAvg():
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
             total_loss += loss.item()/len(features)
             
-            print(y_preds[:, :6].shape, information.shape)
+            # (y_preds[:, :6].shape, information.shape)
 
             self.global_acc[0].update(y_preds[:, :6], information.to(self.device))
             self.global_pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
@@ -314,7 +314,7 @@ class UserAvg():
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
             total_loss += loss.item()
             
-            print(y_preds[:, :6].shape, information.shape)
+            # print(y_preds[:, :6].shape, information.shape)
 
             self.acc[0].update(y_preds[:, :6], information.to(self.device))
             self.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
@@ -354,12 +354,12 @@ class UserAvg():
        
         pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
 
-        print(pandas_data)
+        #print(pandas_data)
 
         avg_loss = total_loss / len(self.val_loader)
         
     def train(self):
-        print(f"user id : {self.id}")
+        #print(f"user id : {self.id}")
         
         self.local_model.train()
         # print(self.local_iters)
