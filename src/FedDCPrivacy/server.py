@@ -14,6 +14,7 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import statistics
 import sys
+import random
 
 class Fedmem():
     def __init__(self,device, args, exp_no, current_directory):
@@ -128,7 +129,7 @@ class Fedmem():
         self.participated_rf_clients = self.kappa*len(resourceful)  #selected resourceful users
         self.participated_rl_clients = (1-self.kappa)*len(resourceless) #selected resourceful users
         self.num_users = self.participated_rf_clients + self.participated_rl_clients
-        
+
         # cluster formation
         self.clusters = [resourceful, resourceless] 
 
@@ -441,6 +442,8 @@ class Fedmem():
             self.selected_rf_users = self.select_users(t,0).tolist()
             self.selected_rl_users = self.select_users(t,1).tolist()
             
+            exchange_dict = {key: random.sample(self.selected_rl_users, 2) for key in self.selected_rf_users} 
+
             list_user_id = [[],[]]
             for user in self.selected_rf_users:
                 list_user_id[0].append(user.id)
@@ -449,37 +452,17 @@ class Fedmem():
             
             print(f"selected users : {list_user_id}")
             
-            for user in tqdm(self.selected_users[0], desc=f"total selected users  from cluster {len(self.selected_users)}"):
-                    user.train()
-               
-            if self.cluster_type == "dynamic":
-                similarity_matrix = self.similarity_check()
-                # print(similarity_matrix)
-                clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
-                print(clusters)
-                self.combine_cluster_user(clusters)
-                self.save_clusters(t)
-            
-            self.aggregate_clusterhead()
-            self.global_update()
+            for user in tqdm(self.selected_users[0], desc=f"selected users from resourceful cluster {len(self.selected_users[0])}"):
+                user.train()
+            for user in tqdm(self.selected_users[1], desc=f"total selected users  from resourceless cluster {len(self.selected_users[1])}"):
+                user.train()
+            for user in tqdm(self.selected_users[0], desc=f"model exchange training"):
+                user.exchange_train(exchange_dict[user])
 
+
+            self.global_update()
         
             self.evaluate_localmodel(t)
-            self.evaluate_clusterhead(t)
             self.evaluate(t)
-        
-        #print(self.global_metric)
-        # informative_accuracy = [d['Accuracy'][0] for d in self.global_metric if 'Accuracy' in d and len(d['Accuracy']) > 0]
-        # informative_precision = [d['Precision'][0] for d in self.global_metric if 'Precision' in d and len(d['Precision']) > 0]
-        # informative_recall = [d['Recall'][0] for d in self.global_metric if 'Recall' in d and len(d['Recall']) > 0]
-        # informative_f1 = [d['f1'][0] for d in self.global_metric if 'f1' in d and len(d['f1']) > 0]
 
-        # print(f"-----Informativeness-----")
-        # print(f"Accuracy : {informative_accuracy}")
-        # print(f"Precision : {informative_precision}")
-        # print(f"Recall : {informative_recall}")
-        # print(f"f1 : {informative_f1}")
-        # self.save_results()
-        # self.plot_per_result()
-        # self.plot_cluster_result()
-        # self.plot_global_result()
+       
