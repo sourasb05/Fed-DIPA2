@@ -4,8 +4,8 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--algorithm", type=str, default="FedAvg",
-                        choices=["pFedme", "FedAvg", "Fedmem", "FeSEM", "FedProx"])
+    parser.add_argument("--algorithm", type=str, default="FedDcprivacy",
+                        choices=["FedAvg", "Fedmem", "FedProx", "FedDcprivacy"])
     parser.add_argument("--batch_size", type=int, default=64)
     
     parser.add_argument("--user_ids", type=list, default=[['71', '7', '189', '202', '208', '0', '160', '10', '105', '68', '139', '207', '57', 
@@ -56,6 +56,9 @@ def args_parser():
                         help="learning rate for local models in fedmem")
     parser.add_argument("--eta", type=float, default=0.01, 
                         help="personalization parameter for Fedmem")
+    parser.add_argument("--kappa", type=float, default=0.5, 
+                        help="regularizer for resourceful and resourceless selection")
+    
     
     parser.add_argument("--num_global_iters", type=int, default=5)
     parser.add_argument("--local_iters", type=int, default=10)
@@ -70,10 +73,7 @@ def args_parser():
     
     parser.add_argument("--users_frac", type=float, default=1.0, 
                         help="selected fraction of users available per global round")
-    parser.add_argument("--total_users", type=int, default=40, 
-                        help="total participants")
-    parser.add_argument("--data_silo", type=int, default=100)
-   
+
     parser.add_argument("--fixed_user_id", type=int, default=16)
     parser.add_argument("--fix_client_every_GR", type=int, default=0, choices=[0,1])
 

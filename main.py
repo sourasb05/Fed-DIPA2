@@ -1,5 +1,6 @@
 from src.Fedavg.FedAvgServer import FedAvg
 from src.Fedmem.FedMEMServer import Fedmem
+from src.FedDCPrivacy.server import Server
 # from src.FedProx.FedProxServer import FedProx
 from src.TrainModels.trainmodels import *
 from src.utils.options import args_parser
@@ -28,6 +29,9 @@ def main(args):
                 server = FedProx(device, args,i, current_directory)
             elif args.algorithm == "Fedmem": 
                 server = Fedmem(device, args, i, current_directory)
+            elif args.algorithm == "FedDcprivacy":
+                server = Server(device, args, i, current_directory)
+
             
         except ValueError:
             raise ValueError("Wrong algorithm selected")
@@ -42,6 +46,9 @@ if __name__ == "__main__":
     print("Algorithm: {}".format(args.algorithm))
     print("Batch size: {}".format(args.batch_size))
     print("alpha       : {}".format(args.alpha))
+    print("eta      : {}".format(args.eta))
+    print("kappa       : {}".format(args.kappa))
+    
     print("Number of global rounds       : {}".format(args.num_global_iters))
     print("Number of local rounds       : {}".format(args.local_iters))
     

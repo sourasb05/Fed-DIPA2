@@ -20,9 +20,10 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, CalibrationError
 from sklearn.metrics import mean_absolute_error
+import wandb
+import sys
 
-
-class Fedmem_user():
+class User():
 
     def __init__(self,device, args, id, exp_no, current_directory):
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
@@ -39,7 +40,6 @@ class Fedmem_user():
         self.local_iters = args.local_iters
         self.eta = args.eta
         self.algorithm = args.algorithm
-        self.cluster_type = args.cluster
         self.country = "japan"
         self.distance = 0.0
         self.bigfives = ["extraversion", "agreeableness", "conscientiousness",
@@ -108,11 +108,13 @@ class Fedmem_user():
         train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
         val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)    
 
-        self.train_loader = DataLoader(train_dataset, batch_size=96, generator=torch.Generator(device='cuda'), shuffle=True)
-        self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=32)
-    
-        self.optimizer = Fedmem(self.local_model.parameters(), lr=self.learning_rate)
-        self.exchange_optimizer= torch.optim(self.exchange_model.parameters(), lr=self.learning_rate)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
+        self.val_loader = DataLoader(val_dataset, batch_size=len(val_dataset), generator=torch.Generator(device='cuda'))
+        self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'))
+        
+        # self.optimizer = Fedmem(self.local_model.parameters(), lr=self.learning_rate)
+        self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
+        self.exchange_optimizer= torch.optim.Adam(self.exchange_model.parameters(), lr=self.learning_rate)
         
         # metrics
 
@@ -143,15 +145,11 @@ class Fedmem_user():
         # print(self.global_acc)
         
         # input("press")
-        
-    def exchange_parameters(self, rl_model):
-        for param, rl_param in zip(self.exchange_model.parameters(), rl_model.parameters()):
-            param.data = rl_model.data.clone
-
+ 
 
         
     def set_parameters(self, cluster_model):
-        for param, glob_param in zip(self.local_model.parameters(), cluster_model):
+        for param, glob_param in zip(self.local_model.parameters(), global_model):
             param.data = glob_param.data.clone()
             # print(f"user {self.id} parameters : {param.data}")
         # input("press")
@@ -175,7 +173,7 @@ class Fedmem_user():
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
             total_loss += loss.item()
             
-            print(y_preds[:, :6].shape, information.shape)
+            # print(y_preds[:, :6].shape, information.shape)
 
             self.global_acc[0].update(y_preds[:, :6], information.to(self.device))
             self.global_pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
@@ -201,12 +199,12 @@ class Fedmem_user():
             # MAE calculation
                 
             true_values = informativeness.cpu().detach().numpy()
-            print(f"true values : {true_values}")
+            # print(f"true values : {true_values}")
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
-            print(f"predicted values : {predicted_values}")
+            # print(f"predicted values : {predicted_values}")
             mae = mean_absolute_error(true_values, predicted_values)
             
-        print(f"MAE : {mae}")
+       # print(f"MAE : {mae}")
             
         mae = mae/len(self.val_loader)
             
@@ -242,7 +240,7 @@ class Fedmem_user():
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
             total_loss += loss.item()
             
-            print(y_preds[:, :6].shape, information.shape)
+            # print(y_preds[:, :6].shape, information.shape)
 
             self.global_acc[0].update(y_preds[:, :6], information.to(self.device))
             self.global_pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
@@ -268,12 +266,12 @@ class Fedmem_user():
             # MAE calculation
                 
             true_values = informativeness.cpu().detach().numpy()
-            print(f"true values : {true_values}")
+           #  print(f"true values : {true_values}")
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
-            print(f"predicted values : {predicted_values}")
+           # print(f"predicted values : {predicted_values}")
             mae = mean_absolute_error(true_values, predicted_values)
             
-        print(f"MAE : {mae}")
+        # print(f"MAE : {mae}")
             
         mae = mae/len(self.val_loader)
         distance = distance / len(self.val_loader)
@@ -284,12 +282,8 @@ class Fedmem_user():
                     'f1': [i.compute().detach().cpu().numpy() for i in self.global_f1]}
         
         pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
-        #print(pandas_data)
-        
-
+       
         avg_loss = total_loss / len(self.val_loader)
-        # print(f"Global iter {t}: Validation loss: {avg_loss}")
-        # print(f"distance: {distance}")
         
         return avg_loss, distance, pandas_data, mae
     
@@ -299,7 +293,7 @@ class Fedmem_user():
         return np.mean(loss)
         
     def evaluate_model(self):
-        self.local_model
+        self.local_model.eval()
         total_loss=0.0
 
         informativeness_gt = []
@@ -310,7 +304,7 @@ class Fedmem_user():
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
             total_loss += loss.item()
             
-            print(y_preds[:, :6].shape, information.shape)
+            # print(y_preds[:, :6].shape, information.shape)
 
             self.acc[0].update(y_preds[:, :6], information.to(self.device))
             self.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
@@ -350,12 +344,13 @@ class Fedmem_user():
        
         pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
 
-        print(pandas_data)
+        # print(pandas_data)
 
         avg_loss = total_loss / len(self.val_loader)
-        
+    
+            
     def train(self):
-        print(f"user id : {self.id}")
+        # print(f"user id : {self.id}")
         
         self.local_model.train()
         for iter in range(self.local_iters):
@@ -367,7 +362,46 @@ class Fedmem_user():
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
                 loss.backward()
                 self.optimizer.step()
-                print(f"Epoch : {iter} Training loss: {loss.item()}")
+                print(f"User id : {self.id} :::: During Individual training Epoch : {iter} ::: Training loss: {loss.item()}")
                 
             self.evaluate_model()
+
+           
+    def exchange_parameters(self, rl_model):
+        #print(self.exchange_model.parameters())
+        # print(rl_model)
+        for param, rl_param in zip(self.exchange_model.parameters(), rl_model):
+            #print(f"param :", param.data)
+            #print(f"rl_param :", rl_param.data)
+            param.data = rl_param.data.clone()
+    
+    
+    def transfer_model(self, rl_user):
+        for rl_param, param in zip(rl_user, self.exchange_model.parameters()):
+            rl_param.data = param.data.clone()
+           # rl_param.grad.data = param.grad.data.clone()
+            # print(f"rl_param :", rl_param.data)
+            # print(f"exchange_param :", param.data)
+            
+
+    def exchange_train(self, exchange_dict_users):
+        for rl_user in exchange_dict_users:
+            print(f"low resource user id : {rl_user.id} and exchanged with user id : {self.id}")
+            #print(rl_user.local_model)
+            self.exchange_parameters(rl_user.local_model.parameters())
+            
+            self.exchange_model.train()
+            for iter in range(self.local_iters):
+                mae = 0
+                for batch in self.train_loader:
+                    features, additional_information, information, informativeness, sharingOwner, sharingOthers = batch
+                    self.exchange_optimizer.zero_grad()
+                    y_preds = self.exchange_model(features.to(self.device), additional_information.to(self.device))
+                    criterion = self.exchange_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
+                    criterion.backward()
+                    self.exchange_optimizer.step()
+                    print(f"RL_user : {rl_user.id} and RF_user : {self.id} During exchange Epoch : {iter} Training loss : {criterion.item()}")
+                    
+            self.transfer_model(rl_user.local_model.parameters())
+    
 
