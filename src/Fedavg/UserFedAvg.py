@@ -380,7 +380,7 @@ class UserAvg():
                 # print(f"Epoch : {iter} Training loss: {loss.item()}")
                 # self.distance = 0.0
                 
-            # self.evaluate_model()
+            self.evaluate_model()
 
         
         

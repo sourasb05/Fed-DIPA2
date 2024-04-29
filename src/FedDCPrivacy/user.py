@@ -22,7 +22,7 @@ from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, 
 from sklearn.metrics import mean_absolute_error
 import wandb
 import sys
-
+import os
 class User():
 
     def __init__(self,device, args, id, exp_no, current_directory, wandb):
@@ -33,6 +33,7 @@ class User():
         self.batch_size = args.batch_size
         self.exp_no = exp_no
         self.current_directory = current_directory
+        self.num_glob_iters = args.num_global_iters
         """
         Hyperparameters
         """
@@ -146,15 +147,15 @@ class User():
         
         # print(self.global_acc)
         
-        # input("press")
- 
-
+        
+        
+        self.minimum_test_loss = 10000000.0
         
     def set_parameters(self, global_model):
         for param, glob_param in zip(self.local_model.parameters(), global_model):
             param.data = glob_param.data.clone()
             # print(f"user {self.id} parameters : {param.data}")
-        # input("press")
+        
             
     def get_parameters(self):
         return self.local_model.parameters()
@@ -219,11 +220,11 @@ class User():
         
         self.wandb.log(data={ "%02d_train_loss" % int(self.id) : avg_loss})
         self.wandb.log(data={ "%02d_train_mae" % int((self.id)) : mae})
-        """self.wandb.log(data={ "%02d_train_Accuracy" % int(self.id) : pandas_data['Accuracy']})
-        self.wandb.log(data={ "%02d_train_precision" % int((self.id)) : pandas_data['Precision']})
-        self.wandb.log(data={ "%02d_train_Recall" % int((self.id)) : pandas_data['Recall']})
-        self.wandb.log(data={ "%02d_train_f1" % int((self.id)) : pandas_data['f1']})
-        """
+        self.wandb.log(data={ "%02d_train_Accuracy" % int(self.id) : pandas_data['Accuracy'][0]})
+        self.wandb.log(data={ "%02d_train_precision" % int((self.id)) : pandas_data['Precision'][0]})
+        self.wandb.log(data={ "%02d_train_Recall" % int((self.id)) : pandas_data['Recall'][0]})
+        self.wandb.log(data={ "%02d_train_f1" % int((self.id)) : pandas_data['f1'][0]})
+        
         return avg_loss, distance, pandas_data, mae
     
 
@@ -268,7 +269,7 @@ class User():
             print(f"true :, {true_values}")
             print(f"predicted :, {predicted_values}")
             print(f"user id: {self.id}")
-            input("268 press")
+            
             mae = mean_absolute_error(true_values, predicted_values)
             distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
             
@@ -282,11 +283,11 @@ class User():
         
         self.wandb.log(data={ "%02d_val_loss" % int(self.id) : avg_loss})
         self.wandb.log(data={ "%02d_val_mae" % int((self.id)) : mae})
-        """self.wandb.log(data={ "%02d_val_Accuracy" % int(self.id) : pandas_data['Accuracy']})
-        self.wandb.log(data={ "%02d_val_precision" % int((self.id)) : pandas_data['Precision']})
-        self.wandb.log(data={ "%02d_val_Recall" % int((self.id)) : pandas_data['Recall']})
-        self.wandb.log(data={ "%02d_val_f1" % int((self.id)) : pandas_data['f1']})
-        """
+        self.wandb.log(data={ "%02d_val_Accuracy" % int(self.id) : pandas_data['Accuracy'][0]})
+        self.wandb.log(data={ "%02d_val_precision" % int((self.id)) : pandas_data['Precision'][0]})
+        self.wandb.log(data={ "%02d_val_Recall" % int((self.id)) : pandas_data['Recall'][0]})
+        self.wandb.log(data={ "%02d_val_f1" % int((self.id)) : pandas_data['f1'][0]})
+        
         return avg_loss, distance, pandas_data, mae
     
         
@@ -294,7 +295,7 @@ class User():
         loss = np.abs(prediction - target)
         return np.mean(loss)
         
-    def evaluate_model(self):
+    def evaluate_model(self, t, epoch):
         self.local_model.eval()
         avg_loss=0.0
         mae=0.0
@@ -306,14 +307,13 @@ class User():
             avg_loss += loss.item()/len(features)
             
             # print(y_preds[:, :6].shape, information.shape)
-            # input("press")
+            
             self.acc[0].update(y_preds[:, :6], information.to(self.device))
             self.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.conf[0].update(y_preds[:, :6], information.to(self.device))
             
-            self.distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
             """for gt, y_pred in zip(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy()):
                 informativeness_gt.append(int(gt))
                 informativeness_pred.append(int(y_pred))"""
@@ -333,7 +333,7 @@ class User():
 
             true_values = informativeness.cpu().detach().numpy()
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
-            mae += mean_absolute_error(true_values, predicted_values)/len(features)
+            mae = mean_absolute_error(true_values, predicted_values)
             distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
             
         pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
@@ -343,9 +343,31 @@ class User():
        
         pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
 
+        self.save_model(t,epoch, avg_loss)
+
+    def save_model(self, glob_iter, epoch, current_loss):
+        if glob_iter == self.num_glob_iters-1:
+            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.local_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "local_checkpoint_GR" + str(glob_iter) + ".pt"))
             
-    def train(self):
-        # print(f"user id : {self.id}")
+        if current_loss < self.minimum_test_loss:
+            self.minimum_test_loss = current_loss
+            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.local_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "best_local_checkpoint" + ".pt"))
+            
+    def train(self, t):
         
         self.local_model.train()
         for iter in range(self.local_iters):
@@ -360,7 +382,7 @@ class User():
                 self.optimizer.step()
                # print(f"User id : {self.id} :::: During Individual training Epoch : {iter} ::: Training loss: {loss.item()}")
                 
-            # self.evaluate_model()
+            self.evaluate_model(t,iter)
 
            
     def exchange_parameters(self, rl_model):
@@ -378,9 +400,10 @@ class User():
            # rl_param.grad.data = param.grad.data.clone()
             # print(f"rl_param :", rl_param.data)
             # print(f"exchange_param :", param.data)
-            
 
-    def exchange_train(self, exchange_dict_users):
+        
+
+    def exchange_train(self, exchange_dict_users, t):
         for rl_user in exchange_dict_users:
             # print(f"low resource user id : {rl_user.id} and exchanged with user id : {self.id}")
             #print(rl_user.local_model)
@@ -399,5 +422,7 @@ class User():
                     # print(f"RL_user : {rl_user.id} and RF_user : {self.id} During exchange Epoch : {iter} Training loss : {criterion.item()}")
                     
             self.transfer_model(rl_user.local_model.parameters())
+
+            self.evaluate_model(t, iter)
     
 

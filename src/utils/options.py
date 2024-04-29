@@ -46,6 +46,7 @@ def args_parser():
                                                          '520', '355', '399', '411', '317', '456', '352', '389', '541', '402', '344', '350', '583', '452', '444', 
                                                          '321', '419', '337', '474', '467', '476', '548', '359', '499', '546', '301', '367', '421', '379', '314', 
                                                          '556', '495', '496', '480'],
+                                                         ['71', '7', '189', '202', '208', '0', '160', '10', '105', '68'],
                                                          ['71', '7', '189', '202', '208', '0', '160', '10', '105', '68', '139', '207', '57', 
                                                          '128', '133', '190', '149', '290', '117', '253', '67', '76', '145', '162', '49', '17', 
                                                          '279', '200', '194', '3', '51', '204', '21', '22', '94', '206', '79', '30', '129', '115', 
@@ -97,7 +98,7 @@ def args_parser():
                         help="regularizer for resourceful and resourceless selection")
     
     
-    parser.add_argument("--num_global_iters", type=int, default=20)
+    parser.add_argument("--num_global_iters", type=int, default=5)
     parser.add_argument("--local_iters", type=int, default=10)
     parser.add_argument("--optimizer", type=str, default="SGD")
     

@@ -75,10 +75,7 @@ class Server():
         self.local_train_loss = []
         self.local_train_distance = []
         self.local_train_mae = []
-
-
-        self.minimum_clust_loss = 0.0
-        self.minimum_global_loss = 0.0
+        self.minimum_test_loss = 0.0
 
         self.data_frac = []
 
@@ -157,17 +154,27 @@ class Server():
     
 
     def save_model(self, glob_iter):
-       if self.global_test_loss[glob_iter] < self.minimum_test_loss:
-            self.minimum_test_loss = self.global_test_loss[glob_iter]
-            model_path = self.current_directory + "/models/" + "/" + self.algorithm + "/global_model/"
+        if glob_iter == self.num_glob_iters-1:
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
                         'model_state_dict': self.global_model.state_dict(),
                         'loss': self.minimum_test_loss
                         }
-            torch.save(checkpoint, os.path.join(model_path, "server_checkpoint" + ".pt"))
-
+            torch.save(checkpoint, os.path.join(model_path, "server_checkpoint_GR" + str(glob_iter) + ".pt"))
+            
+        if self.global_test_loss[glob_iter] < self.minimum_test_loss:
+            self.minimum_test_loss = self.global_test_loss[glob_iter]
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.global_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "best_server_checkpoint" + ".pt"))
+            
     def select_users(self, round, switch, num_subset_users):
         if switch == 0:
             np.random.seed(round)
@@ -313,11 +320,11 @@ class Server():
             # print(f"selected users : {list_user_id}")
             
             for user in tqdm(self.selected_rf_users, desc=f"selected users from resourceful cluster {len(self.selected_rf_users)}"):
-                user.train()
+                user.train(t)
             for user in tqdm(self.selected_rl_users, desc=f"total selected users  from resourceless cluster {len(self.selected_rl_users)}"):
-                user.train()
+                user.train(t)
             for user in tqdm(self.selected_rf_users, desc=f"model exchange training"):
-                user.exchange_train(exchange_dict[user])
+                user.exchange_train(exchange_dict[user], t)
             
 
 
@@ -325,7 +332,7 @@ class Server():
             
             # self.evaluate_localmodel(t)
             self.evaluate(t)
-            #self.save_model(t)
-        #self.save_results()
+            self.save_model(t)
+        self.save_results()
 
        
