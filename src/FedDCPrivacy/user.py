@@ -171,6 +171,7 @@ class User():
         distance = 0.0
         mae=0.0
         for i, vdata in enumerate(self.trainloaderfull):
+            
             features, additional_information, information, informativeness, sharingOwner, sharingOthers = vdata
             y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
@@ -198,9 +199,10 @@ class User():
 
             true_values = informativeness.cpu().detach().numpy()
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
-            mae += mean_absolute_error(true_values, predicted_values)/len(features)
+            mae = mean_absolute_error(true_values, predicted_values)
             distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
             
+            print(f"i : {i}")
         
         pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.global_acc], 
                     'Precision' : [i.compute().detach().cpu().numpy() for i in self.global_pre], 
@@ -240,7 +242,6 @@ class User():
             avg_loss += loss.item()/len(features)
             
             # print(y_preds[:, :6].shape, information.shape)
-
             self.global_acc[0].update(y_preds[:, :6], information.to(self.device))
             self.global_pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.global_rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
@@ -264,7 +265,11 @@ class User():
 
             true_values = informativeness.cpu().detach().numpy()
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
-            mae += mean_absolute_error(true_values, predicted_values)/len(features)
+            print(f"true :, {true_values}")
+            print(f"predicted :, {predicted_values}")
+            print(f"user id: {self.id}")
+            input("268 press")
+            mae = mean_absolute_error(true_values, predicted_values)
             distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
             
         pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.global_acc], 
@@ -301,7 +306,7 @@ class User():
             avg_loss += loss.item()/len(features)
             
             # print(y_preds[:, :6].shape, information.shape)
-
+            # input("press")
             self.acc[0].update(y_preds[:, :6], information.to(self.device))
             self.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
@@ -349,12 +354,13 @@ class User():
                 features, additional_information, information, informativeness, sharingOwner, sharingOthers = batch
                 self.optimizer.zero_grad()
                 y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
+                
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
                 loss.backward()
                 self.optimizer.step()
                # print(f"User id : {self.id} :::: During Individual training Epoch : {iter} ::: Training loss: {loss.item()}")
                 
-            self.evaluate_model()
+            # self.evaluate_model()
 
            
     def exchange_parameters(self, rl_model):

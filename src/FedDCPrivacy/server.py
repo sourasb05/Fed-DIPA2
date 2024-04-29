@@ -25,7 +25,7 @@ class Server():
         self.kappa = args.kappa
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[0]
+            self.user_ids = args.user_ids[2]
         else:
             self.user_ids = args.user_ids[1]
 
@@ -325,7 +325,7 @@ class Server():
             
             # self.evaluate_localmodel(t)
             self.evaluate(t)
-            self.save_model(t)
-        self.save_results()
+            #self.save_model(t)
+        #self.save_results()
 
        

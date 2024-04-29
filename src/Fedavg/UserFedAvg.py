@@ -371,6 +371,7 @@ class UserAvg():
                 self.optimizer.zero_grad()
                 y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
                 print(y_preds)
+                input("pause")
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
                 loss.backward()
                 self.optimizer.step()
