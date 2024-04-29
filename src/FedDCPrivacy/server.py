@@ -25,13 +25,13 @@ class Server():
         self.kappa = args.kappa
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[2]
+            self.user_ids = args.user_ids[0]
         else:
             self.user_ids = args.user_ids[1]
 
         # print(f"user ids : {self.user_ids}")
         self.total_users = len(self.user_ids)
-        print(f"total users : {self.total_users}")
+        # print(f"total users : {self.total_users}")
         self.total_samples = 0
         self.total_selected_samples = 0
         self.exp_no = exp_no
@@ -40,7 +40,7 @@ class Server():
         self.fix_client_every_GR = args.fix_client_every_GR
         self.fixed_user_id = args.fixed_user_id
 
-        print(f"self.fixed_user_id : {self.fixed_user_id}")
+        # print(f"self.fixed_user_id : {self.fixed_user_id}")
 
         self.global_metric = []
 
@@ -89,21 +89,21 @@ class Server():
                 
         
         for i in trange(self.total_users, desc="Data distribution to clients"):
-            print(f"client id : {self.user_ids[i]}")
-            user = User(device, args, self.user_ids[i], exp_no, current_directory)
+            # print(f"client id : {self.user_ids[i]}")
+            user = User(device, args, self.user_ids[i], exp_no, current_directory, wandb)
             self.users.append(user)
             self.total_samples += user.samples
             
         
             if self.user_ids[i] == str(self.fixed_user_id):
                 self.fixed_user = user
-                print(f'id found : {self.fixed_user.id}')
+                # print(f'id found : {self.fixed_user.id}')
         # print("Finished creating Fedmem server.")
 
         #Create Global_model
         for user in self.users:
             self.data_frac.append([user, user.samples])
-        print(f"data available {self.data_frac}")
+       # print(f"data available {self.data_frac}")
         self.global_model = copy.deepcopy(self.users[0].local_model)
         
         # Step 1: Determine the threshold (let's use median for simplicity)
@@ -170,19 +170,11 @@ class Server():
 
     def select_users(self, round, switch, num_subset_users):
         if switch == 0:
-            if num_subset_users == len(self.clusters[0]):
-                return self.users
-            elif  num_subset_users < len(self.clusters[0]):
-            
-                np.random.seed(round)
-                return np.random.choice(self.clusters[0], num_subset_users, replace=False) 
+            np.random.seed(round)
+            return np.random.choice(self.clusters[0], num_subset_users, replace=False) 
         elif switch == 1:
-            if num_subset_users == len(self.clusters[1]):
-                return self.users
-            elif  num_subset_users < len(self.clusters[1]):
-            
-                np.random.seed(round)
-                return np.random.choice(self.clusters[1], num_subset_users, replace=False)
+            np.random.seed(round)
+            return np.random.choice(self.clusters[1], num_subset_users, replace=False)
         else: 
             assert (switch > 1)
             
@@ -199,11 +191,13 @@ class Server():
     def eval_train(self, t):
         avg_loss = 0.0
         avg_distance = 0.0
+        avg_mae = 0.0
         accumulator = {}
         for c in self.selected_users:
             loss, distance, c_dict, mae = c.train_evaluation(self.global_model.parameters(), t)
             avg_loss += (1/len(self.selected_users))*loss
             avg_distance += (1/len(self.selected_users))*distance
+            avg_mae += (1/len(self.selected_users))*mae
             if c_dict:  # Check if test_dict is not None or empty
                 self.initialize_or_add(accumulator, c_dict)
         average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
@@ -213,11 +207,14 @@ class Server():
         self.global_train_metric.append(average_dict)
         self.global_train_loss.append(avg_loss)
         self.global_train_distance.append(avg_distance)
-        self.global_train_mae.append(mae)
+        self.global_train_mae.append(avg_mae)
 
                     
-        print(f"Global round {t} avg loss {avg_loss} avg distance {avg_distance}") 
-        
+        print(f"Global round {t} Global Train loss {avg_loss} avg distance {avg_distance}") 
+        print(f"Train Performance metric : {average_dict}")
+        print(f"Train global mae : {avg_mae}")
+
+
 
     
   
@@ -225,25 +222,33 @@ class Server():
         avg_loss = 0.0
         avg_distance = 0.0
         accumulator = {}
+        avg_mae = 0.0
         for c in self.selected_users:
-            loss, distance, c_dict, mae= c.test(self.global_model.parameters(), t)
+            loss, distance, c_dict, mae = c.test(self.global_model.parameters(), t)
             avg_loss += (1/len(self.selected_users))*loss
             avg_distance += (1/len(self.selected_users))*distance
+            avg_mae += (1/len(self.selected_users))*mae
             if c_dict:  # Check if test_dict is not None or empty
                 self.initialize_or_add(accumulator, c_dict)
         average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
 
         
         self.wandb.log(data={ "global_val_loss" : avg_loss})
-
+        self.wandb.log(data={ "global_mae" : avg_mae})
+        """self.wandb.log(data={ "global_Accuracy"  : average_dict['Accuracy']})
+        self.wandb.log(data={ "global_precision"  : average_dict['Precision']})
+        self.wandb.log(data={ "global_Recall" : average_dict['Recall']})
+        self.wandb.log(data={ "global_f1"  : average_dict['f1']})
+        """
         self.global_test_metric.append(average_dict)
         self.global_test_loss.append(avg_loss)
         self.global_test_distance.append(avg_distance)
-        self.global_test_mae.append(mae)
+        self.global_test_mae.append(avg_mae)
             
                     
-        print(f"Global round {t} avg loss {avg_loss} avg distance {avg_distance}") 
-        
+        print(f"Global round {t} Global Test loss {avg_loss} avg distance {avg_distance}") 
+        print(f"Test Performance metric : {average_dict}")
+        print(f"Test global mae : {avg_mae}")
 
 
     def evaluate(self, t):
@@ -256,7 +261,7 @@ class Server():
         
         print(file)
        
-        directory_name = str(self.algorithm) + "/" +"h5" + "/global_model/"
+        directory_name = str(self.algorithm) + "/" +"h5" + "/global_model/" + self.country + "/"
         # Check if the directory already exists
         if not os.path.exists(self.current_directory + "/results/"+ directory_name):
         # If the directory does not exist, create it
@@ -289,10 +294,12 @@ class Server():
         loss = []
 
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} number of clients: {self.num_users} / Global Rounds :"):
+            subset_rf = len(self.clusters[0])
+            subset_rl = len(self.clusters[1])
             
-            self.selected_rf_users = self.select_users(t,0,3).tolist()
-            self.selected_rl_users = self.select_users(t,1,3).tolist()
-            
+            self.selected_rf_users = self.select_users(t,0, subset_rf).tolist()
+            self.selected_rl_users = self.select_users(t,1, subset_rl).tolist()
+            self.selected_users = self.selected_rf_users + self.selected_rl_users
             exchange_dict = {key: random.sample(self.selected_rl_users, 2) for key in self.selected_rf_users} 
 
             list_user_id = [[],[]]
@@ -303,7 +310,7 @@ class Server():
                 #print(f"rl : {user.id}")
                 list_user_id[1].append(user.id)
             
-            print(f"selected users : {list_user_id}")
+            # print(f"selected users : {list_user_id}")
             
             for user in tqdm(self.selected_rf_users, desc=f"selected users from resourceful cluster {len(self.selected_rf_users)}"):
                 user.train()
@@ -315,8 +322,10 @@ class Server():
 
 
             self.aggregate_parameters()
-        
+            
             # self.evaluate_localmodel(t)
-            #self.evaluate(t)
+            self.evaluate(t)
+            self.save_model(t)
+        self.save_results()
 
        
