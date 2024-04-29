@@ -1,12 +1,10 @@
 from src.Fedavg.FedAvgServer import FedAvg
 from src.Fedmem.FedMEMServer import Fedmem
 from src.FedDCPrivacy.server import Server
-# from src.FedProx.FedProxServer import FedProx
+from src.Siloed.SiloedServer import Siloedserver
 from src.TrainModels.trainmodels import *
 from src.utils.options import args_parser
-import torchvision.models as models
 import torch
-from tqdm import tqdm, trange
 import os
 
 torch.manual_seed(0)
@@ -19,20 +17,16 @@ def main(args):
     print(current_directory)
     i = args.exp_start
     while i < args.times:
-        # if args.model_name == "Basemodel":
-        #    model = BaseModel(224).to(device)
-        
-        try:    
+        try:
+            if args.algorithm == "siloed":
+                server = Siloedserver(device, args,i, current_directory)
             if args.algorithm == "FedAvg":
                 server = FedAvg(device, args,i, current_directory)
-            elif args.algorithm == "FedProx":
-                server = FedProx(device, args,i, current_directory)
             elif args.algorithm == "Fedmem": 
                 server = Fedmem(device, args, i, current_directory)
             elif args.algorithm == "FedDcprivacy":
                 server = Server(device, args, i, current_directory)
 
-            
         except ValueError:
             raise ValueError("Wrong algorithm selected")
         server.train()
