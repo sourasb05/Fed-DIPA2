@@ -29,7 +29,11 @@ def main(args):
 
         except ValueError:
             raise ValueError("Wrong algorithm selected")
-        server.train()
+
+        if args.test:
+            server.test()
+        else:
+            server.train()
         i+=1
 
 if __name__ == "__main__":
