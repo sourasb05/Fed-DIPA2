@@ -48,8 +48,10 @@ class User():
         self.basic_info = [ "age", "gender", 'nationality', 'frequency']
         self.category = ['category']
         self.privacy_metrics = ['informationType', 'informativeness', 'sharingOwner', 'sharingOthers']
+        print(str(self.id))
         self.mega_table = pd.read_csv(current_directory + '/feature_clients/annotations_annotator' + str(self.id) + '.csv')
-        
+        # print(self.mega_table)
+       
         self.description = {'informationType': ['It tells personal information', 
                                                 'It tells location of shooting',
                                                 'It tells individual preferences/pastimes',
