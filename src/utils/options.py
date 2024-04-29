@@ -88,7 +88,7 @@ def args_parser():
                                                         # '128', '133', '190', '149', '290', '117', '253', '67', '76', '145', '162', '49', '17', 
                                                         # '279', '200', '194', '3', '51', '204', '21', '22', '94', '206', '79', '30', '129', '115', 
                                                         # '225', '184', '281', '88', '58', '295', '161', '250', '50', '63', '176', '275', '52']])
-    parser.add_argument("--country", type=str, default="japan", choices=["japan", "uk"])
+    parser.add_argument("--country", type=str, default="japan", choices=["japan", "uk", "both"])
     
     parser.add_argument("--alpha", type=float, default=0.05, 
                         help="learning rate for local models in fedmem")
