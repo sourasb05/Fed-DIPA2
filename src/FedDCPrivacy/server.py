@@ -25,7 +25,7 @@ class Server():
         self.kappa = args.kappa
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[0]
+            self.user_ids = args.user_ids[0][:10]
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
@@ -340,4 +340,11 @@ class Server():
             self.save_model(t)
         self.save_results()
 
-       
+
+    def test(self):
+        for user in self.users:
+            
+            #if user.train_samples > 30:
+            print("User ID", user.id)
+            user.test()
+            #sys.exit()

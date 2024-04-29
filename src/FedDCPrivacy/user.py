@@ -149,15 +149,25 @@ class User():
         
         # print(self.global_acc)
         
-        
-        
         self.minimum_test_loss = 10000000.0
+
+
+        if args.test:
+            self.testing = True
+            self.load_model()
+        else:
+            self.testing = False
+    
+    def load_model(self):
+        models_dir = "./models/FedDcprivacy/local_model/"
+        model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "best_local_checkpoint.pt"))["model_state_dict"]
+        self.local_model.load_state_dict(model_state_dict)
+        self.local_model.eval()
         
     def set_parameters(self, global_model):
         for param, glob_param in zip(self.local_model.parameters(), global_model):
             param.data = glob_param.data.clone()
             # print(f"user {self.id} parameters : {param.data}")
-        
             
     def get_parameters(self):
         return self.local_model.parameters()
@@ -231,10 +241,11 @@ class User():
     
 
 
-    def test(self, global_model, t):
+    def test(self, global_model=None, t=0):
         # Set the model to evaluation mode
         self.local_model.eval()
-        self.update_parameters(global_model)
+        if global_model != None:
+            self.update_parameters(global_model)
         avg_loss=0.0
         distance = 0.0
         mae = 0.0
@@ -283,12 +294,13 @@ class User():
         pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
        
         
-        self.wandb.log(data={ "%02d_val_loss" % int(self.id) : avg_loss})
-        self.wandb.log(data={ "%02d_val_mae" % int((self.id)) : mae})
-        self.wandb.log(data={ "%02d_val_Accuracy" % int(self.id) : pandas_data['Accuracy'][0]})
-        self.wandb.log(data={ "%02d_val_precision" % int((self.id)) : pandas_data['Precision'][0]})
-        self.wandb.log(data={ "%02d_val_Recall" % int((self.id)) : pandas_data['Recall'][0]})
-        self.wandb.log(data={ "%02d_val_f1" % int((self.id)) : pandas_data['f1'][0]})
+        if not self.testing:
+            self.wandb.log(data={ "%02d_val_loss" % int(self.id) : avg_loss})
+            self.wandb.log(data={ "%02d_val_mae" % int((self.id)) : mae})
+            self.wandb.log(data={ "%02d_val_Accuracy" % int(self.id) : pandas_data['Accuracy'][0]})
+            self.wandb.log(data={ "%02d_val_precision" % int((self.id)) : pandas_data['Precision'][0]})
+            self.wandb.log(data={ "%02d_val_Recall" % int((self.id)) : pandas_data['Recall'][0]})
+            self.wandb.log(data={ "%02d_val_f1" % int((self.id)) : pandas_data['f1'][0]})
         
         return avg_loss, distance, pandas_data, mae
     

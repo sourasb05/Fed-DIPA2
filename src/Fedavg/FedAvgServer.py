@@ -239,3 +239,6 @@ class FedAvg():
             self.evaluate(glob_iter)
             self.save_model(glob_iter)
         self.save_results()
+
+
+
