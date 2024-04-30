@@ -12,6 +12,7 @@ import sys
 import wandb
 import datetime
 import json
+import pandas as pd
 
 class C_server():
     def __init__(self,device, args, exp_no, current_directory):
@@ -23,6 +24,7 @@ class C_server():
         self.learning_rate = args.alpha
         self.eta = args.eta
         self.kappa = args.kappa
+        self.delta = args.delta
         self.country = args.country
         print(self.country)
         
@@ -78,9 +80,10 @@ class C_server():
         self.minimum_test_loss = 0.0
 
         self.data_frac = []
+        self.clusters = [[],[]]
+        self.data_in_cluster = [[0.0,0.0],[0.0,0.0]]
 
-        self.data_in_cluster = [0.0,0.0]
-
+        self.location_wise_cluster_model = [[],[]]
         date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         # self.wandb = wandb.init(project="DIPA2", name="Clustered_FedDC_%s_%d" % (date_and_time, int(len(self.total_users[0]+self.total_users[1]))), mode=None if args.wandb else "disabled")
                 
@@ -93,39 +96,51 @@ class C_server():
             
                 
             for user in self.users[c]:
-                self.data_frac.append([user, user.samples/self.total_samples[c]])
-                #print(f"data available {self.data_frac}")
+                
+                self.data_frac.append([user, user.id, user.samples/self.total_samples[c]])
+            # print(f"data available {self.data_frac}")
 
                 # Step 2: Sort the list in descending order
-                data_sorted = sorted(self.data_frac, reverse=True)
-                print(data_sorted)
-                
+            self.data_frac = sorted(self.data_frac, key=lambda x: x[2], reverse=True)
+            # print(self.data_frac)
             
-         
-        
-        # Step 2: Divide into two clusters
-        resourceful = [item[0] for item in self.data_frac if item[1] >= threshold]
-        resourceless = [item[0] for item in self.data_frac if item[1] < threshold]
-        
-       # print(resourceful)
-       # print(resourceless)
-        self.participated_rf_clients = self.kappa*len(resourceful)  #selected resourceful users
-        self.participated_rl_clients = (1-self.kappa)*len(resourceless) #selected resourceful users
-        self.num_users = self.participated_rf_clients + self.participated_rl_clients
+            resourceful = []
+            cum_sum = 0.0
+            for value in self.data_frac:
+                # print(value[2])
+                cum_sum += value[2]
+                resourceful.append(value[0])
 
-        # cluster formation
-        self.clusters = [resourceful, resourceless] 
-       # print(self.clusters)
-        
-
-        for user in self.clusters[0]:
-            self.data_in_cluster[0] += user.samples
+                if cum_sum >= 0.5:
+                    break
             
-        for user in self.clusters[1]:
-            self.data_in_cluster[1] += user.samples
+            resourceless = [x for x in self.users[c] if x not in resourceful]
+            
+            print(len(resourceful))
+            print(len(resourceless))
 
-            self.cluster_model[c] = copy.deepcopy(self.users[0].local_model)
+            self.participated_rf_clients = self.kappa*len(resourceful)  #selected resourceful users
+            self.participated_rl_clients = self.delta*len(resourceless) #selected resourceful users
+            self.num_users = self.participated_rf_clients + self.participated_rl_clients
+
+            # cluster formation
+            self.clusters[c] = [resourceful, resourceless] 
+            
+            print(self.clusters[c][0])
+        
+
+            for user in self.clusters[c][0]:
+                self.data_in_cluster[c][0] += user.samples
                 
+            for user in self.clusters[c][1]:
+                self.data_in_cluster[c][1] += user.samples
+
+                self.location_wise_cluster_model[c] = copy.deepcopy(self.users[c][0].local_model)
+        
+        self.global_model = copy.deepcopy(self.location_wise_cluster_model[0])
+
+
+        sys.exit()
         
     def __del__(self):
         self.wandb.finish()

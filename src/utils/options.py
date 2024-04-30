@@ -88,14 +88,16 @@ def args_parser():
                                                          [['71', '7', '189', '202', '208', '0', '160', '10', '105', '68'],
                                                           ['329', '325', '504', '584', '323', '369', '470', '597', '587', '524', '488', '482']]
                                                          ]) 
-    parser.add_argument("--country", type=str, default="none", choices=["japan", "uk", "both", "both_small", "none"])
+    parser.add_argument("--country", type=str, default="both_small", choices=["japan", "uk", "both", "both_small", "none"])
     
     parser.add_argument("--alpha", type=float, default=0.05, 
                         help="learning rate for local models in fedmem")
     parser.add_argument("--eta", type=float, default=0.01, 
                         help="personalization parameter for Fedmem")
-    parser.add_argument("--kappa", type=float, default=0.5, 
-                        help="regularizer for resourceful and resourceless selection")
+    parser.add_argument("--kappa", type=float, default=1.0, 
+                        help="regularizer for resourceful and resourceful clients")
+    parser.add_argument("--delta", type=float, default=1.0, 
+                        help="regularizer for resourceless clients")
     
     
     parser.add_argument("--num_global_iters", type=int, default=5)
