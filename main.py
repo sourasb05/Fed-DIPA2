@@ -32,6 +32,7 @@ def main(args):
 
         if args.test:
             server.test()
+            
         else:
             server.train()
         i+=1

@@ -4,8 +4,8 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--algorithm", type=str, default="FedDcprivacy",
-                        choices=["FedAvg", "Fedmem", "FedProx", "FedDcprivacy"])
+    parser.add_argument("--algorithm", type=str, default="siloed",
+                        choices=["FedAvg", "Fedmem", "FedProx", "FedDcprivacy", "siloed"])
     parser.add_argument("--batch_size", type=int, default=64)
     
     parser.add_argument("--user_ids", type=list, default=[['71', '7', '189', '202', '208', '0', '160', '10', '105', '68', '139', '207', '57', 
@@ -84,11 +84,8 @@ def args_parser():
                                                          '333', '309', '553', '415', '322', '357', '375', '521', '572', '528', '302', '362', '510', '477', 
                                                          '520', '355', '399', '411', '317', '456', '352', '389', '541', '402', '350', '583', '452', '444', 
                                                          '321', '419', '337', '474', '467', '359', '499', '546', '301', '367', '421', '379', '314', 
-                                                         '556', '495', '496', '480']]) #, '207', '57', 
-                                                        # '128', '133', '190', '149', '290', '117', '253', '67', '76', '145', '162', '49', '17', 
-                                                        # '279', '200', '194', '3', '51', '204', '21', '22', '94', '206', '79', '30', '129', '115', 
-                                                        # '225', '184', '281', '88', '58', '295', '161', '250', '50', '63', '176', '275', '52']])
-    parser.add_argument("--country", type=str, default="japan", choices=["japan", "uk", "both"])
+                                                         '556', '495', '496', '480']]) 
+    parser.add_argument("--country", type=str, default="japan", choices=["japan", "uk", "both", "none"])
     
     parser.add_argument("--alpha", type=float, default=0.05, 
                         help="learning rate for local models in fedmem")
@@ -116,7 +113,7 @@ def args_parser():
     parser.add_argument("--fix_client_every_GR", type=int, default=0, choices=[0,1])
 
     parser.add_argument("--wandb", action='store_true')
-    parser.add_argument("--test", action='store_true')
+    parser.add_argument("--test", action='store_false')
     args = parser.parse_args()
 
     return args
