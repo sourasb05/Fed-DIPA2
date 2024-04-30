@@ -30,17 +30,17 @@ class FedAvg():
         self.country = args.country
         if args.country == "japan":
             self.user_ids = args.user_ids[0]
-            self.total_users = len(self.user_ids[0])
+            self.total_users = len(self.user_ids)
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
-            self.total_users = len(self.user_ids[1])
+            self.total_users = len(self.user_ids)
         elif args.country == "both":
             self.user_ids = args.user_ids[3]
-            self.total_users = len(self.user_ids[3])
+            self.total_users = len(self.user_ids)
         else:
             self.user_ids = args.user_ids[2]
             print(self.user_ids)
-            self.total_users = len(self.user_ids[2])
+            self.total_users = len(self.user_ids)
 
         print(f"total users : {self.total_users}")
         self.num_users = self.total_users * args.users_frac    #selected users

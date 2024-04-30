@@ -1,0 +1,1 @@
+python -W ignore main.py --algorithm=FedAvg --country=both --num_global_iters=20 --local_iters=10
