@@ -23,7 +23,7 @@ from sklearn.metrics import mean_absolute_error
 import wandb
 import sys
 import os
-class user():
+class User():
 
     def __init__(self,device, args, id, exp_no, current_directory, wandb):
         torch.set_default_tensor_type('torch.cuda.FloatTensor')

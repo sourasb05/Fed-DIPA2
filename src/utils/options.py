@@ -4,7 +4,7 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--algorithm", type=str, default="siloed",
+    parser.add_argument("--algorithm", type=str, default="Clustered_FedDC",
                         choices=["FedAvg", "Fedmem", "FedProx", "FedDcprivacy", "Siloed", "Clustered_FedDC"])
     parser.add_argument("--batch_size", type=int, default=64)
     
@@ -84,8 +84,11 @@ def args_parser():
                                                          '333', '309', '553', '415', '322', '357', '375', '521', '572', '528', '302', '362', '510', '477', 
                                                          '520', '355', '399', '411', '317', '456', '352', '389', '541', '402', '350', '583', '452', '444', 
                                                          '321', '419', '337', '474', '467', '359', '499', '546', '301', '367', '421', '379', '314', 
-                                                         '556', '495', '496', '480']]) 
-    parser.add_argument("--country", type=str, default="japan", choices=["japan", "uk", "both", "none"])
+                                                         '556', '495', '496', '480'],
+                                                         [['71', '7', '189', '202', '208', '0', '160', '10', '105', '68'],
+                                                          ['329', '325', '504', '584', '323', '369', '470', '597', '587', '524', '488', '482']]
+                                                         ]) 
+    parser.add_argument("--country", type=str, default="both_small", choices=["japan", "uk", "both", "both_small", "none"])
     
     parser.add_argument("--alpha", type=float, default=0.05, 
                         help="learning rate for local models in fedmem")

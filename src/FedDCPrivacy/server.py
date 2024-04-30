@@ -13,7 +13,7 @@ import wandb
 import datetime
 import json
 
-class server():
+class Server():
     def __init__(self,device, args, exp_no, current_directory):
                 
         self.device = device

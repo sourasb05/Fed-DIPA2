@@ -27,17 +27,17 @@ def main(args):
                 server = Fedmem(device, args, i, current_directory)
             elif args.algorithm == "FedDcprivacy":
                 server = Server(device, args, i, current_directory)
-            elif args.algorithm == "Clustered_FedDc":
+            elif args.algorithm == "Clustered_FedDC":
                 server = C_server(device, args, i, current_directory)
 
         except ValueError:
             raise ValueError("Wrong algorithm selected")
 
-        if args.test:
-            server.test()
+        # if args.test:
+        #    server.test()
             
-        else:
-            server.train()
+        #else:
+        server.train()
         i+=1
 
 if __name__ == "__main__":

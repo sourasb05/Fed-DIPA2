@@ -24,29 +24,24 @@ class C_server():
         self.eta = args.eta
         self.kappa = args.kappa
         self.country = args.country
-        if args.country == "japan":
-            self.user_ids = args.user_ids[0]
-        elif args.country == "uk":
-            self.user_ids = args.user_ids[1]
-        elif args.country == "both":
-            self.user_ids = args.user_ids[3]
+        print(self.country)
+        
+        if args.country == "both_small":
+            self.user_ids = args.user_ids[4]
+            print(f"users {self.user_ids}")
         else:
             self.user_ids = args.user_ids[2]
 
 
         # print(f"user ids : {self.user_ids}")
-        self.total_users = len(self.user_ids)
-        # print(f"total users : {self.total_users}")
-        self.total_samples = 0
-        self.total_selected_samples = 0
+        self.total_users = [len(self.user_ids[u]) for u in range(len(self.user_ids))]
+        
+        self.total_samples = [0,0]
+        self.total_selected_samples = [0,0]
         self.exp_no = exp_no
         self.current_directory = current_directory
         self.algorithm = args.algorithm
-        self.fix_client_every_GR = args.fix_client_every_GR
-        self.fixed_user_id = args.fixed_user_id
-
-        # print(f"self.fixed_user_id : {self.fixed_user_id}")
-
+        
         self.global_metric = []
 
 
@@ -89,28 +84,20 @@ class C_server():
         date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.wandb = wandb.init(project="DIPA2", name="FedDCPrivacy_%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
                 
-        
-        for i in trange(self.total_users, desc="Data distribution to clients"):
-            # print(f"client id : {self.user_ids[i]}")
-            user = C_user(device, args, self.user_ids[i], exp_no, current_directory, wandb)
-            self.users.append(user)
-            self.total_samples += user.samples
+        for c in range(self.total_users):
+            for i in trange(self.total_users[c], desc="Data distribution to clients"):
+                # print(f"client id : {self.user_ids[i]}")
+                user = C_user(device, args, self.user_ids[c][i], exp_no, current_directory, wandb)
+                self.users[c].append(user)
+                self.total_samples[c] += user.samples
             
-        
-            if self.user_ids[i] == str(self.fixed_user_id):
-                self.fixed_user = user
-                # print(f'id found : {self.fixed_user.id}')
-        # print("Finished creating Fedmem server.")
+                
+            for user in self.users[c]:
+                self.data_frac.append([user, user.samples/self.total_samples[c]])
+                print(f"data available {self.data_frac}")
 
-        #Create Global_model
-        for user in self.users:
-            self.data_frac.append([user, user.samples])
-       # print(f"data available {self.data_frac}")
-        self.global_model = copy.deepcopy(self.users[0].local_model)
-        
-        # Step 1: Determine the threshold (let's use median for simplicity)
-        threshold = sorted([item[1] for item in self.data_frac])[len(self.data_frac)//2]
-
+        sys.exit()   
+                
         # Step 2: Divide into two clusters
         resourceful = [item[0] for item in self.data_frac if item[1] >= threshold]
         resourceless = [item[0] for item in self.data_frac if item[1] < threshold]
@@ -131,6 +118,9 @@ class C_server():
             
         for user in self.clusters[1]:
             self.data_in_cluster[1] += user.samples
+
+            self.cluster_model[c] = copy.deepcopy(self.users[0].local_model)
+                
         
     def __del__(self):
         self.wandb.finish()
