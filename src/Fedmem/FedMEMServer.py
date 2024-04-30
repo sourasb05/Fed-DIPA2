@@ -6,18 +6,15 @@ import h5py
 from src.Fedmem.FedMEMUser import Fedmem_user
 import numpy as np
 import copy
-from datetime import date
 from tqdm import trange
 from tqdm import tqdm
 import numpy as np
-import pandas as pd
-# from sklearn.cluster import SpectralClustering
-import time
 from sklearn.cluster import KMeans
-# Implementation for FedAvg Server
-import matplotlib.pyplot as plt
 import statistics
 import sys
+import wandb
+import datetime
+import json
 
 class Fedmem():
     def __init__(self,device, args, exp_no, current_directory):
@@ -29,10 +26,12 @@ class Fedmem():
         self.learning_rate = args.alpha
         self.eta = args.eta
         self.country = args.country
-        if args.country == "japan":
-            self.user_ids = args.user_ids[0]
+        if args.country == "both_small":
+            self.user_ids = args.user_ids[4]
+            print(f"users {self.user_ids}")
         else:
-            self.user_ids = args.user_ids[1]
+            self.user_ids = args.user_ids[2]
+
 
         # print(f"user ids : {self.user_ids}")
         self.total_users = len(self.user_ids)
@@ -47,13 +46,7 @@ class Fedmem():
         self.lambda_2 = args.lambda_2
         self.current_directory = current_directory
         self.algorithm = args.algorithm
-        self.target = args.target
         self.cluster_type = args.cluster
-        self.data_silo = args.data_silo
-        self.fix_client_every_GR = args.fix_client_every_GR
-        self.fixed_user_id = args.fixed_user_id
-
-        print(f"self.fixed_user_id : {self.fixed_user_id}")
         self.cluster_dict = {}
         self.clusters_list = []
         self.c = []
@@ -61,25 +54,7 @@ class Fedmem():
         #self.c = [[] for _ in range(args.num_teams)]
         self.top_accuracies = []
         self.global_metric = []
-
-
-        """
-        Global model
-        
-        """
-
-        # self.global_model = copy.deepcopy(model)
-        # print(self.global_model)
-        # self.global_model.to(self.device)
-        # self.global_model_name = args.model_name
-
-        """
-        Clusterhead models
-        """
-
-        # for _ in range(self.n_clusters):
-        #    self.c.append(copy.deepcopy(list(self.global_model.parameters())))
-            
+ 
 
         self.users = []
         self.selected_users = []
@@ -125,18 +100,17 @@ class Fedmem():
         # self.tot_users = len(data[0])
         # print(self.tot_users)
 
+        date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.wandb = wandb.init(project="DIPA2", name="Fedmem%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
+        
+
         for i in trange(self.total_users, desc="Data distribution to clients"):
             # id, train, test = read_user_data(i, data)
             print(f"client id : {self.user_ids[i]}")
-            user = Fedmem_user(device, args, self.user_ids[i], exp_no, current_directory)
+            user = Fedmem_user(device, args, self.user_ids[i], exp_no, current_directory, wandb)
             self.users.append(user)
             self.total_train_samples += user.train_samples
-            
-        
-            if self.user_ids[i] == str(self.fixed_user_id):
-                self.fixed_user = user
-                print(f'id found : {self.fixed_user.id}')
-        # print("Finished creating Fedmem server.")
+
 
         #Create Global_model
         for user in self.users:
@@ -304,6 +278,7 @@ class Fedmem():
 
     def eigen_decomposition(self, laplacian_matrix, n_components):
         eigenvalues, eigenvectors = np.linalg.eigh(laplacian_matrix)
+        print(f"eigenvalues : {eigenvalues}, eigenvectors : {eigenvectors}")
         # Sort eigenvectors by eigenvalues
         idx = np.argsort(eigenvalues)
         eigenvalues, eigenvectors = eigenvalues[idx], eigenvectors[:, idx]
@@ -383,169 +358,29 @@ class Fedmem():
         
         self.clusters_list.append(list(self.cluster_dict_user_id.values()))
 
-
-    def apriori_clusters(self):
-        if self.target == 10:
-            self.cluster_dict_user_id = { 0 : ['50','25','55','28','30'],
-                                     1 : ['18','52','38','34','60','17','16'],
-                                     2 : ['44','53','45','47','57','41','48'],
-                                     3 : ['56','22','37','35'],
-                                     4 : ['19','32','33','23','26','54','61','43','46','49','31','27','39','29','62','42']
-                                    }
-        elif self.target == 3:
-            self.cluster_dict_user_id = { 0 : ['47', '45', '48', '55', '16', '31', '62', '61', '57', '39', '41', '53', '17', '18'],
-                                     1 : ['27','46', '42', '60', '29', '34', '36','23', '43', '30', '25', '28', '44'],
-                                     2 : ['37', '56', '19', '54', '33', '32', '38', '22', '49', '51', '52', '26', '35']
-                                    }
+    def save_global_model(self, glob_iter):
+        if glob_iter == self.num_glob_iters-1:
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.global_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "server_checkpoint_GR" + str(glob_iter) + ".pt"))
             
-        self.cluster_dict = {cluster : [] for cluster in self.cluster_dict_user_id}
-
-
-        for cluster, user_ids in self.cluster_dict_user_id.items():
-            for user in self.users:
-                if user.id in user_ids:
-                    self.cluster_dict[cluster].append(user)
-
-        clustered_users_ids = {cluster: [user.id for user in users] for cluster, users in self.cluster_dict.items()}
-        # print(f" cluster is created : {clustered_users_ids}")
-        
-
-    def save_clusters(self, t):
-        file = "exp_no" + str(self.exp_no) + "_clusters_at_GR_" + str(t)
-        print(file)
-        # directory_name =  "/data_silo_" + str(self.data_silo) + "/" + "target_" + str(self.target) + "/" + str(self.cluster_type) + "/" + str(self.num_users) + "/" + str(self.exp_no) + "/" + "h5"
-        
-        directory_name =  "/data_silo_" + str(self.data_silo) + "/" + "fixed_client_" + str(self.fixed_user.id)  + "/" + "target_" + str(self.target) + "/" + str(self.cluster_type) + "/" + str(self.num_users) + "/" + "h5"
-
-        
-        if not os.path.exists(self.current_directory + "/results/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/" + directory_name)
-        
-        with h5py.File(self.current_directory + "/results/" + directory_name + "/" + '{}.h5'.format(file), 'w') as hf:
-            for key, value in self.cluster_dict_user_id.items():
-                hf.create_dataset(str(key), data=value)
-
-    def save_results(self):
-        file = "_exp_no_" + str(self.exp_no) + "_GR_" + str(self.num_glob_iters) + "_BS_" + str(self.batch_size) + "_data_silo_" + str(self.data_silo) + "_num_user_" + str(self.num_users)
-        
-        print(file)
-       
-        # directory_name = str(self.global_model_name) + "/" + str(self.algorithm) + "/data_silo_" + str(self.data_silo) + "/" + "target_" + str(self.target) + "/" + str(self.cluster_type) + "/" + str(self.num_users) + "/" "h5"
-        
-        directory_name = "fixed_client_" + str(self.fixed_user.id) + "/target_" + str(self.target)+  "/" + self.cluster_type
-
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/results/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/" + directory_name)
-        avg_highest_acc = 0
-        accuracy_array = np.array([])
-        each_client_accuracy_array = []
-        each_client_f1_array = []
-        each_client_val_loss_array = []
-        for user in self.users:
-            
-            accuracy_array = np.append(accuracy_array, user.maximum_per_accuracy)
-            # each_client_accuracy_array.append(user.list_accuracy)
-            # each_client_f1_array.append(user.list_f1)
-            # each_client_val_loss_array.append(user.list_val_loss)
-        print(f"len(self.users) : {len(self.users)}")
-        #print(f"each_client_accuracy_array : {each_client_accuracy_array}")
-        #print(f"each_client_f1_array : {each_client_f1_array}")
-        #print(f"each_client_val_loss_array : {each_client_val_loss_array}")
-        
-        
-        avg_highest_acc = np.mean(accuracy_array)
-        std_dev = np.std(accuracy_array, ddof=1) # ddof=1 for sample standard deviation, 0 for population
-
-
-        with h5py.File(self.current_directory + "/results/" + directory_name + "/" + '{}.h5'.format(file), 'w') as hf:
-            hf.create_dataset('exp_no', data=self.exp_no)
-            hf.create_dataset('Global rounds', data=self.num_glob_iters)
-            hf.create_dataset('Local iters', data=self.local_iters)
-            hf.create_dataset('Learning rate', data=self.learning_rate)
-            hf.create_dataset('Lambda_1', data=self.lambda_1)
-            hf.create_dataset('Lambda_2', data=self.lambda_2)
-            hf.create_dataset('Batch size', data=self.batch_size)
-            hf.create_dataset('data silo', data=self.data_silo)
-            hf.create_dataset('num users', data=self.num_users)
-            
-            # hf.create_dataset('clusters', data=self.clusters_list)
-            hf.create_dataset('global_test_loss', data=self.global_test_loss)
-            hf.create_dataset('global_train_loss', data=self.global_train_loss)
-            hf.create_dataset('global_test_accuracy', data=self.global_test_acc)
-            hf.create_dataset('global_train_accuracy', data=self.global_train_acc)
-            hf.create_dataset('global_precision', data=self.global_precision)
-            hf.create_dataset('global_recall', data=self.global_recall)
-            hf.create_dataset('global_f1score', data=self.global_f1score)
-            
-            hf.create_dataset('cluster_test_loss', data=self.cluster_test_loss)
-            hf.create_dataset('cluster_train_loss', data=self.cluster_train_loss)
-            hf.create_dataset('cluster_test_accuracy', data=self.cluster_test_acc)
-            hf.create_dataset('cluster_train_accuracy', data=self.cluster_train_acc)
-            hf.create_dataset('cluster_precision', data=self.cluster_precision)
-            hf.create_dataset('cluster_recall', data=self.cluster_recall)
-            hf.create_dataset('cluster_f1score', data=self.cluster_f1score)
-
-            hf.create_dataset('per_test_loss', data=self.local_test_loss)
-            hf.create_dataset('per_train_loss', data=self.local_train_loss)
-            hf.create_dataset('per_test_accuracy', data=self.local_test_acc)
-            hf.create_dataset('per_train_accuracy', data=self.local_train_acc)
-            hf.create_dataset('per_precision', data=self.local_precision)
-            hf.create_dataset('per_recall', data=self.local_recall)
-            hf.create_dataset('per_f1score', data=self.local_f1score)
-
-            hf.create_dataset('maximum_per_test_accuracy', data=avg_highest_acc)
-            hf.create_dataset('maximum_per_test_accuracy_list', data=accuracy_array)
-            hf.create_dataset('std_dev', data=std_dev)
-
-            for user in self.users:
-                
-                hf.create_dataset(f'client_{user.id}_accuracy_array', data=np.array(user.list_accuracy))
-                hf.create_dataset(f'client_{user.id}_f1_array', data=np.array(user.list_f1))
-                hf.create_dataset(f'client_{user.id}_val_loss_array', data=np.array(user.list_val_loss))
-            # each_client_accuracy_array.append(user.list_accuracy)
-            # each_client_f1_array.append(user.list_f1)
-            # each_client_val_loss_array.append(user.list_val_loss)
-            hf.close()
-        
-    def save_global_model(self, t): #, cm):
-        # cm_df = pd.DataFrame(cm)
-        file_cm = "_exp_no_" + str(self.exp_no) + "_confusion_matrix" 
-        file = "_exp_no_" + str(self.exp_no) + "_model" 
-        
-        print(file)
-       
-        directory_name = str(self.global_model_name) + "/" + str(self.algorithm) + "/data_silo_" + str(self.data_silo) + "/" + "target_" + str(self.target) + "/" + str(self.cluster_type) + "/" + str(self.num_users) + "/" + "h5"
-
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/models/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/models/"+ directory_name)
-        
-        if not os.path.exists(self.current_directory + "/models/confusion_matrix/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/models/confusion_matrix/"+ directory_name)
-        torch.save(self.global_model,self.current_directory + "/models/"+ directory_name + "/" + file + ".pt")
-        # cm_df.to_csv(self.current_directory + "/models/confusion_matrix/"+ directory_name + "/" + file_cm + ".csv", index=False)
+        if self.global_test_loss[glob_iter] < self.minimum_test_loss:
+            self.minimum_test_loss = self.global_test_loss[glob_iter]
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.global_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "best_server_checkpoint" + ".pt"))
     
-    
-    def save_cluster_model(self, t):
         
-
-        for cluster in range(self.num_teams):
-            file = "_exp_no_" + str(self.exp_no) + "_cluster_model_" + str(cluster)
-        
-            print(file)
-            directory_name = str(self.global_model_name) + "/" + str(self.algorithm) + "/" + str(self.target) + "/" + str(self.num_users)  + "/" +"cluster_model_" + str(cluster) 
-            # Check if the directory already exists
-            if not os.path.exists(self.current_directory + "/models/"+ directory_name):
-            # If the directory does not exist, create it
-                os.makedirs(self.current_directory + "/models/"+ directory_name)
-        
-            torch.save(self.c[cluster],self.current_directory + "/models/"+ directory_name + "/" + file + ".pt")
-
     def initialize_or_add(self, dest, src):
     
         for key, value in src.items():
@@ -555,65 +390,139 @@ class Fedmem():
                 dest[key] = value.copy()  # Initialize with a copy of the first list
 
 
-    def test_error_and_loss(self, t):
-        # num_samples = []
-        # tot_correct = []
-        accs = []
+    def eval_train_local(self, t):
         avg_loss = 0.0
         avg_distance = 0.0
-        precisions = []
-        recalls = []
-        f1s = []
-        cms = []
+        avg_mae = 0.0
         accumulator = {}
         for c in self.selected_users:
-            loss, distance, c_dict = c.test(self.global_model.parameters(), t)
+            loss, distance, c_dict, mae = c.train_evaluation_local(t)
             avg_loss += (1/len(self.selected_users))*loss
             avg_distance += (1/len(self.selected_users))*distance
+            avg_mae += (1/len(self.selected_users))*mae
             if c_dict:  # Check if test_dict is not None or empty
                 self.initialize_or_add(accumulator, c_dict)
         average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
 
-        self.global_metric.append(average_dict)
-   
-            
-                    
-        print(f"Global round {t} avg loss {avg_loss} avg distance {avg_distance}") 
-        print(average_dict)           
+        self.wandb.log(data={ "global_train_loss" : avg_loss})
+
+        self.local_train_metric.append(average_dict)
+        self.local_train_loss.append(avg_loss)
+        self.local_train_distance.append(avg_distance)
+        self.local_train_mae.append(avg_mae)
+
+        print(f"Global round {t} Local :: Train ::")           
+        print(f"Train loss {avg_loss} avg distance {avg_distance}") 
+        print(f"Train Performance metric : {average_dict}")
+        print(f"Train global mae : {avg_mae}")
+
+
 
     
-    def evaluate(self, t):
-        
-        self.test_error_and_loss(t)
-        
-    def evaluate_clusterhead(self, t):
-        evaluate_model = "cluster"
-        test_accs, test_losses, precisions, recalls, f1s, cms = self.test_error_and_loss(evaluate_model, t)
-        train_accs, train_losses  = self.train_error_and_loss( evaluate_model)
-        
-        self.cluster_train_acc.append(statistics.mean(train_accs))
-        self.cluster_test_acc.append(statistics.mean(test_accs))
-        self.cluster_train_loss.append(statistics.mean(train_losses))
-        self.cluster_test_loss.append(statistics.mean(test_losses))
-        self.cluster_precision.append(statistics.mean(precisions))
-        self.cluster_recall.append(statistics.mean(recalls))
-        self.cluster_f1score.append(statistics.mean(f1s))
-        
-        print(f"Cluster Trainning Accurancy: {self.cluster_train_acc[t]}" )
-        print(f"Cluster Trainning Loss: {self.cluster_train_loss[t]}")
-        print(f"Cluster test accurancy: {self.cluster_test_acc[t]}")
-        print(f"Cluster test_loss: {self.cluster_test_loss[t]}")
-        print(f"Cluster Precision: {self.cluster_precision[t]}")
-        print(f"Cluster Recall: {self.cluster_recall[t]}")
-        print(f"Cluster f1score: {self.cluster_f1score[t]}")
+  
+    def eval_test_local(self, t):
+        avg_loss = 0.0
+        avg_distance = 0.0
+        accumulator = {}
+        avg_mae = 0.0
+        for c in self.selected_users:
+            loss, distance, c_dict, mae = c.test_local(t)
+            avg_loss += (1/len(self.selected_users))*loss
+            avg_distance += (1/len(self.selected_users))*distance
+            avg_mae += (1/len(self.selected_users))*mae
+            if c_dict:  # Check if test_dict is not None or empty
+                self.initialize_or_add(accumulator, c_dict)
+        average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
 
-        if t == 0 and self.minimum_clust_loss == 0.0:
-            self.minimum_clust_loss = self.cluster_test_loss[0]
-        else:
-            if self.cluster_test_loss[t] < self.minimum_clust_loss:
-                self.minimum_clust_loss = self.cluster_test_loss[t]
-                # print(f"new minimum loss of local model at client {self.id} found at global round {t} local epoch {epoch}")
-                self.save_cluster_model(t)
+        
+        self.wandb.log(data={ "local_val_loss" : avg_loss})
+        self.wandb.log(data={ "local_mae" : avg_mae})
+        self.wandb.log(data={ "local_Accuracy"  : average_dict['Accuracy'][0]})
+        self.wandb.log(data={ "local_precision"  : average_dict['Precision'][0]})
+        self.wandb.log(data={ "local_Recall" : average_dict['Recall'][0]})
+        self.wandb.log(data={ "local_f1"  : average_dict['f1'][0]})
+
+        self.local_test_metric.append(average_dict)
+        self.local_test_loss.append(avg_loss)
+        self.local_test_distance.append(avg_distance)
+        self.local_test_mae.append(avg_mae)
+
+        print(f"Global round {t} Local :: Test ::")           
+        print(f"test loss {avg_loss} avg distance {avg_distance}") 
+        print(f"test Performance metric : {average_dict}")
+        print(f"test global mae : {avg_mae}")
+
+    def eval_train(self, t):
+        avg_loss = 0.0
+        avg_distance = 0.0
+        avg_mae = 0.0
+        accumulator = {}
+        for c in self.selected_users:
+            loss, distance, c_dict, mae = c.train_evaluation(self.global_model.parameters(), t)
+            avg_loss += (1/len(self.selected_users))*loss
+            avg_distance += (1/len(self.selected_users))*distance
+            avg_mae += (1/len(self.selected_users))*mae
+            if c_dict:  # Check if test_dict is not None or empty
+                self.initialize_or_add(accumulator, c_dict)
+        average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
+
+        self.wandb.log(data={ "global_train_loss" : avg_loss})
+
+        self.global_train_metric.append(average_dict)
+        self.global_train_loss.append(avg_loss)
+        self.global_train_distance.append(avg_distance)
+        self.global_train_mae.append(avg_mae)
+
+                    
+        print(f"Global round {t} Global Train loss {avg_loss} avg distance {avg_distance}") 
+        print(f"Train Performance metric : {average_dict}")
+        print(f"Train global mae : {avg_mae}")
+
+
+
+    
+  
+    def eval_test(self, t):
+        avg_loss = 0.0
+        avg_distance = 0.0
+        accumulator = {}
+        avg_mae = 0.0
+        for c in self.selected_users:
+            loss, distance, c_dict, mae = c.test(self.global_model.parameters(), t)
+            avg_loss += (1/len(self.selected_users))*loss
+            avg_distance += (1/len(self.selected_users))*distance
+            avg_mae += (1/len(self.selected_users))*mae
+            if c_dict:  # Check if test_dict is not None or empty
+                self.initialize_or_add(accumulator, c_dict)
+        average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
+
+        
+        self.wandb.log(data={ "global_val_loss" : avg_loss})
+        self.wandb.log(data={ "global_mae" : avg_mae})
+        self.wandb.log(data={ "global_Accuracy"  : average_dict['Accuracy'][0]})
+        self.wandb.log(data={ "global_precision"  : average_dict['Precision'][0]})
+        self.wandb.log(data={ "global_Recall" : average_dict['Recall'][0]})
+        self.wandb.log(data={ "global_f1"  : average_dict['f1'][0]})
+        
+        self.global_test_metric.append(average_dict)
+        self.global_test_loss.append(avg_loss)
+        self.global_test_distance.append(avg_distance)
+        self.global_test_mae.append(avg_mae)
+            
+                    
+        print(f"Global round {t} Global Test loss {avg_loss} avg distance {avg_distance}") 
+        print(f"Test Performance metric : {average_dict}")
+        print(f"Test global mae : {avg_mae}")
+
+
+    def evaluate(self, t):
+        self.eval_test(t)
+        self.eval_train(t)
+
+    def evaluate_local(self, t):
+        self.eval_test_local(t)
+        self.eval_train_local(t)
+
 
     
     def find_cluster_id(self, user_id):
@@ -625,20 +534,15 @@ class Fedmem():
 
     def train(self):
         loss = []
-        if self.cluster_type == "apriori_hsgd":
-            self.apriori_clusters()
+        
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} cluster type : {self.cluster_type} number of clients: {self.num_users} Global Rounds :"):
-            # self.send_global_parameters()
             
             if t == 0:
                 self.send_global_parameters()
             else:
                 self.send_cluster_parameters()
 
-            if self.fix_client_every_GR == 1:
-                self.selected_users = self.select_n_1_users(t, int(self.num_users)-1)
-            else:
-                self.selected_users = self.select_users(t, int(self.num_users)).tolist()
+            self.selected_users = self.select_users(t, int(self.num_users)).tolist()
             list_user_id = []
             for user in self.selected_users:
                 list_user_id.append(user.id)
@@ -646,41 +550,23 @@ class Fedmem():
             
             
             for user in tqdm(self.selected_users, desc=f"total selected users {len(self.selected_users)}"):
-               clust_id = self.find_cluster_id(user.id)
-               print(f"clust_id : {clust_id}")
-               if clust_id is not None:
-                    user.train()
-               else:
-                    user.train()
+                clust_id = self.find_cluster_id(user.id)
+                print(f"clust_id : {clust_id}")
+                if clust_id is not None:
+                    user.train(self.c[clust_id],t)
+                else:
+                    user.train(self.global_model.parameters(),t)
 
-            if self.cluster_type == "dynamic":
-                similarity_matrix = self.similarity_check()
-                # print(similarity_matrix)
-                clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
-                print(clusters)
-                self.combine_cluster_user(clusters)
-                self.save_clusters(t)
+            similarity_matrix = self.similarity_check()
+            clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
+            print(clusters)
+            self.combine_cluster_user(clusters)
+            # self.save_clusters(t)
             
             self.aggregate_clusterhead()
             self.global_update()
 
+            #self.evaluate_localmodel(t)
+            #self.evaluate(t)
         
-            self.evaluate_localmodel(t)
-            self.evaluate_clusterhead(t)
-            self.evaluate(t)
         
-        #print(self.global_metric)
-        # informative_accuracy = [d['Accuracy'][0] for d in self.global_metric if 'Accuracy' in d and len(d['Accuracy']) > 0]
-        # informative_precision = [d['Precision'][0] for d in self.global_metric if 'Precision' in d and len(d['Precision']) > 0]
-        # informative_recall = [d['Recall'][0] for d in self.global_metric if 'Recall' in d and len(d['Recall']) > 0]
-        # informative_f1 = [d['f1'][0] for d in self.global_metric if 'f1' in d and len(d['f1']) > 0]
-
-        # print(f"-----Informativeness-----")
-        # print(f"Accuracy : {informative_accuracy}")
-        # print(f"Precision : {informative_precision}")
-        # print(f"Recall : {informative_recall}")
-        # print(f"f1 : {informative_f1}")
-        # self.save_results()
-        # self.plot_per_result()
-        # self.plot_cluster_result()
-        # self.plot_global_result()

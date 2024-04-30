@@ -33,7 +33,7 @@ from sklearn.metrics import mean_absolute_error
 
 class Fedmem_user():
 
-    def __init__(self,device, args, id, exp_no, current_directory):
+    def __init__(self,device, args, id, exp_no, current_directory, wandb):
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
         self.device = device
         
@@ -41,20 +41,18 @@ class Fedmem_user():
         self.batch_size = args.batch_size
         self.exp_no = exp_no
         self.current_directory = current_directory
+        self.num_glob_iters=args.num_global_iters
+        self.wandb = wandb
+
         """
         Hyperparameters
         """
         self.learning_rate = args.alpha
         self.local_iters = args.local_iters
         self.eta = args.eta
-        self.global_model_name = args.model_name
         self.algorithm = args.algorithm
         self.cluster_type = args.cluster
-        self.data_silo = args.data_silo
-        self.target = args.target
-        self.num_users = args.total_users * args.users_frac 
-        self.fixed_user_id = args.fixed_user_id
-        self.country = "japan"
+        self.country = args.country
         
         self.distance = 0.0
         
@@ -109,7 +107,6 @@ class Fedmem_user():
 
 
         self.local_model = PrivacyModel(input_dim=self.input_dim).to(self.device)
-        self.eval_model = copy.deepcopy(self.local_model)
 
         image_size = (224, 224)
         feature_folder = self.current_directory + '/object_features/resnet50/'
@@ -125,14 +122,16 @@ class Fedmem_user():
         train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
         val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)    
 
-        self.train_loader = DataLoader(train_dataset, batch_size=96, generator=torch.Generator(device='cuda'), shuffle=True)
-        self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=32)
-    
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
+        self.val_loader = DataLoader(val_dataset, batch_size=len(val_dataset), generator=torch.Generator(device='cuda'))
+        self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'))
+        
         
       
         
         self.optimizer= torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
-        
+        #self.optimizer = Fedmem(self.local_model.parameters(), self.learning_rate, self.eta)
+
         # metrics
 
         threshold = 0.5
@@ -158,10 +157,21 @@ class Fedmem_user():
                 for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
         self.global_conf = [ConfusionMatrix(task="multilabel", num_labels=output_dim) \
                 for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
-        
-        # print(self.global_acc)
-        
-        # input("press")
+       
+        self.minimum_test_loss = 10000000.0
+
+
+        if args.test:
+            self.testing = True
+            self.load_model()
+        else:
+            self.testing = False
+    
+    def load_model(self):
+        models_dir = "./models/FedDcprivacy/local_model/"
+        model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "best_local_checkpoint.pt"))["model_state_dict"]
+        self.local_model.load_state_dict(model_state_dict)
+        self.local_model.eval()
         
         
 
@@ -284,9 +294,7 @@ class Fedmem_user():
             # MAE calculation
                 
             true_values = informativeness.cpu().detach().numpy()
-            print(f"true values : {true_values}")
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
-            print(f"predicted values : {predicted_values}")
             mae = mean_absolute_error(true_values, predicted_values)
             
         print(f"MAE : {mae}")
@@ -304,8 +312,6 @@ class Fedmem_user():
         
 
         avg_loss = total_loss / len(self.val_loader)
-        # print(f"Global iter {t}: Validation loss: {avg_loss}")
-        # print(f"distance: {distance}")
         
         return avg_loss, distance, pandas_data, mae
     
@@ -314,27 +320,25 @@ class Fedmem_user():
         loss = np.abs(prediction - target)
         return np.mean(loss)
         
-    def evaluate_model(self):
-        self.local_model
-        total_loss=0.0
-
-        informativeness_gt = []
-        informativeness_pred = []
+    def evaluate_model(self, t, epoch):
+        self.local_model.eval()
+        avg_loss=0.0
+        mae=0.0
+        distance=0.0
         for i, vdata in enumerate(self.val_loader):
             features, additional_information, information, informativeness, sharingOwner, sharingOthers = vdata
             y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
-            total_loss += loss.item()
+            avg_loss += loss.item()/len(features)
             
-            print(y_preds[:, :6].shape, information.shape)
-
+            # print(y_preds[:, :6].shape, information.shape)
+            
             self.acc[0].update(y_preds[:, :6], information.to(self.device))
             self.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.conf[0].update(y_preds[:, :6], information.to(self.device))
             
-            self.distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())
             """for gt, y_pred in zip(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy()):
                 informativeness_gt.append(int(gt))
                 informativeness_pred.append(int(y_pred))"""
@@ -352,39 +356,50 @@ class Fedmem_user():
             self.f1[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(self.device))
             self.conf[2].update(y_preds[:, 14:21], sharingOthers.to(self.device))
 
-        #print(informativeness_gt)
-        #print(informativeness_pred)
-        #precision = precision_score(informativeness_gt, informativeness_pred, labels = np.arange(7))
-        #print(f"precision : {precision}")
-        #input("press")
-        self.distance = self.distance / len(self.val_loader)
-
+            true_values = informativeness.cpu().detach().numpy()
+            predicted_values = y_preds[:, 6].cpu().detach().numpy()
+            mae = mean_absolute_error(true_values, predicted_values)
+            distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
+            
         pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
                     'Precision' : [i.compute().detach().cpu().numpy() for i in self.pre], 
                     'Recall': [i.compute().detach().cpu().numpy() for i in self.rec], 
                     'f1': [i.compute().detach().cpu().numpy() for i in self.f1]}
-       
+        
+        self.wandb.log(data={ "%02d_val_loss" % int(self.id) : avg_loss})
+        self.wandb.log(data={ "%02d_val_mae" % int((self.id)) : mae})
+        self.wandb.log(data={ "%02d_val_Accuracy" % int(self.id) : pandas_data['Accuracy'][0]})
+        self.wandb.log(data={ "%02d_val_precision" % int((self.id)) : pandas_data['Precision'][0]})
+        self.wandb.log(data={ "%02d_val_Recall" % int((self.id)) : pandas_data['Recall'][0]})
+        self.wandb.log(data={ "%02d_val_f1" % int((self.id)) : pandas_data['f1'][0]})
+    
         pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
+        print(f"t : {t} e : {epoch} : val loss : {avg_loss}")
+        self.save_model(t,epoch, avg_loss)
 
-        print(pandas_data)
-
-        avg_loss = total_loss / len(self.val_loader)
-        # print(f"Validation loss: {avg_loss}")
-        # print(f"distance: {self.distance}")
-        # input("press")
-        # print(f"Epoch : {iter}  loss: {loss.item()} acc: {self.acc} pre: {self.pre} f1: {self.f1} conf: {self.conf}")
-
-
-        # df = pd.DataFrame(pandas_data, index=output_channel.keys())
-        # print(df.round(3))
-        # df.to_csv('./result.csv', index =False)
-        # with open('./distance', 'w') as w:
-        #     w.write(str(distance))
+    def save_model(self, glob_iter, epoch, current_loss):
+        if glob_iter == self.num_glob_iters-1:
+            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.local_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "local_checkpoint_GR" + str(glob_iter) + ".pt"))
+            
+        if current_loss < self.minimum_test_loss:
+            self.minimum_test_loss = current_loss
+            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.local_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "best_local_checkpoint" + ".pt"))
         
-        # if 'informativeness' in self.output_channel.keys():
-        #    print('informativenss distance: ', distance)
-        
-    def train(self):
+    def train(self,cluster_model,t):
         print(f"user id : {self.id}")
         
         self.local_model.train()
@@ -396,10 +411,12 @@ class Fedmem_user():
                 y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
                 loss.backward()
-                self.optimizer.step()
-                print(f"Epoch : {iter} Training loss: {loss.item()}")
                 
-            self.evaluate_model()
+                self.optimizer.step()
+                #self.optimizer.step(cluster_model)
+                #print(f"Epoch : {iter} Training loss: {loss.item()}")
+                
+            self.evaluate_model(t, iter)
 
         
         

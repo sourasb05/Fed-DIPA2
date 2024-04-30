@@ -41,7 +41,7 @@ class C_user():
         self.local_iters = args.local_iters
         self.eta = args.eta
         self.algorithm = args.algorithm
-        self.country = "japan"
+        self.country = args.country
         self.distance = 0.0
         self.bigfives = ["extraversion", "agreeableness", "conscientiousness",
                          "neuroticism", "openness"]
