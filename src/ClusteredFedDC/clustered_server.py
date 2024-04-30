@@ -1,7 +1,7 @@
 import torch
 import os
 import h5py
-from src.FedDCPrivacy.user import User
+from src.ClusteredFedDC.clustered_user import C_user
 import numpy as np
 import copy
 from tqdm import trange
@@ -13,7 +13,7 @@ import wandb
 import datetime
 import json
 
-class server():
+class C_server():
     def __init__(self,device, args, exp_no, current_directory):
                 
         self.device = device
@@ -25,7 +25,7 @@ class server():
         self.kappa = args.kappa
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[0][:10]
+            self.user_ids = args.user_ids[0]
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
@@ -92,7 +92,7 @@ class server():
         
         for i in trange(self.total_users, desc="Data distribution to clients"):
             # print(f"client id : {self.user_ids[i]}")
-            user = User(device, args, self.user_ids[i], exp_no, current_directory, wandb)
+            user = C_user(device, args, self.user_ids[i], exp_no, current_directory, wandb)
             self.users.append(user)
             self.total_samples += user.samples
             

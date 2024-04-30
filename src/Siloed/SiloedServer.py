@@ -88,13 +88,84 @@ class Siloedserver():
         for user in self.users:
             user.set_parameters(self.global_model)
     
+    def eval_train(self):
+        avg_loss = 0.0
+        avg_distance = 0.0
+        avg_mae = 0.0
+        accumulator = {}
+        for c in self.users:
+            loss, distance, c_dict, mae = c.train_evaluation()
+            avg_loss += (1/len(self.users))*loss
+            avg_distance += (1/len(self.users))*distance
+            avg_mae += (1/len(self.users))*mae
+            if c_dict:  # Check if test_dict is not None or empty
+                self.initialize_or_add(accumulator, c_dict)
+        average_dict = {key: [x / len(self.users) for x in value] for key, value in accumulator.items()}
+
+        self.wandb.log(data={ "global_train_loss" : avg_loss})
+
+        self.global_train_metric.append(average_dict)
+        self.global_train_loss.append(avg_loss)
+        self.global_train_distance.append(avg_distance)
+        self.global_train_mae.append(avg_mae)
+
+                    
+        print(f"siloed avg Train loss {avg_loss} avg distance {avg_distance}") 
+        print(f"siloed avg Train Performance metric : {average_dict}")
+        print(f"siloed avg Train global mae : {avg_mae}")
+
+
+    def initialize_or_add(self, dest, src):
+    
+        for key, value in src.items():
+            if key in dest:
+                dest[key] = [x + y for x, y in zip(dest[key], value)]
+            else:
+                dest[key] = value.copy()  # Initialize with a copy of the first list
+
+    
+  
+    def eval_test(self):
+        avg_loss = 0.0
+        avg_distance = 0.0
+        accumulator = {}
+        avg_mae = 0.0
+        for c in self.users:
+            loss, distance, c_dict, mae = c.test()
+            avg_loss += (1/len(self.users))*loss
+            avg_distance += (1/len(self.users))*distance
+            avg_mae += (1/len(self.users))*mae
+            if c_dict:  # Check if test_dict is not None or empty
+                self.initialize_or_add(accumulator, c_dict)
+        average_dict = {key: [x / len(self.users) for x in value] for key, value in accumulator.items()}
+
+        
+        self.wandb.log(data={ "global_val_loss" : avg_loss})
+        self.wandb.log(data={ "global_mae" : avg_mae})
+        self.global_test_metric.append(average_dict)
+        self.global_test_loss.append(avg_loss)
+        self.global_test_distance.append(avg_distance)
+        self.global_test_mae.append(avg_mae)
+            
+                    
+        print(f"siloed avg Test loss {avg_loss} avg distance {avg_distance}") 
+        print(f"siloed avg Performance metric : {average_dict}")
+        print(f"siloed avg Test global mae : {avg_mae}")
+
+
+    def evaluate(self):
+        self.eval_test()
+        self.eval_train()
+        self.save_results()
+    
     def save_results(self):
-       
-        file = "exp_no_" + str(self.exp_no) + "local_model" + "_BS_" + str(self.batch_size)
+        date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        
+        file = "avg_siloed_model" +  date_and_time
         
         print(file)
        
-        directory_name = str(self.algorithm) + "/" +"h5" + "/global_model/"
+        directory_name = str(self.algorithm) + "/" +"h5" + "/siloed_model/" 
         # Check if the directory already exists
         if not os.path.exists(self.current_directory + "/results/"+ directory_name):
         # If the directory does not exist, create it
@@ -127,7 +198,7 @@ class Siloedserver():
         for user in self.users:
             list_user_id.append(user.id)
             user.train()
-        self.save_results()
+        self.evaluate()
     
     def test(self):
         for user in self.users:

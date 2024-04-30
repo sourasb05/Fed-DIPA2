@@ -2,6 +2,7 @@ from src.Fedavg.FedAvgServer import FedAvg
 from src.Fedmem.FedMEMServer import Fedmem
 from src.FedDCPrivacy.server import Server
 from src.Siloed.SiloedServer import Siloedserver
+from src.ClusteredFedDC.clustered_server import C_server
 from src.TrainModels.trainmodels import *
 from src.utils.options import args_parser
 import torch
@@ -18,7 +19,7 @@ def main(args):
     i = args.exp_start
     while i < args.times:
         try:
-            if args.algorithm == "siloed":
+            if args.algorithm == "Siloed":
                 server = Siloedserver(device, args,i, current_directory)
             if args.algorithm == "FedAvg":
                 server = FedAvg(device, args,i, current_directory)
@@ -26,6 +27,8 @@ def main(args):
                 server = Fedmem(device, args, i, current_directory)
             elif args.algorithm == "FedDcprivacy":
                 server = Server(device, args, i, current_directory)
+            elif args.algorithm == "Clustered_FedDc":
+                server = C_server(device, args, i, current_directory)
 
         except ValueError:
             raise ValueError("Wrong algorithm selected")

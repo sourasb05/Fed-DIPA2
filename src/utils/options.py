@@ -5,7 +5,7 @@ def args_parser():
     parser = argparse.ArgumentParser()
     
     parser.add_argument("--algorithm", type=str, default="siloed",
-                        choices=["FedAvg", "Fedmem", "FedProx", "FedDcprivacy", "siloed"])
+                        choices=["FedAvg", "Fedmem", "FedProx", "FedDcprivacy", "Siloed", "Clustered_FedDC"])
     parser.add_argument("--batch_size", type=int, default=64)
     
     parser.add_argument("--user_ids", type=list, default=[['71', '7', '189', '202', '208', '0', '160', '10', '105', '68', '139', '207', '57', 
@@ -96,7 +96,7 @@ def args_parser():
     
     
     parser.add_argument("--num_global_iters", type=int, default=5)
-    parser.add_argument("--local_iters", type=int, default=10)
+    parser.add_argument("--local_iters", type=int, default=100)
     parser.add_argument("--optimizer", type=str, default="SGD")
     
     parser.add_argument("--times", type=int, default=1, 

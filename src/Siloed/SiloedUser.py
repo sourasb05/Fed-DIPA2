@@ -157,10 +157,18 @@ class Siloeduser():
         for param, new_param in zip(self.local_model.parameters(), new_params):
             param.data = new_param.data.clone()
 
-    def train_evaluation(self, global_model, t):
+    def load_model(self):
+        models_dir =model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/"
+        model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "best_siloed_checkpoint.pt"))["model_state_dict"]
+        self.local_model.load_state_dict(model_state_dict)
+        
+
+    def train_evaluation(self, global_model=None):
+        self.load_model()
         # Set the model to evaluation mode
         self.local_model.eval()
-        self.update_parameters(global_model)
+        if global_model!=None:
+            self.update_parameters(global_model)
         total_loss=0.0
         distance = 0.0
         for i, vdata in enumerate(self.trainloaderfull):
@@ -207,8 +215,9 @@ class Siloeduser():
         
         return total_loss, distance, pandas_data, mae
     
-    def test(self, global_model=None, t=0):
+    def test(self, global_model=None):
         # Set the model to evaluation mode
+        self.load_model()
         self.local_model.eval()
         if global_model != None:
             self.update_parameters(global_model)
@@ -278,7 +287,7 @@ class Siloeduser():
 
         
     def evaluate_model(self, epoch):
-        self.local_model
+        self.local_model.eval()
         avg_loss=0.0
 
         for i, vdata in enumerate(self.val_loader):
@@ -320,6 +329,7 @@ class Siloeduser():
         
         if current_loss < self.minimum_test_loss:
             self.minimum_test_loss = current_loss
+            # print(f"user id : {self.id} Epoch : {epoch} best val loss : {self.minimum_test_loss} ")
             model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
@@ -327,7 +337,10 @@ class Siloeduser():
                         'model_state_dict': self.local_model.state_dict(),
                         'loss': self.minimum_test_loss
                         }
-            torch.save(checkpoint, os.path.join(model_path, "best_local_checkpoint" + ".pt"))
+            torch.save(checkpoint, os.path.join(model_path, "best_siloed_checkpoint" + ".pt"))
+           # print(f"model saved at epoch : {epoch}")
+    
+    
     
     def train(self):
         self.local_model.train()
