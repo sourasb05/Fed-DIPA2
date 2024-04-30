@@ -25,14 +25,14 @@ class Server():
         self.kappa = args.kappa
         self.country = args.country
         if args.country == "japan":
-            self.user_ids = args.user_ids[0][:10]
+            self.user_ids = args.user_ids[0]
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
             self.user_ids = args.user_ids[3]
         else:
             self.user_ids = args.user_ids[2]
-
+        
 
         # print(f"user ids : {self.user_ids}")
         self.total_users = len(self.user_ids)

@@ -21,9 +21,6 @@ class FedAvg():
         self.learning_rate = args.alpha
         
         self.user_ids = args.user_ids
-        self.total_users = len(self.user_ids[0])
-        print(f"total users : {self.total_users}")
-        self.num_users = self.total_users * args.users_frac    #selected users
         self.total_train_samples = 0
         self.exp_no = exp_no
         self.algorithm = args.algorithm
@@ -33,8 +30,21 @@ class FedAvg():
         self.country = args.country
         if args.country == "japan":
             self.user_ids = args.user_ids[0]
-        else:
+            self.total_users = len(self.user_ids[0])
+        elif args.country == "uk":
             self.user_ids = args.user_ids[1]
+            self.total_users = len(self.user_ids[1])
+        elif args.country == "both":
+            self.user_ids = args.user_ids[3]
+            self.total_users = len(self.user_ids[3])
+        else:
+            self.user_ids = args.user_ids[2]
+            print(self.user_ids)
+            self.total_users = len(self.user_ids[2])
+
+        print(f"total users : {self.total_users}")
+        self.num_users = self.total_users * args.users_frac    #selected users
+
 
   
         self.users = []
@@ -100,9 +110,19 @@ class FedAvg():
     
 
     def save_model(self, glob_iter):
-       if self.global_test_loss[glob_iter] < self.minimum_test_loss:
+        if glob_iter == self.num_glob_iters-1:
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.global_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "server_checkpoint_GR" + str(glob_iter) + ".pt"))
+            
+        if self.global_test_loss[glob_iter] < self.minimum_test_loss:
             self.minimum_test_loss = self.global_test_loss[glob_iter]
-            model_path = self.current_directory + "/models/" + "/" + self.algorithm + "/global_model/"
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,

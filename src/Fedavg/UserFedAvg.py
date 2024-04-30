@@ -49,9 +49,8 @@ class UserAvg():
         self.local_iters = args.local_iters
         self.eta = args.eta
         self.algorithm = args.algorithm
-        self.num_users = args.total_users * args.users_frac 
         self.fixed_user_id = args.fixed_user_id
-        self.country = "japan"
+        self.country = args.country
         
         self.distance = 0.0
         
@@ -359,19 +358,16 @@ class UserAvg():
         avg_loss = total_loss / len(self.val_loader)
         
     def train(self):
-        #print(f"user id : {self.id}")
         
         self.local_model.train()
         # print(self.local_iters)
-        # sys.exit()
+        
         for iter in range(self.local_iters):
             mae = 0
             for ib, batch in enumerate(self.train_loader):
                 features, additional_information, information, informativeness, sharingOwner, sharingOthers = batch
                 self.optimizer.zero_grad()
                 y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
-                print(y_preds)
-                input("pause")
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
                 loss.backward()
                 self.optimizer.step()
