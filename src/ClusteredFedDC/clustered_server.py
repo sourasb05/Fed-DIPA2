@@ -45,7 +45,7 @@ class C_server():
         self.global_metric = []
 
 
-        self.users = []
+        self.users = [[],[]]
         self.selected_users = []
 
         """
@@ -82,9 +82,9 @@ class C_server():
         self.data_in_cluster = [0.0,0.0]
 
         date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        self.wandb = wandb.init(project="DIPA2", name="FedDCPrivacy_%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
+        # self.wandb = wandb.init(project="DIPA2", name="Clustered_FedDC_%s_%d" % (date_and_time, int(len(self.total_users[0]+self.total_users[1]))), mode=None if args.wandb else "disabled")
                 
-        for c in range(self.total_users):
+        for c in range(len(self.total_users)):
             for i in trange(self.total_users[c], desc="Data distribution to clients"):
                 # print(f"client id : {self.user_ids[i]}")
                 user = C_user(device, args, self.user_ids[c][i], exp_no, current_directory, wandb)
@@ -94,10 +94,15 @@ class C_server():
                 
             for user in self.users[c]:
                 self.data_frac.append([user, user.samples/self.total_samples[c]])
-                print(f"data available {self.data_frac}")
+                #print(f"data available {self.data_frac}")
 
-        sys.exit()   
+                # Step 2: Sort the list in descending order
+                data_sorted = sorted(self.data_frac, reverse=True)
+                print(data_sorted)
                 
+            
+         
+        
         # Step 2: Divide into two clusters
         resourceful = [item[0] for item in self.data_frac if item[1] >= threshold]
         resourceless = [item[0] for item in self.data_frac if item[1] < threshold]
