@@ -9,12 +9,12 @@ def args_parser():
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--num_teams", type=int, default=2)
     parser.add_argument("--gamma", type=float, default=1.0)
-    parser.add_argument("--lambda_1", type=float, default=0.25, 
+    parser.add_argument("--lambda_1", type=float, default=0.0, 
                         help="Regularization term lambda_1")
-    parser.add_argument("--lambda_2", type=float, default=0.25, 
+    parser.add_argument("--lambda_2", type=float, default=0.0, 
                         help="Regularization term lambda_2")
     parser.add_argument("--cluster", type = str, default="dynamic", choices=["apriori_hsgd", "dynamic", "apriori"])
-
+    parser.add_argument("--users_frac", type=float, default=1.0)
     
     parser.add_argument("--user_ids", type=list, default=[['71', '7', '189', '202', '208', '0', '160', '10', '105', '68', '139', '207', '57', 
                                                          '128', '133', '190', '149', '290', '117', '253', '67', '76', '145', '162', '49', '17', 
@@ -54,7 +54,12 @@ def args_parser():
                                                          '520', '355', '399', '411', '317', '456', '352', '389', '541', '402', '350', '583', '452', '444', 
                                                          '321', '419', '337', '474', '467', '359', '499', '546', '301', '367', '421', '379', '314', 
                                                          '556', '495', '496', '480'],
-                                                         ['71', '7', '189', '202', '208', '0', '160', '10', '105', '68'],
+                                                         ['71', '7', '189', '202', '208', '0', '160', '10', '105', '68', '321', '419', '337', '474', '467', '359', '499', '546', '301', '367', '421', '379', '314', 
+                                                         '556', '495', '496', '480', '140', '132', '159', '119', '91', '130', '6', '101', '255', '237', '25', '152', '87', 
+                                                         '32', '227', '243', '111', '294', '42', '257', '183', '27', '90', '299', '214', '222', '298', '284',
+                                                         '66', '251', '125', '269', '164', '271', '45', '198', '84', '246', '29', '150', '238', '293', '264', '156',
+                                                         '12', '272', '70', '266', '260', '249', '199', '142', '258', '48', '69', '114', '15', '85', '283', 
+                                                         ],
                                                          ['71', '7', '189', '202', '208', '0', '160', '10', '105', '68', '139', '207', '57', 
                                                          '128', '133', '190', '149', '290', '117', '253', '67', '76', '145', '162', '49', '17', 
                                                          '279', '200', '194', '3', '51', '204', '21', '22', '94', '206', '79', '30', '129', '115', 
@@ -94,7 +99,7 @@ def args_parser():
                                                          '321', '419', '337', '474', '467', '359', '499', '546', '301', '367', '421', '379', '314', 
                                                          '556', '495', '496', '480'],
                                                          [['71', '7', '189', '202', '208', '0', '160', '10', '105', '68'],
-                                                          ['329', '325', '504', '584', '323', '369', '470', '597', '587', '524', '488', '482']]
+                                                          ['329', '325', '504', '584', '323', '369', '470', '597', '587', '524', '488', '482', ]]
                                                          ]) 
     parser.add_argument("--country", type=str, default="none", choices=["japan", "uk", "both", "both_small", "none"])
     
@@ -119,14 +124,14 @@ def args_parser():
     parser.add_argument("--gpu", type=int, default=0,
                         help="Which GPU to run the experiments, -1 mean CPU, 0,1,2 for GPU")
     
-    parser.add_argument("--users_frac", type=float, default=1.0, 
+    parser.add_argument("--p", type=float, default=1.0, 
                         help="selected fraction of users available per global round")
 
     parser.add_argument("--fixed_user_id", type=int, default=16)
     parser.add_argument("--fix_client_every_GR", type=int, default=0, choices=[0,1])
 
     parser.add_argument("--wandb", action='store_true')
-    parser.add_argument("--test", action='store_false')
+    parser.add_argument("--test", action='store_true')
     args = parser.parse_args()
 
     return args

@@ -28,15 +28,13 @@ class Fedmem():
         self.country = args.country
         if args.country == "both":
             self.user_ids = args.user_ids[3]
-            print(f"users {self.user_ids}")
         else:
             self.user_ids = args.user_ids[2]
 
 
-        # print(f"user ids : {self.user_ids}")
         self.total_users = len(self.user_ids)
-        print(f"total users : {self.total_users}")
-        self.num_users = self.total_users * args.users_frac    #selected users
+        self.num_users = int(self.total_users*args.p)  #selected users
+        print(self.num_users)
         self.num_teams = args.num_teams
         self.total_train_samples = 0
         self.exp_no = exp_no
@@ -95,10 +93,6 @@ class Fedmem():
         self.minimum_global_loss = 0.0
 
         self.data_frac = []
-        
-        # data = read_data(args, current_directory)
-        # self.tot_users = len(data[0])
-        # print(self.tot_users)
 
         date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.wandb = wandb.init(project="DIPA2", name="Fedmem%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
@@ -106,7 +100,7 @@ class Fedmem():
 
         for i in trange(self.total_users, desc="Data distribution to clients"):
             # id, train, test = read_user_data(i, data)
-            print(f"client id : {self.user_ids[i]}")
+           # print(f"client id : {self.user_ids[i]}")
             user = Fedmem_user(device, args, self.user_ids[i], exp_no, current_directory, wandb)
             self.users.append(user)
             self.total_train_samples += user.train_samples
@@ -135,13 +129,13 @@ class Fedmem():
         for clust_id in range(self.num_teams):
             users = np.array(self.cluster_dict[clust_id])
             users_id = np.array(self.cluster_dict_user_id[clust_id])
-            # print(f"cluster {clust_id} model has been sent to {len(users_id)} users {users_id}")
-            if len(users) != 0:
-                #for param in self.c[clust_id]:
-                    # print(f" cluster {clust_id} parameters :{param.data}")
-                    # input("press")
-                for user in users:
-                    user.set_parameters(self.c[clust_id])
+            print(f"cluster {clust_id} model has been sent to {len(users_id)} users {users_id}")
+            """if len(users) != 0:
+                for param in self.c[clust_id]:
+                    print(f" cluster {clust_id} parameters :{param.data}")
+                """
+            for user in users:
+                user.set_parameters(self.c[clust_id])
 
     def add_parameters(self, cluster_model, ratio):
         for server_param, cluster_param in zip(self.global_model.parameters(), cluster_model):
@@ -153,23 +147,14 @@ class Fedmem():
         
         for user in self.selected_users:
             for server_param, local_param in zip(self.global_model.parameters(), user.local_model.parameters()):
-                server_param.data += local_param.data.clone() * (1/len(self.selected_users))
+                server_param.data += local_param.data.clone() * (user.samples/self.samples)
 
 
-        
-        """for cluster_model in self.c:
-            self.add_parameters(cluster_model, 1/len(self.c))
-        """
     def add_parameters_clusters(self, user, cluster_id):
         
         for cluster_param, user_param in zip(self.c[cluster_id], user.get_parameters()):
-            # cluster_param.data = cluster_param.data + user.ratio * user_param.data.clone()
-            cluster_param.data = cluster_param.data + 0.1* user_param.data.clone()
-        for cluster_param , global_param in zip(self.c[cluster_id], self.global_model.parameters()):
-            cluster_param.data += self.eta*(cluster_param.data - global_param.data)
-
-            # print(f"cluster {cluster_id} model after adding user {user.id}'s local model : {cluster_param.data} ")
-        # self.c[cluster_id] = copy.deepcopy(list(self.c[cluster_id].parameters()))
+            cluster_param.data = cluster_param.data + (user.samples/self.samples)* user_param.data.clone()
+      
     def aggregate_clusterhead(self):
 
         for clust_id in range(self.num_teams):
@@ -278,7 +263,7 @@ class Fedmem():
 
     def eigen_decomposition(self, laplacian_matrix, n_components):
         eigenvalues, eigenvectors = np.linalg.eigh(laplacian_matrix)
-        print(f"eigenvalues : {eigenvalues}, eigenvectors : {eigenvectors}")
+        #print(f"eigenvalues : {eigenvalues}, eigenvectors : {eigenvectors}")
         # Sort eigenvectors by eigenvalues
         idx = np.argsort(eigenvalues)
         eigenvalues, eigenvectors = eigenvalues[idx], eigenvectors[:, idx]
@@ -536,16 +521,12 @@ class Fedmem():
         loss = []
         
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} cluster type : {self.cluster_type} number of clients: {self.num_users} Global Rounds :"):
-            
-            if t == 0:
-                self.send_global_parameters()
-            else:
-                self.send_cluster_parameters()
-
+            self.samples = 0.0
             self.selected_users = self.select_users(t, int(self.num_users)).tolist()
             list_user_id = []
             for user in self.selected_users:
                 list_user_id.append(user.id)
+                self.samples += user.samples
             print(f"selected users : {list_user_id}")
             
             

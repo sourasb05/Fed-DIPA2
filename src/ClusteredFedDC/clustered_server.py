@@ -139,9 +139,6 @@ class C_server():
         
         self.global_model = copy.deepcopy(self.location_wise_cluster_model[0])
 
-
-        sys.exit()
-        
     def __del__(self):
         self.wandb.finish()
         
@@ -313,42 +310,90 @@ class C_server():
 
 
     def train(self):
-        loss = []
 
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} number of clients: {self.num_users} / Global Rounds :"):
-            subset_rf = len(self.clusters[0])
-            subset_rl = len(self.clusters[1])
-            
-            self.selected_rf_users = self.select_users(t,0, subset_rf).tolist()
-            self.selected_rl_users = self.select_users(t,1, subset_rl).tolist()
-            self.selected_users = self.selected_rf_users + self.selected_rl_users
-            exchange_dict = {key: random.sample(self.selected_rl_users, 2) for key in self.selected_rf_users} 
+            for c in range(len(self.users)):
+                subset_rf = len(self.clusters[c][0])
+                subset_rl = len(self.clusters[c][1])
+                
+                self.selected_rf_users = self.select_users(t,0, subset_rf).tolist()
+                self.selected_rl_users = self.select_users(t,1, subset_rl).tolist()
+                self.selected_users = self.selected_rf_users + self.selected_rl_users
+                exchange_dict = {key: random.sample(self.selected_rl_users, 2) for key in self.selected_rf_users} 
 
-            list_user_id = [[],[]]
-            for user in self.selected_rf_users:
-                #print(f"rf : {user.id}")
-                list_user_id[0].append(user.id)
-            for user in self.selected_rl_users:
-                #print(f"rl : {user.id}")
-                list_user_id[1].append(user.id)
-            
-            # print(f"selected users : {list_user_id}")
-            
-            for user in tqdm(self.selected_rf_users, desc=f"selected users from resourceful cluster {len(self.selected_rf_users)}"):
-                user.train(t)
-            for user in tqdm(self.selected_rl_users, desc=f"total selected users  from resourceless cluster {len(self.selected_rl_users)}"):
-                user.train(t)
-            for user in tqdm(self.selected_rf_users, desc=f"model exchange training"):
-                user.exchange_train(exchange_dict[user], t)
-            
+                list_user_id = [[],[]]
+                for user in self.selected_rf_users:
+                    #print(f"rf : {user.id}")
+                    list_user_id[0].append(user.id)
+                for user in self.selected_rl_users:
+                    #print(f"rl : {user.id}")
+                    list_user_id[1].append(user.id)
+                
+                # print(f"selected users : {list_user_id}")
+                
+                for user in tqdm(self.selected_rf_users, desc=f"selected users from resourceful cluster {len(self.selected_rf_users)}"):
+                    clust_id = self.find_cluster_id(user.id)
+                    print(f"clust_id : {clust_id}")
+                    if clust_id is not None:
+                        user.train(self.c[clust_id],t)
+                    else:
+                        user.train(self.global_model.parameters(),t)
+                    
+                for user in tqdm(self.selected_rl_users, desc=f"total selected users  from resourceless cluster {len(self.selected_rl_users)}"):
+                    user.train(t)
+                for user in tqdm(self.selected_rf_users, desc=f"model exchange training"):
+                    user.exchange_train(exchange_dict[user], t)
+                
+                similarity_matrix = self.similarity_check()
+                clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
+                print(clusters)
+                self.combine_cluster_user(clusters)
+                
+                
+                self.aggregate_parameters()
+                
+                # self.evaluate_localmodel(t)
+                self.evaluate(t)
+                self.save_model(t)
+            self.save_results()
 
 
-            self.aggregate_parameters()
+    def train(self):
+        loss = []
+        
+        for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} cluster type : {self.cluster_type} number of clients: {self.num_users} Global Rounds :"):
+            self.samples = 0.0
+            self.selected_users = self.select_users(t, int(self.num_users)).tolist()
+            list_user_id = []
             
-            # self.evaluate_localmodel(t)
-            self.evaluate(t)
-            self.save_model(t)
-        self.save_results()
+            for user in self.selected_users:
+                list_user_id.append(user.id)
+                self.samples += user.samples
+            print(f"selected users : {list_user_id}")
+            
+            
+            for user in tqdm(self.selected_users, desc=f"total selected users {len(self.selected_users)}"):
+                clust_id = self.find_cluster_id(user.id)
+                print(f"clust_id : {clust_id}")
+                if clust_id is not None:
+                    user.train(self.c[clust_id],t)
+                else:
+                    user.train(self.global_model.parameters(),t)
+
+            similarity_matrix = self.similarity_check()
+            clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
+            print(clusters)
+            self.combine_cluster_user(clusters)
+            # self.save_clusters(t)
+            
+            self.aggregate_clusterhead()
+            self.global_update()
+
+            #self.evaluate_localmodel(t)
+            #self.evaluate(t)
+
+
+
 
 
     def test(self):
