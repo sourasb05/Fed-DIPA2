@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+2,"[0, 0, 1, 0, 0, 0]",6,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 1, 0, 0, 0, 0]",22,0,4,0,2,5,7,3,8,37eecbdbbebfef53.jpg,1,"[[257, 294, 765, 388]]",Table,0,1024,685,annotator568,37eecbdbbebfef53_Table_3,37eecbdbbebfef53_Table_3_annotator568
+0,"[1, 0, 0, 0, 0, 0]",4,"[0, 0, 0, 0, 1, 0, 0]","[0, 0, 0, 0, 1, 0, 0]",22,0,4,0,2,5,7,3,8,122259cbb3d91b12.jpg,1,"[[116, 91, 201, 117]]",Others,0,668,1024,annotator568,122259cbb3d91b12_Hat_0,122259cbb3d91b12_Hat_0_annotator568
+1,"[0, 0, 1, 0, 0, 0]",4,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 1, 0, 0, 0, 0]",22,0,4,0,2,5,7,3,8,37eecbdbbebfef53.jpg,1,"[[0, 0, 1022, 683]]",Others,0,1024,685,annotator568,37eecbdbbebfef53_House_2,37eecbdbbebfef53_House_2_annotator568

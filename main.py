@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 from src.Fedavg.FedAvgServer import FedAvg
 from src.Fedmem.FedMEMServer import Fedmem
 from src.FedDCPrivacy.server import Server
@@ -37,11 +40,10 @@ def main(args):
         except ValueError:
             raise ValueError("Wrong algorithm selected")
 
-        # if args.test:
-        #    server.test()
-            
-        #else:
-        server.train()
+        if args.test:
+            server.test()    
+        else:
+            server.train()
         i+=1
 
 if __name__ == "__main__":

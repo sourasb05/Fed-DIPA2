@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+5,"[0, 0, 1, 0, 0, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",55,0,2,0,6,6,8,4,6,2f666bfe74564b04.jpg,1,"[[156, 78, 659, 484]]",Machine,0,1024,768,annotator396,2f666bfe74564b04_Sewing machine_0,2f666bfe74564b04_Sewing machine_0_annotator396

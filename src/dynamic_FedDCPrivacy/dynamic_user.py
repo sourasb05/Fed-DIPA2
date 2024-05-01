@@ -34,6 +34,8 @@ class User():
         self.exp_no = exp_no
         self.current_directory = current_directory
         self.num_glob_iters = args.num_global_iters
+        self.delta=args.delta
+        self.kappa=args.kappa
         """
         Hyperparameters
         """
@@ -48,7 +50,7 @@ class User():
         self.basic_info = [ "age", "gender", 'nationality', 'frequency']
         self.category = ['category']
         self.privacy_metrics = ['informationType', 'informativeness', 'sharingOwner', 'sharingOthers']
-        print(str(self.id))
+        #print(str(self.id))
         self.mega_table = pd.read_csv(current_directory + '/feature_clients/annotations_annotator' + str(self.id) + '.csv')
         # print(self.mega_table)
        
@@ -100,23 +102,45 @@ class User():
         image_size = (224, 224)
         feature_folder = self.current_directory + '/object_features/resnet50/'
 
+        # Dataset Allocation
         num_rows = len(self.mega_table)
-        train_size = int(0.8 * num_rows)
-        test_size = num_rows - train_size
-        self.train_samples = train_size
-        self.test_samples = test_size
-        self.samples = train_size + test_size
-        # Split the dataframe into two
+
+        if num_rows <= 3:
+            self.valid = False
+            return None
+        else:
+            self.valid = True
+
+        train_per, val_per, test_per = 65, 10, 25
+        train_size = math.floor((train_per/100.0) * num_rows)
+        val_size = math.ceil((val_per/100.0) * num_rows)
+        test_size = num_rows - train_size - val_size
+
         train_df = self.mega_table.sample(n=train_size, random_state=0)
-        val_df = self.mega_table.drop(train_df.index)
+        rem_df = self.mega_table.drop(train_df.index)
+        val_df = rem_df.sample(n=val_size, random_state=0)
+        test_df = rem_df.drop(val_df.index)
+
+        dataset_files_dir = "dataset_files/%s/" % self.algorithm
+        os.makedirs(dataset_files_dir, exist_ok=True)
+
+        train_df.to_csv("%s/train_%d.csv" % (dataset_files_dir, self.id), index=False)
+        val_df.to_csv("%s/val_%d.csv" % (dataset_files_dir, self.id), index=False)
 
         train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
-        val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)    
+        val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)
+        test_dataset = ImageMaskDataset(test_df, feature_folder, self.input_channel, image_size)
 
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
-        self.val_loader = DataLoader(val_dataset, batch_size=len(val_dataset), generator=torch.Generator(device='cuda'))
-        self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'))
-        
+        self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'), shuffle=True)
+        self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=len(val_dataset))
+        self.test_loader = DataLoader(test_dataset, generator=torch.Generator(device='cuda'), batch_size=len(test_dataset))
+        # Dataset Allocation ends
+
+        self.train_samples = train_size
+        self.val_samples = val_size
+        self.samples = train_size + val_size
+
         # self.optimizer = Fedmem(self.local_model.parameters(), lr=self.learning_rate)
         self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
         self.exchange_optimizer= torch.optim.Adam(self.exchange_model.parameters(), lr=self.learning_rate)
@@ -153,11 +177,8 @@ class User():
 
 
         if args.test:
-            self.testing = True
             self.load_model()
-        else:
-            self.testing = False
-    
+            
     def load_model(self):
         models_dir = "./models/FedDcprivacy/local_model/"
         model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "best_local_checkpoint.pt"))["model_state_dict"]
@@ -215,8 +236,7 @@ class User():
             mae = mean_absolute_error(true_values, predicted_values)
             distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
             
-            print(f"i : {i}")
-        
+           
         pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.global_acc], 
                     'Precision' : [i.compute().detach().cpu().numpy() for i in self.global_pre], 
                     'Recall': [i.compute().detach().cpu().numpy() for i in self.global_rec], 
@@ -279,9 +299,9 @@ class User():
 
             true_values = informativeness.cpu().detach().numpy()
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
-            print(f"true :, {true_values}")
-            print(f"predicted :, {predicted_values}")
-            print(f"user id: {self.id}")
+            # print(f"true :, {true_values}")
+            # print(f"predicted :, {predicted_values}")
+            # print(f"user id: {self.id}")
             
             mae = mean_absolute_error(true_values, predicted_values)
             distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
@@ -361,7 +381,7 @@ class User():
 
     def save_model(self, glob_iter, epoch, current_loss):
         if glob_iter == self.num_glob_iters-1:
-            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"
+            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"  + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "/"
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
@@ -380,23 +400,21 @@ class User():
                         'loss': self.minimum_test_loss
                         }
             torch.save(checkpoint, os.path.join(model_path, "best_local_checkpoint" + ".pt"))
-            
-    def train(self, t):
-        
+
+    def train(self,cluster_model,t):
+        # print(f"user id : {self.id}")
+        self.set_parameters(cluster_model)
         self.local_model.train()
         for iter in range(self.local_iters):
-            mae = 0
             for batch in self.train_loader:
                 features, additional_information, information, informativeness, sharingOwner, sharingOthers = batch
                 self.optimizer.zero_grad()
                 y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
-                
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
                 loss.backward()
                 self.optimizer.step()
-               # print(f"User id : {self.id} :::: During Individual training Epoch : {iter} ::: Training loss: {loss.item()}")
                 
-            self.evaluate_model(t,iter)
+            self.evaluate_model(t, iter)
 
            
     def exchange_parameters(self, rl_model):

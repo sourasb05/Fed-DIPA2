@@ -7,6 +7,38 @@ import re
 import csv
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import sklearn
+
+def ClassWiseMAE(gt, pred):
+   gt = np.array(gt)
+   pred = np.array([0 if x<0 else x for x in pred])
+
+   num_classes = len(set(gt))
+   cmae = [0 for x in range(num_classes)]
+   unique, counts = np.unique(gt, return_counts=True)
+   counts = dict(zip(unique, counts))
+
+   for i in range(num_classes):
+       for g, p in zip(gt, pred):
+           if g == i:
+               cmae[i] += abs(g - p)
+       if i in counts:
+           cmae[i] /= counts[i]
+       else:    
+           cmae[i] = 0
+   return np.mean(cmae)
+
+def InformativenessMetrics(gt, pred):
+   cmae = ClassWiseMAE(gt, pred)
+   mae = sklearn.metrics.mean_absolute_error(gt, pred)
+   gt = np.array(gt)
+   pred = np.array([0 if x<0 else x for x in pred], dtype=int)
+
+   average = "macro"
+   prec = sklearn.metrics.precision_score(gt, pred, average=average)
+   recall = sklearn.metrics.recall_score(gt, pred, average=average)
+   f1 = sklearn.metrics.f1_score(gt, pred, average=average)
+   return prec, recall, f1, cmae, mae
 
 
 def convert_csv_to_txt(input_file,output_file):
@@ -390,8 +422,8 @@ directory_name = "/proj/sourasb-220503/codebase/FedFWplus/results/convergence/SY
 average_result(path, directory_name, 'Fedfw', 'fedfw')
 """
 
-path = "/proj/sourasb-220503/FedMEM/results/convergence/"
-acc_file = "accuracy_sota"
-loss_file = "loss_sota"
+# path = "/proj/sourasb-220503/FedMEM/results/convergence/"
+# acc_file = "accuracy_sota"
+# loss_file = "loss_sota"
 
-convergence_analysis(path, acc_file, loss_file)
+#convergence_analysis(path, acc_file, loss_file)

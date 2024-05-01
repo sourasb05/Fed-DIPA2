@@ -415,7 +415,6 @@ class User():
             # print(f"rl_param :", rl_param.data)
             # print(f"exchange_param :", param.data)
 
-        
 
     def exchange_train(self, exchange_dict_users, t):
         for rl_user in exchange_dict_users:
@@ -439,4 +438,14 @@ class User():
 
             self.evaluate_model(t, iter)
     
+    def test_eval(self):
+        self.local_model.eval()
 
+        results = []
+        for i, vdata in enumerate(self.val_loader):
+            vdata = [x.to('cuda') for x in vdata]
+            features, additional_info, information, informativeness, sharingOwner, sharingOthers = vdata
+            with torch.no_grad():
+                y_preds = self.local_model(features, additional_info)
+            results.append([information, informativeness, sharingOwner, sharingOthers, y_preds])
+        return results

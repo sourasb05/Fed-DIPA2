@@ -13,7 +13,7 @@ import wandb
 import datetime
 import json
 from sklearn.cluster import KMeans
-
+import pickle
 
 class Server():
     def __init__(self,device, args, exp_no, current_directory):
@@ -26,20 +26,22 @@ class Server():
         self.eta = args.eta
         self.kappa = args.kappa
         self.delta = args.delta
+        self.gamma=args.gamma
+        self.lambda_1=args.lambda_1
+        self.lambda_2=args.lambda_2
+
         self.country = args.country
         if args.country == "japan":
             self.user_ids = args.user_ids[0]
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
-            self.user_ids = args.user_ids[3]
+            self.user_ids = args.user_ids[3][:20]
         else:
             self.user_ids = args.user_ids[2]
         
 
-        # print(f"user ids : {self.user_ids}")
         self.total_users = len(self.user_ids)
-        # print(f"total users : {self.total_users}")
         self.total_samples = 0
         self.total_selected_samples = 0
         self.exp_no = exp_no
@@ -47,6 +49,12 @@ class Server():
         self.algorithm = args.algorithm
         self.fix_client_every_GR = args.fix_client_every_GR
         self.fixed_user_id = args.fixed_user_id
+        self.n_clusters = args.num_teams
+        self.cluster_dict = {}
+        self.clusters_list = []
+        self.c = []
+        self.cluster_dict_user_id = {}
+
 
         # print(f"self.fixed_user_id : {self.fixed_user_id}")
 
@@ -73,7 +81,7 @@ class Server():
         """
         Local model evaluation
         """
-
+        
         self.local_test_metric = []
         self.local_test_loss = []
         self.local_test_distance = []
@@ -90,23 +98,32 @@ class Server():
         self.data_in_cluster = [0.0,0.0]
 
         date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        self.wandb = wandb.init(project="DIPA2", name="FedDCPrivacy_%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
+        self.wandb = wandb.init(project="DIPA2", name="dynamic_FedDCPrivacy_%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
                 
         
         for i in trange(self.total_users, desc="Data distribution to clients"):
             # print(f"client id : {self.user_ids[i]}")
             user = User(device, args, self.user_ids[i], exp_no, current_directory, wandb)
-            self.users.append(user)
-            self.total_samples += user.samples
-            
-        
-            if self.user_ids[i] == str(self.fixed_user_id):
-                self.fixed_user = user
-                # print(f'id found : {self.fixed_user.id}')
+            if user.valid:
+                self.users.append(user)
+                self.total_samples += user.samples
+                
+                if self.user_ids[i] == str(self.fixed_user_id):
+                    self.fixed_user = user
+                    # print(f'id found : {self.fixed_user.id}')
         # print("Finished creating Fedmem server.")
+
+        self.total_users = len(self.users) 
+        self.num_users = self.total_users * args.users_frac    #selected users
+        
+
         self.global_model = copy.deepcopy(self.users[0].local_model)
 
-    
+        for _ in range(self.n_clusters):
+            self.c.append(copy.deepcopy(list(self.global_model.parameters())))
+          
+
+
         for user in self.users:
                 
             self.data_frac.append([user, user.id, user.samples/self.total_samples])
@@ -176,7 +193,7 @@ class Server():
 
     def save_model(self, glob_iter):
         if glob_iter == self.num_glob_iters-1:
-            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "/"
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
@@ -195,6 +212,9 @@ class Server():
                         'loss': self.minimum_test_loss
                         }
             torch.save(checkpoint, os.path.join(model_path, "best_server_checkpoint" + ".pt"))
+
+        with open(os.path.join(model_path, "best_clusters.pickle"), 'wb') as handle:
+            pickle.dump(self.cluster_dict_user_id, handle, protocol=pickle.HIGHEST_PROTOCOL)
             
     def select_users(self, round, switch, num_subset_users):
         if switch == 0:
@@ -283,13 +303,17 @@ class Server():
         self.eval_test(t)
         self.eval_train(t)
 
+    def evaluate_cluster(self, t):
+        self.eval_test(t)
+        self.eval_train(t)
+
     def save_results(self):
        
-        file = "exp_no_" + str(self.exp_no) + self.algorithm + "_GR_" + str(self.num_glob_iters) + "_BS_" + str(self.batch_size)
+        file = "exp_no_" + str(self.exp_no) + self.algorithm + "_GR_" + str(self.num_glob_iters) + "_BS_" + str(self.batch_size) + "_delta_" + str(self.delta) + "_kappa_" + str(self.kappa)
         
         print(file)
        
-        directory_name = str(self.algorithm) + "/" +"h5" + "/global_model/" + self.country + "/"
+        directory_name = str(self.algorithm) + "/" +"h5" + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "/" 
         # Check if the directory already exists
         if not os.path.exists(self.current_directory + "/results/"+ directory_name):
         # If the directory does not exist, create it
@@ -490,7 +514,7 @@ class Server():
       
     def aggregate_clusterhead(self):
 
-        for clust_id in range(self.num_teams):
+        for clust_id in range(self.n_clusters):
             for param in self.c[clust_id]:
                 param.data = torch.zeros_like(param.data)
         
@@ -502,6 +526,12 @@ class Server():
                 for user in users:
                     self.add_parameters_clusters(user, clust_id)
 
+    def find_cluster_id(self, user_id):
+        for key, values in self.cluster_dict_user_id.items():
+            if user_id in values:
+                return key
+        return None
+
 
 
 
@@ -509,12 +539,17 @@ class Server():
         loss = []
 
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} number of clients: {self.num_users} / Global Rounds :"):
+            self.samples = 0.0
             subset_rf = len(self.clusters[0])
             subset_rl = len(self.clusters[1])
             
             self.selected_rf_users = self.select_users(t,0, subset_rf).tolist()
             self.selected_rl_users = self.select_users(t,1, subset_rl).tolist()
             self.selected_users = self.selected_rf_users + self.selected_rl_users
+
+            for user in self.selected_users:
+                self.samples += user.samples
+
             exchange_dict = {key: random.sample(self.selected_rl_users, 2) for key in self.selected_rf_users} 
 
             list_user_id = [[],[]]
@@ -527,16 +562,17 @@ class Server():
             
             # print(f"selected users : {list_user_id}")
             
-            for user in tqdm(self.selected_rf_users, desc=f"selected users from resourceful cluster {len(self.selected_rf_users)}"):
+            for user in tqdm(self.selected_rf_users, desc=f"selected users from resourceful {len(self.selected_rf_users)}"):
                 clust_id = self.find_cluster_id(user.id)
-                print(f"clust_id : {clust_id}")
+                # print(f"clust_id : {clust_id}")
+
                 if clust_id is not None:
                     user.train(self.c[clust_id],t)
                 else:
                     user.train(self.global_model.parameters(),t)
-            for user in tqdm(self.selected_rl_users, desc=f"total selected users  from resourceless cluster {len(self.selected_rl_users)}"):
+            for user in tqdm(self.selected_rl_users, desc=f"total selected users  from resourceless {len(self.selected_rl_users)}"):
                 clust_id = self.find_cluster_id(user.id)
-                print(f"clust_id : {clust_id}")
+                # print(f"clust_id : {clust_id}")
                 if clust_id is not None:
                     user.train(self.c[clust_id],t)
                 else:

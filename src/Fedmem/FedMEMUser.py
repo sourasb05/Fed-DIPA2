@@ -127,9 +127,6 @@ class Fedmem_user():
         self.val_loader = DataLoader(val_dataset, batch_size=len(val_dataset), generator=torch.Generator(device='cuda'))
         self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'))
         
-        
-      
-        
         self.optimizer= torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
         #self.optimizer = Fedmem(self.local_model.parameters(), self.learning_rate, self.eta)
 
@@ -169,14 +166,16 @@ class Fedmem_user():
         else:
             self.testing = False
          """
+
+        
+        if args.test:
+            self.load_model()
+
     def load_model(self):
-        models_dir = "./models/FedDcprivacy/local_model/"
+        models_dir = "./models/Fedmem/local_model/"
         model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "best_local_checkpoint.pt"))["model_state_dict"]
         self.local_model.load_state_dict(model_state_dict)
         self.local_model.eval()
-        
-        
-
         
     def set_parameters(self, cluster_model):
         for param, glob_param in zip(self.local_model.parameters(), cluster_model):
@@ -425,4 +424,14 @@ class Fedmem_user():
 
         # self.distance = 0.0
     
-                 
+    def test_eval(self):
+        self.local_model.eval()
+
+        results = []
+        for i, vdata in enumerate(self.val_loader):
+            vdata = [x.to('cuda') for x in vdata]
+            features, additional_info, information, informativeness, sharingOwner, sharingOthers = vdata
+            with torch.no_grad():
+                y_preds = self.local_model(features, additional_info)
+            results.append([information, informativeness, sharingOwner, sharingOthers, y_preds])
+        return results

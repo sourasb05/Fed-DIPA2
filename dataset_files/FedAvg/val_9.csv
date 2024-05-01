@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+5,"[1, 1, 0, 1, 1, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",35,0,1,0,4,6,7,8,9,110784.jpg,0,"[[5, 109, 68, 136]]",Scenery,0,433,640,annotator9,110784_streetlight_1,110784_streetlight_1_annotator9

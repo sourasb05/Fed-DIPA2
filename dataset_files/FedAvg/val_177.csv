@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+4,"[0, 1, 0, 0, 0, 0]",2,"[0, 1, 1, 1, 0, 0, 0]","[0, 1, 1, 1, 0, 0, 0]",26,0,1,0,4,5,5,6,7,4babec5c7441cf9a.jpg,0,"[[0, 0, 728, 1022]]",Place Identifier,0,730,1024,annotator177,4babec5c7441cf9a_Office building_1,4babec5c7441cf9a_Office building_1_annotator177
+6,"[1, 0, 1, 0, 1, 0]",6,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",26,0,1,0,4,5,5,6,7,01ead89d32a58f87.jpg,0,"[[295, 18, 479, 663]]",Others,0,1200,799,annotator177,01ead89d32a58f87_identity_0,01ead89d32a58f87_identity_0_annotator177

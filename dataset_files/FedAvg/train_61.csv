@@ -1,0 +1,6 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+5,"[1, 0, 0, 0, 0, 0]",1,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",30,0,0,0,8,6,7,4,5,156404.jpg,0,"[[173, 261, 66, 73]]",Identity,0,375,500,annotator61,156404_passport_0,156404_passport_0_annotator61
+2,"[0, 1, 0, 0, 0, 0]",1,"[0, 0, 0, 1, 0, 0, 0]","[0, 0, 0, 1, 0, 0, 0]",30,0,0,0,8,6,7,4,5,154451.jpg,0,"[[3, -8, 492, 285]]",Others,0,640,427,annotator61,154451_Object 0_0,154451_Object 0_0_annotator61
+1,"[0, 0, 0, 1, 0, 0]",1,"[0, 0, 1, 0, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",30,0,0,0,8,6,7,4,5,1fe48301477bc976.jpg,1,"[[29, 109, 831, 830]]",Accessory,0,912,1024,annotator61,1fe48301477bc976_Necklace_0,1fe48301477bc976_Necklace_0_annotator61
+6,"[0, 0, 1, 0, 0, 0]",1,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",30,0,0,0,8,6,7,4,5,156404.jpg,0,"[[75, 34, 279, 339]]",Others,0,375,500,annotator61,156404_teddy_bear_1,156404_teddy_bear_1_annotator61
+3,"[0, 0, 0, 1, 0, 0]",3,"[0, 0, 0, 0, 1, 0, 0]","[0, 0, 0, 0, 1, 0, 0]",30,0,0,0,8,6,7,4,5,2443f4715e5f54d5.jpg,1,"[[51, 59, 898, 905]]",Machine,0,1024,1024,annotator61,2443f4715e5f54d5_Tool_0,2443f4715e5f54d5_Tool_0_annotator61

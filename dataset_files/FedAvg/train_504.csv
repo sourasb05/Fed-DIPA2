@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+5,"[1, 1, 0, 0, 0, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",38,0,1,0,2,9,9,6,8,302076.jpg,0,"[[287, 221, 50, 69]]",Others,0,640,480,annotator504,302076_television_set_0,302076_television_set_0_annotator504
+2,"[0, 0, 0, 1, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",38,0,1,0,2,9,9,6,8,146315.jpg,0,"[[360, 237, 39, 25], [213, 215, 37, 27]]",Others,0,640,425,annotator504,146315_cellular_telephone_3-4,146315_cellular_telephone_3-4_annotator504
+1,"[0, 0, 1, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",38,0,1,0,2,9,9,6,8,16aaa6421eaf9905.jpg,1,"[[919, 0, 104, 331]]",Person,0,1024,576,annotator504,16aaa6421eaf9905_Woman_29,16aaa6421eaf9905_Woman_29_annotator504

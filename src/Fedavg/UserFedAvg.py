@@ -30,6 +30,8 @@ from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, 
 import wandb
 from sklearn.metrics import mean_absolute_error
 import sys
+import shutil
+import math
 
 class UserAvg():
 
@@ -103,28 +105,48 @@ class UserAvg():
         self.output_name = self.privacy_metrics
         self.output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
 
-
         self.local_model = PrivacyModel(input_dim=self.input_dim).to(self.device)
         self.eval_model = copy.deepcopy(self.local_model)
 
         image_size = (224, 224)
         feature_folder = self.current_directory + '/object_features/resnet50/'
 
+        # Dataset Allocation
         num_rows = len(self.mega_table)
-        train_size = int(0.8 * num_rows)
-        test_size = num_rows - train_size
-        self.train_samples = train_size
-        # Split the dataframe into two
+
+        if num_rows <= 3:
+            self.valid = False
+            return None
+        else:
+            self.valid = True
+
+        train_per, val_per, test_per = 65, 10, 25
+        train_size = math.floor((train_per/100.0) * num_rows)
+        val_size = math.ceil((val_per/100.0) * num_rows)
+        test_size = num_rows - train_size - val_size
+
         train_df = self.mega_table.sample(n=train_size, random_state=0)
-        val_df = self.mega_table.drop(train_df.index)
+        rem_df = self.mega_table.drop(train_df.index)
+        val_df = rem_df.sample(n=val_size, random_state=0)
+        test_df = rem_df.drop(val_df.index)
+
+        dataset_files_dir = "dataset_files/%s/" % self.algorithm
+        os.makedirs(dataset_files_dir, exist_ok=True)
+
+        train_df.to_csv("%s/train_%d.csv" % (dataset_files_dir, self.id), index=False)
+        val_df.to_csv("%s/val_%d.csv" % (dataset_files_dir, self.id), index=False)
 
         train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
-        val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)    
+        val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)
+        test_dataset = ImageMaskDataset(test_df, feature_folder, self.input_channel, image_size)
 
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
         self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'), shuffle=True)
-        self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=32)
-        
+        self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=len(val_dataset))
+        self.test_loader = DataLoader(test_dataset, generator=torch.Generator(device='cuda'), batch_size=len(test_dataset))
+        # Dataset Allocation ends
+
+        self.train_samples = train_size
         self.optimizer= torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
         
         # metrics
@@ -153,6 +175,14 @@ class UserAvg():
         self.global_conf = [ConfusionMatrix(task="multilabel", num_labels=output_dim) \
                 for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
         
+        if args.test:
+            self.load_model()
+
+    def load_model(self):
+        models_dir = "./models/FedAvg/global_model/"
+        model_state_dict = torch.load(os.path.join(models_dir, "server_checkpoint.pt"))["model_state_dict"]
+        self.local_model.load_state_dict(model_state_dict)
+        self.local_model.eval()
         
     def set_parameters(self, cluster_model):
         for param, glob_param in zip(self.local_model.parameters(), cluster_model.parameters()):
@@ -229,11 +259,25 @@ class UserAvg():
         
         return total_loss, distance, pandas_data, mae
     
+    def test_eval(self):
+        self.local_model.eval()
 
-    def test(self, global_model, t):
+        results = []
+        for i, vdata in enumerate(self.val_loader):
+            vdata = [x.to('cuda') for x in vdata]
+            features, additional_info, information, informativeness, sharingOwner, sharingOthers = vdata
+            with torch.no_grad():
+                y_preds = self.local_model(features, additional_info)
+            results.append([information, informativeness, sharingOwner, sharingOthers, y_preds])
+        return results
+
+    def test(self, global_model=None, t=-1):
         # Set the model to evaluation mode
         self.local_model.eval()
-        self.update_parameters(global_model)
+
+        if global_model != None:
+            self.update_parameters(global_model)
+
         total_loss=0.0
         distance = 0.0
         mae = 0.0
@@ -377,9 +421,6 @@ class UserAvg():
                 # self.distance = 0.0
                 
             self.evaluate_model()
-
-        
-        
 
         # self.distance = 0.0
     

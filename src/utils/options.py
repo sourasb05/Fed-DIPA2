@@ -4,10 +4,10 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--algorithm", type=str, default="Clustered_FedDC",
-                        choices=["FedAvg", "Fedmem", "FedProx", "FedDcprivacy", "Siloed", "Clustered_FedDC"])
+    parser.add_argument("--algorithm", type=str, default="dynamic_FedDcprivacy",
+                        choices=["FedAvg", "Fedmem", "FedProx", "FedDcprivacy", "Siloed", "Clustered_FedDC", "dynamic_FedDcprivacy"])
     parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--num_teams", type=int, default=2)
+    parser.add_argument("--num_teams", type=int, default=10)
     parser.add_argument("--gamma", type=float, default=1.0)
     parser.add_argument("--lambda_1", type=float, default=0.0, 
                         help="Regularization term lambda_1")
@@ -101,7 +101,7 @@ def args_parser():
                                                          [['71', '7', '189', '202', '208', '0', '160', '10', '105', '68'],
                                                           ['329', '325', '504', '584', '323', '369', '470', '597', '587', '524', '488', '482', ]]
                                                          ]) 
-    parser.add_argument("--country", type=str, default="none", choices=["japan", "uk", "both", "both_small", "none"])
+    parser.add_argument("--country", type=str, default="both", choices=["japan", "uk", "both", "both_small", "none"])
     
     parser.add_argument("--alpha", type=float, default=0.05, 
                         help="learning rate for local models in fedmem")

@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+8,"[1, 0, 0, 0, 0, 0]",6,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",32,0,4,0,3,5,5,8,5,05c6fc62d2980f50.jpg,1,"[[132, 324, 411, 575]]",Person,0,683,1024,annotator171,05c6fc62d2980f50_Human face_0,05c6fc62d2980f50_Human face_0_annotator171
+20,"[1, 0, 0, 1, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",32,0,4,0,3,5,5,8,5,139429.jpg,0,"[[242, 366, 140, 83]]",Pet,0,640,480,annotator171,139429_dog_0,139429_dog_0_annotator171
+4,"[1, 0, 0, 1, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",32,0,4,0,3,5,5,8,5,010d9a7f0d2e0622.jpg,1,"[[262, 303, 296, 379]]",Clothing,0,1024,683,annotator171,010d9a7f0d2e0622_Clothing_5,010d9a7f0d2e0622_Clothing_5_annotator171

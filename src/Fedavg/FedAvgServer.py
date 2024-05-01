@@ -11,6 +11,11 @@ import sys
 import wandb
 import datetime
 import json
+
+import torch
+from torchmetrics import Precision, Recall, F1Score
+from src.utils.results_utils import InformativenessMetrics
+
 class FedAvg():
     def __init__(self,device, args, exp_no, current_directory):
                 
@@ -43,10 +48,7 @@ class FedAvg():
             self.total_users = len(self.user_ids)
 
         print(f"total users : {self.total_users}")
-        self.num_users = self.total_users * args.users_frac    #selected users
-
-
-  
+         
         self.users = []
         self.selected_users = []
 
@@ -69,9 +71,13 @@ class FedAvg():
                 
         for i in trange(self.total_users, desc="Data distribution to clients"):
             user = UserAvg(device, args, int(self.user_ids[i]), exp_no, current_directory, self.wandb)
-            self.users.append(user)
-            self.total_train_samples += user.train_samples
-
+            if user.valid: # Copy for all algorithms
+                self.users.append(user)
+                self.total_train_samples += user.train_samples
+        
+        self.total_users = len(self.users) 
+        self.num_users = self.total_users * args.users_frac    #selected users
+        
         #Create Global_model
         for user in self.users:
             self.data_frac.append(user.train_samples/self.total_train_samples)
@@ -80,7 +86,6 @@ class FedAvg():
         for param in self.global_model.parameters():
             param.data.zero_()
         
-
         print("Finished creating FedAvg server.")
 
     def __del__(self):
@@ -260,5 +265,41 @@ class FedAvg():
             self.save_model(glob_iter)
         self.save_results()
 
+    def test(self):
+        output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+        threshold = 0.5
+        average_method = 'weighted'
+        metrics = [Precision, Recall, F1Score]
+        metrics_data = {}
+        for metric in metrics:
+            metrics_data[metric.__name__] = [metric(task="multilabel",
+                                                    num_labels=output_dim,
+                                                    threshold = threshold,
+                                                    average=average_method,
+                                                    ignore_index = output_dim - 1) \
+                                                    for i, (output_name, output_dim) in enumerate(output_channel.items())]
+        informativeness_scores = [[], []]
 
+        for user in self.users:
+            results = user.test_eval()
 
+            for result in results:
+                information, informativeness, sharingOwner, sharingOthers, y_preds = result
+                gt = [information, sharingOwner, sharingOthers]
+                output_dims = output_channel.values()
+                for o, (output_dim, gt) in enumerate(zip(output_dims, gt)):
+                    start_dim = o*(output_dim)
+                    end_dim = o*(output_dim)+output_dim
+                    for metric_name in metrics_data.keys():
+                        metrics_data[metric_name][o].update(y_preds[:, start_dim:end_dim], gt)
+                informativeness_scores[0].extend(informativeness.detach().cpu().numpy().tolist())
+                informativeness_scores[1].extend(y_preds[:, 6].detach().cpu().numpy().tolist())
+        results_data = {}
+        for metric_name in metrics_data.keys():
+            results_data[metric_name] = [i.compute().detach().cpu().numpy() for i in metrics_data[metric_name]]
+        for i, k in enumerate(output_channel.keys()):
+            for metric, values in results_data.items():
+                print("%.02f " % values[i], end="")
+
+        info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
+        print("%.02f %.02f %.02f %.02f %.02f" % (info_prec, info_rec, info_f1, info_cmae, info_mae))
