@@ -26,8 +26,8 @@ class Fedmem():
         self.learning_rate = args.alpha
         self.eta = args.eta
         self.country = args.country
-        if args.country == "both_small":
-            self.user_ids = args.user_ids[4]
+        if args.country == "both":
+            self.user_ids = args.user_ids[3]
             print(f"users {self.user_ids}")
         else:
             self.user_ids = args.user_ids[2]
