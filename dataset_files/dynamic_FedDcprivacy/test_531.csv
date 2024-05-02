@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+0,"[0, 0, 0, 0, 1, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",41,0,1,0,6,6,6,6,6,56a690f5c282c6a4.jpg,0,"[[141, 67, 750, 569], [601, 128, 422, 320]]",Others,0,1024,683,annotator531,56a690f5c282c6a4_Car_0-1,56a690f5c282c6a4_Car_0-1_annotator531

@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+4,"[0, 1, 0, 0, 0, 0]",5,"[0, 0, 0, 0, 1, 0, 0]","[0, 0, 0, 0, 1, 0, 0]",47,0,2,0,4,8,5,7,3,170017.jpg,0,"[[310, 55, 195, 61]]",Others,0,640,427,annotator132,170017_Object 0_1,170017_Object 0_1_annotator132

@@ -22,6 +22,7 @@ from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, 
 from sklearn.metrics import mean_absolute_error
 import wandb
 import sys
+import math
 import os
 class User():
 
@@ -124,8 +125,9 @@ class User():
         dataset_files_dir = "dataset_files/%s/" % self.algorithm
         os.makedirs(dataset_files_dir, exist_ok=True)
 
-        train_df.to_csv("%s/train_%d.csv" % (dataset_files_dir, self.id), index=False)
-        val_df.to_csv("%s/val_%d.csv" % (dataset_files_dir, self.id), index=False)
+        train_df.to_csv("%s/train_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
+        val_df.to_csv("%s/val_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
+        test_df.to_csv("%s/test_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
 
         train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
         val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)
@@ -175,10 +177,9 @@ class User():
         
         self.minimum_test_loss = 10000000.0
 
-
         if args.test:
             self.load_model()
-            
+
     def load_model(self):
         models_dir = "./models/FedDcprivacy/local_model/"
         model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "best_local_checkpoint.pt"))["model_state_dict"]
@@ -314,14 +315,14 @@ class User():
         pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
        
         
-        if not self.testing:
-            self.wandb.log(data={ "%02d_val_loss" % int(self.id) : avg_loss})
-            self.wandb.log(data={ "%02d_val_mae" % int((self.id)) : mae})
-            self.wandb.log(data={ "%02d_val_Accuracy" % int(self.id) : pandas_data['Accuracy'][0]})
-            self.wandb.log(data={ "%02d_val_precision" % int((self.id)) : pandas_data['Precision'][0]})
-            self.wandb.log(data={ "%02d_val_Recall" % int((self.id)) : pandas_data['Recall'][0]})
-            self.wandb.log(data={ "%02d_val_f1" % int((self.id)) : pandas_data['f1'][0]})
         
+        self.wandb.log(data={ "%02d_val_loss" % int(self.id) : avg_loss})
+        self.wandb.log(data={ "%02d_val_mae" % int((self.id)) : mae})
+        self.wandb.log(data={ "%02d_val_Accuracy" % int(self.id) : pandas_data['Accuracy'][0]})
+        self.wandb.log(data={ "%02d_val_precision" % int((self.id)) : pandas_data['Precision'][0]})
+        self.wandb.log(data={ "%02d_val_Recall" % int((self.id)) : pandas_data['Recall'][0]})
+        self.wandb.log(data={ "%02d_val_f1" % int((self.id)) : pandas_data['f1'][0]})
+    
         return avg_loss, distance, pandas_data, mae
     
         

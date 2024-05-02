@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+2,"[1, 0, 0, 1, 1, 1]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",31,0,0,0,6,10,9,2,9,125821.jpg,0,"[[15, 223, 99, 76]]",Printed Material,0,480,640,annotator347,125821_calendar_1,125821_calendar_1_annotator347

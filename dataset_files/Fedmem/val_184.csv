@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+5,"[0, 0, 0, 1, 0, 0]",1,"[0, 1, 1, 1, 1, 0, 0]","[0, 1, 1, 1, 0, 0, 0]",34,0,2,0,8,4,7,5,8,125687.jpg,0,"[[207, 135, 275, 179]]",Screen,0,640,427,annotator184,125687_laptop_computer_5,125687_laptop_computer_5_annotator184

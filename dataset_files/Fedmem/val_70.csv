@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+3,"[1, 0, 0, 0, 0, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",40,0,3,0,4,6,6,6,6,230995.jpg,0,"[[161, 431, 6, 11]]",Accessory,0,480,640,annotator70,230995_ring_1,230995_ring_1_annotator70

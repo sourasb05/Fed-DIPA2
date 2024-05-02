@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+1,"[0, 1, 0, 1, 0, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[0, 0, 0, 1, 0, 0, 0]",44,0,0,0,6,6,6,7,5,115636.jpg,0,"[[20, 0, 533, 116], [135, 449, 146, 96], [440, 464, 112, 96]]",Place Identifier,0,554,640,annotator20,115636_banner_13-14-15,115636_banner_13-14-15_annotator20

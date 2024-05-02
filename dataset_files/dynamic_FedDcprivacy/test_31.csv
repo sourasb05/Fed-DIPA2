@@ -1,0 +1,6 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+0,"[1, 1, 1, 1, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",38,0,0,0,8,5,9,7,3,3e4ad48b1e86a288.jpg,1,"[[0, 58, 1024, 624]]",Clothing,0,1024,683,annotator31,3e4ad48b1e86a288_Clothing_4,3e4ad48b1e86a288_Clothing_4_annotator31
+3,"[1, 1, 1, 0, 0, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",38,0,0,0,8,5,9,7,3,3e4ad48b1e86a288.jpg,1,"[[0, 0, 1022, 330]]",Person,0,1024,683,annotator31,3e4ad48b1e86a288_Human hair_0,3e4ad48b1e86a288_Human hair_0_annotator31
+10,"[1, 1, 1, 1, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",38,0,0,0,8,5,9,7,3,204643.jpg,0,"[[0, 0, 294, 480]]",Others,0,640,480,annotator31,204643_bulletin_board_0,204643_bulletin_board_0_annotator31
+11,"[0, 0, 0, 1, 0, 0]",2,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",38,0,0,0,8,5,9,7,3,19924.jpg,0,"[[25, 38, 259, 414]]",Others,0,458,500,annotator31,19924_hat_1,19924_hat_1_annotator31
+14,"[1, 0, 0, 1, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",38,0,0,0,8,5,9,7,3,19924.jpg,0,"[[269, 193, 188, 146]]",Others,0,458,500,annotator31,19924_necktie_0,19924_necktie_0_annotator31

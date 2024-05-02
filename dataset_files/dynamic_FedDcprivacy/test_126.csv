@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+0,"[1, 0, 0, 0, 0, 0]",6,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",37,0,0,0,3,4,5,7,4,40a05ea0282d5897.jpg,1,"[[274, 121, 88, 88], [482, 322, 281, 252]]",Person,0,1024,575,annotator126,40a05ea0282d5897_Girl_4-5,40a05ea0282d5897_Girl_4-5_annotator126
+3,"[1, 0, 0, 0, 0, 0]",6,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",37,0,0,0,3,4,5,7,4,117222.jpg,0,"[[394, 38, 42, 74]]",Others,0,640,334,annotator126,117222_Object 0_0,117222_Object 0_0_annotator126
+6,"[1, 0, 0, 0, 0, 0]",6,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",37,0,0,0,3,4,5,7,4,40a05ea0282d5897.jpg,1,"[[202, 188, 692, 363]]",Person,0,1024,575,annotator126,40a05ea0282d5897_Woman_18,40a05ea0282d5897_Woman_18_annotator126

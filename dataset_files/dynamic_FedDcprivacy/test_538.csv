@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+3,"[0, 0, 0, 0, 1, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",26,0,1,0,6,6,7,6,8,403656193dc35cad.jpg,1,"[[51, 0, 578, 416], [638, 79, 384, 277]]",Screen,0,1024,680,annotator538,403656193dc35cad_Laptop_0-1,403656193dc35cad_Laptop_0-1_annotator538
+6,"[0, 1, 0, 0, 0, 0]",4,"[0, 1, 1, 1, 0, 0, 0]","[0, 1, 1, 1, 0, 0, 0]",26,0,1,0,6,6,7,6,8,142454.jpg,0,"[[246, 276, 131, 106]]",Others,0,640,480,annotator538,142454_sink_1,142454_sink_1_annotator538
+8,"[0, 1, 1, 0, 0, 0]",5,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 1, 0, 0, 0, 0]",26,0,1,0,6,6,7,6,8,104188.jpg,0,"[[251, 137, 43, 9]]",Others,0,640,481,annotator538,104188_spectacles_1,104188_spectacles_1_annotator538

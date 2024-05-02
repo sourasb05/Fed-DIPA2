@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+15,"[0, 0, 0, 0, 1, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",41,0,1,0,5,5,6,8,7,316336.jpg,0,"[[0, 357, 84, 129]]",Others,0,375,500,annotator145,316336_cash_register_37,316336_cash_register_37_annotator145
+7,"[1, 0, 0, 1, 0, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",41,0,1,0,5,5,6,8,7,3e40cab2517ace8d.jpg,1,"[[339, 121, 337, 902]]",Person,0,768,1024,annotator145,3e40cab2517ace8d_Man_3,3e40cab2517ace8d_Man_3_annotator145
+3,"[1, 0, 0, 0, 0, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",41,0,1,0,5,5,6,8,7,02ef01f6d6a665ac.jpg,1,"[[249, 1, 569, 761], [475, 456, 548, 312]]",Pet,0,1024,768,annotator145,02ef01f6d6a665ac_Dog_0-1,02ef01f6d6a665ac_Dog_0-1_annotator145

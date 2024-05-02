@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+2,"[0, 0, 1, 0, 0, 0]",1,"[0, 0, 0, 1, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",33,0,0,0,2,6,6,10,8,01bac85f962c2ff5.jpg,1,"[[70, 39, 953, 904]]",Pet,0,1024,945,annotator413,01bac85f962c2ff5_Dog_0,01bac85f962c2ff5_Dog_0_annotator413
+6,"[1, 0, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",33,0,0,0,2,6,6,10,8,101882.jpg,0,"[[371, 327, 30, 14], [228, 379, 32, 20]]",Vehicle Plate,0,640,506,annotator413,101882_license_plate_11-12,101882_license_plate_11-12_annotator413
+8,"[0, 0, 1, 0, 0, 0]",2,"[0, 0, 1, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",33,0,0,0,2,6,6,10,8,104666.jpg,0,"[[431, 136, 97, 118]]",Others,0,640,427,annotator413,104666_painting_1,104666_painting_1_annotator413

@@ -1,0 +1,5 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+0,"[0, 1, 0, 0, 0, 0]",2,"[0, 0, 0, 0, 1, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",30,0,2,0,6,8,8,8,6,356ee35811299b3e.jpg,1,"[[1, 0, 761, 1022]]",Others,0,768,1024,annotator370,356ee35811299b3e_Building_0,356ee35811299b3e_Building_0_annotator370
+3,"[1, 0, 0, 0, 0, 0]",5,"[0, 0, 0, 0, 1, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",30,0,2,0,6,8,8,8,6,140263.jpg,0,"[[282, 123, 144, 192]]",Others,0,428,640,annotator370,140263_Object 0_3,140263_Object 0_3_annotator370
+8,"[1, 1, 1, 0, 0, 0]",5,"[0, 0, 0, 0, 1, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",30,0,2,0,6,8,8,8,6,334813.jpg,0,"[[200, 313, 87, 24], [0, 358, 480, 281]]",Table,0,480,640,annotator370,334813_desk_6-7,334813_desk_6-7_annotator370
+9,"[0, 1, 0, 0, 0, 0]",3,"[0, 0, 0, 0, 1, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",30,0,2,0,6,8,8,8,6,410033.jpg,0,"[[0, 0, 199, 95]]",Others,0,640,480,annotator370,410033_headboard_2,410033_headboard_2_annotator370

@@ -1,35 +1,17 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader, Dataset, random_split,  TensorDataset
-import torch.optim as optim
-from torchvision import transforms
-from torchvision.models import resnet50
-import torchvision.models as models
-import torchvision.transforms as transforms
-from PIL import Image
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, confusion_matrix
 import os
-import glob
-import copy
 import pandas as pd
 import numpy as np
 from src.Optimizer.Optimizer import Fedmem
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import DataLoader
 from dipa2.ML_baseline.Study2TransMLP.inference_dataset import ImageMaskDataset
 from src.TrainModels.trainmodels import PrivacyModel
 from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import DataLoader
-import pytorch_lightning as pl
-import io
-from PIL import Image
-import json
-from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix, CalibrationError
-import wandb
+from torchmetrics import Accuracy, Precision, Recall, F1Score, ConfusionMatrix
 from sklearn.metrics import mean_absolute_error
-
+import math
 
 class Fedmem_user():
 
@@ -111,23 +93,44 @@ class Fedmem_user():
         image_size = (224, 224)
         feature_folder = self.current_directory + '/object_features/resnet50/'
 
+        # Dataset Allocation
         num_rows = len(self.mega_table)
-        train_size = int(0.8 * num_rows)
-        test_size = num_rows - train_size
-        self.train_samples = train_size
-        self.samples = train_size + test_size
-        # Split the dataframe into two
+
+        if num_rows <= 3:
+            self.valid = False
+            return None
+        else:
+            self.valid = True
+
+        train_per, val_per, test_per = 65, 10, 25
+        train_size = math.floor((train_per/100.0) * num_rows)
+        val_size = math.ceil((val_per/100.0) * num_rows)
+        test_size = num_rows - train_size - val_size
+
         train_df = self.mega_table.sample(n=train_size, random_state=0)
-        val_df = self.mega_table.drop(train_df.index)
+        rem_df = self.mega_table.drop(train_df.index)
+        val_df = rem_df.sample(n=val_size, random_state=0)
+        test_df = rem_df.drop(val_df.index)
+
+        dataset_files_dir = "dataset_files/%s/" % self.algorithm
+        os.makedirs(dataset_files_dir, exist_ok=True)
+
+        train_df.to_csv("%s/train_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
+        val_df.to_csv("%s/val_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
 
         train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
-        val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)    
+        val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)
+        test_dataset = ImageMaskDataset(test_df, feature_folder, self.input_channel, image_size)
 
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
-        self.val_loader = DataLoader(val_dataset, batch_size=len(val_dataset), generator=torch.Generator(device='cuda'))
-        self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'))
-        
+        self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'), shuffle=True)
+        self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=len(val_dataset))
+        self.test_loader = DataLoader(test_dataset, generator=torch.Generator(device='cuda'), batch_size=len(test_dataset))
+        # Dataset Allocation ends
+
+        self.train_samples = train_size
         self.optimizer= torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
+        
         #self.optimizer = Fedmem(self.local_model.parameters(), self.learning_rate, self.eta)
 
         # metrics

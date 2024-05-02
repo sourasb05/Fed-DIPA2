@@ -17,7 +17,7 @@ import datetime
 import json
 from torchmetrics import Precision, Recall, F1Score
 from src.utils.results_utils import InformativenessMetrics
-
+import pickle
 class Fedmem():
     def __init__(self,device, args, exp_no, current_directory):
                 
@@ -33,10 +33,10 @@ class Fedmem():
         else:
             self.user_ids = args.user_ids[2]
 
+        self.cluster_save_path =  "_best_clusters.pickle"
+
 
         self.total_users = len(self.user_ids)
-        self.num_users = int(self.total_users*args.p)  #selected users
-        print(self.num_users)
         self.num_teams = args.num_teams
         self.total_train_samples = 0
         self.exp_no = exp_no
@@ -104,9 +104,13 @@ class Fedmem():
             # id, train, test = read_user_data(i, data)
            # print(f"client id : {self.user_ids[i]}")
             user = Fedmem_user(device, args, self.user_ids[i], exp_no, current_directory, wandb)
-            self.users.append(user)
-            self.total_train_samples += user.train_samples
-
+            if user.valid: # Copy for all algorithms
+                self.users.append(user)
+                self.total_train_samples += user.train_samples
+            self.total_users = len(self.users)
+            self.num_users = int(self.total_users)*args.p  #selected users
+        print(self.num_users)
+        
 
         #Create Global_model
         for user in self.users:
@@ -149,13 +153,13 @@ class Fedmem():
         
         for user in self.selected_users:
             for server_param, local_param in zip(self.global_model.parameters(), user.local_model.parameters()):
-                server_param.data += local_param.data.clone() * (user.samples/self.samples)
+                server_param.data += local_param.data.clone() * (user.train_samples/self.samples)
 
 
     def add_parameters_clusters(self, user, cluster_id):
         
         for cluster_param, user_param in zip(self.c[cluster_id], user.get_parameters()):
-            cluster_param.data = cluster_param.data + (user.samples/self.samples)* user_param.data.clone()
+            cluster_param.data = cluster_param.data + (user.train_samples/self.samples)* user_param.data.clone()
       
     def aggregate_clusterhead(self):
 
@@ -366,7 +370,13 @@ class Fedmem():
                         'loss': self.minimum_test_loss
                         }
             torch.save(checkpoint, os.path.join(model_path, "best_server_checkpoint" + ".pt"))
-    
+        cluster_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
+        print(f"cluster path :", cluster_path)
+        if not os.path.exists(cluster_path):
+            os.makedirs(cluster_path)
+        with open(os.path.join(cluster_path, self.cluster_save_path), 'wb') as handle:
+            pickle.dump(self.cluster_dict_user_id, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        
         
     def initialize_or_add(self, dest, src):
     
@@ -528,7 +538,7 @@ class Fedmem():
             list_user_id = []
             for user in self.selected_users:
                 list_user_id.append(user.id)
-                self.samples += user.samples
+                self.samples += user.train_samples
             print(f"selected users : {list_user_id}")
             
             

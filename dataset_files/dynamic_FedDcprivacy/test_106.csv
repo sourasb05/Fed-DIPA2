@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+3,"[1, 0, 0, 0, 0, 0]",2,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",42,0,1,0,5,7,7,7,6,484dd70be82c3092.jpg,1,"[[300, 111, 475, 568]]",Person,0,1024,683,annotator106,484dd70be82c3092_Man_4,484dd70be82c3092_Man_4_annotator106
+9,"[1, 0, 0, 0, 0, 0]",0,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",42,0,1,0,5,7,7,7,6,115639.jpg,0,"[[253, 320, 40, 12]]",Vehicle Plate,0,640,427,annotator106,115639_license_plate_2,115639_license_plate_2_annotator106
+11,"[1, 1, 0, 0, 0, 0]",0,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",42,0,1,0,5,7,7,7,6,115639.jpg,0,"[[243, 230, 57, 15], [198, 231, 61, 17]]",Others,0,640,427,annotator106,115639_windshield_wiper_3-4,115639_windshield_wiper_3-4_annotator106

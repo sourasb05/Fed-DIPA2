@@ -1,0 +1,5 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+6,"[0, 1, 0, 0, 0, 0]",1,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 1, 0, 0, 0, 0]",32,0,0,0,4,5,8,7,7,136131.jpg,0,"[[73, 133, 196, 223]]",Others,0,425,640,annotator63,136131_statue_(sculpture)_0,136131_statue_(sculpture)_0_annotator63
+2,"[1, 0, 1, 0, 0, 0]",3,"[1, 0, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",32,0,0,0,4,5,8,7,7,108645.jpg,0,"[[0, 260, 98, 51]]",Home interior,0,500,375,annotator63,108645_bed_0,108645_bed_0_annotator63
+1,"[0, 1, 0, 0, 0, 0]",4,"[0, 1, 0, 0, 1, 0, 0]","[0, 1, 1, 1, 1, 0, 0]",32,0,0,0,4,5,8,7,7,d58bd5a441e5a2a8.jpg,1,"[[0, 260, 755, 133]]",Others,0,1024,678,annotator63,d58bd5a441e5a2a8_Train_1,d58bd5a441e5a2a8_Train_1_annotator63
+3,"[0, 0, 0, 0, 1, 0]",2,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",32,0,0,0,4,5,8,7,7,254420.jpg,0,"[[208, 261, 124, 83]]",Screen,0,640,427,annotator63,254420_laptop_computer_3,254420_laptop_computer_3_annotator63

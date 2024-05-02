@@ -66,9 +66,10 @@ class Siloedserver():
                 
         for i in trange(self.total_users, desc="Data distribution to clients"):
             user = Siloeduser(device, args, int(self.user_ids[i]), exp_no, current_directory, self.wandb)
-            self.users.append(user)
-            self.total_train_samples += user.train_samples
-
+            if user.valid: # Copy for all algorithms
+                self.users.append(user)
+                self.total_train_samples += user.train_samples
+        
         #Create Global_model
         for user in self.users:
             self.data_frac.append(user.train_samples/self.total_train_samples)

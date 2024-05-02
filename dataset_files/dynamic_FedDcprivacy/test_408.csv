@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+3,"[0, 1, 0, 1, 0, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",26,0,2,0,5,9,6,7,7,179155.jpg,0,"[[49, 182, 26, 41]]",Others,0,500,364,annotator408,179155_baby_buggy_10,179155_baby_buggy_10_annotator408

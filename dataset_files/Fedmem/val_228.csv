@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+4,"[0, 0, 0, 1, 0, 0]",4,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 1, 0, 0, 0, 0]",34,0,3,0,7,3,6,9,7,206501.jpg,0,"[[230, 1, 178, 424], [433, 0, 71, 51]]",Others,0,640,427,annotator228,206501_skateboard_0-1,206501_skateboard_0-1_annotator228

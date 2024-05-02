@@ -36,10 +36,11 @@ class Server():
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
-            self.user_ids = args.user_ids[3][:20]
+            self.user_ids = args.user_ids[3]
         else:
             self.user_ids = args.user_ids[2]
         
+        self.cluster_save_path =  "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_best_clusters.pickle"
 
         self.total_users = len(self.user_ids)
         self.total_samples = 0
@@ -106,7 +107,7 @@ class Server():
             user = User(device, args, self.user_ids[i], exp_no, current_directory, wandb)
             if user.valid:
                 self.users.append(user)
-                self.total_samples += user.samples
+                self.total_samples += user.train_samples
                 
                 if self.user_ids[i] == str(self.fixed_user_id):
                     self.fixed_user = user
@@ -126,7 +127,7 @@ class Server():
 
         for user in self.users:
                 
-            self.data_frac.append([user, user.id, user.samples/self.total_samples])
+            self.data_frac.append([user, user.id, user.train_samples/self.total_samples])
             # print(f"data available {self.data_frac}")
 
             # Step 2: Sort the list in descending order
@@ -160,10 +161,10 @@ class Server():
         
 
         for user in self.clusters[0]:
-            self.data_in_cluster[0] += user.samples
+            self.data_in_cluster[0] += user.train_samples
             
         for user in self.clusters[1]:
-            self.data_in_cluster[1] += user.samples
+            self.data_in_cluster[1] += user.train_samples
         
     def __del__(self):
         self.wandb.finish()
@@ -204,7 +205,8 @@ class Server():
             
         if self.global_test_loss[glob_iter] < self.minimum_test_loss:
             self.minimum_test_loss = self.global_test_loss[glob_iter]
-            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "/"
+            print(f"model path :", model_path)
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
@@ -212,8 +214,11 @@ class Server():
                         'loss': self.minimum_test_loss
                         }
             torch.save(checkpoint, os.path.join(model_path, "best_server_checkpoint" + ".pt"))
-
-        with open(os.path.join(model_path, "best_clusters.pickle"), 'wb') as handle:
+        cluster_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
+        print(f"cluster path :", cluster_path)
+        if not os.path.exists(cluster_path):
+            os.makedirs(cluster_path)
+        with open(os.path.join(cluster_path, self.cluster_save_path), 'wb') as handle:
             pickle.dump(self.cluster_dict_user_id, handle, protocol=pickle.HIGHEST_PROTOCOL)
             
     def select_users(self, round, switch, num_subset_users):
@@ -504,13 +509,13 @@ class Server():
         
         for user in self.selected_users:
             for server_param, local_param in zip(self.global_model.parameters(), user.local_model.parameters()):
-                server_param.data += local_param.data.clone() * (user.samples/self.samples)
+                server_param.data += local_param.data.clone() * (user.train_samples/self.samples)
 
 
     def add_parameters_clusters(self, user, cluster_id):
         
         for cluster_param, user_param in zip(self.c[cluster_id], user.get_parameters()):
-            cluster_param.data = cluster_param.data + (user.samples/self.samples)* user_param.data.clone()
+            cluster_param.data = cluster_param.data + (user.train_samples/self.samples)* user_param.data.clone()
       
     def aggregate_clusterhead(self):
 
@@ -540,15 +545,15 @@ class Server():
 
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} number of clients: {self.num_users} / Global Rounds :"):
             self.samples = 0.0
-            subset_rf = len(self.clusters[0])
-            subset_rl = len(self.clusters[1])
+            subset_rf = int(len(self.clusters[0])*self.kappa)
+            subset_rl = int(len(self.clusters[1])*self.delta)
             
             self.selected_rf_users = self.select_users(t,0, subset_rf).tolist()
             self.selected_rl_users = self.select_users(t,1, subset_rl).tolist()
             self.selected_users = self.selected_rf_users + self.selected_rl_users
 
             for user in self.selected_users:
-                self.samples += user.samples
+                self.samples += user.train_samples
 
             exchange_dict = {key: random.sample(self.selected_rl_users, 2) for key in self.selected_rf_users} 
 

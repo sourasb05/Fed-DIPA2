@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+4,"[0, 0, 0, 0, 0, 1]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",68,0,1,0,8,8,10,4,8,131273.jpg,0,"[[118, 0, 361, 637]]",Pet,0,480,640,annotator578,131273_dog_0,131273_dog_0_annotator578

@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+0,"[1, 0, 0, 1, 0, 0]",2,"[0, 1, 1, 1, 1, 1, 0]","[0, 1, 1, 1, 1, 1, 0]",31,0,2,0,9,10,10,3,7,1968c9cbabd1ebbd.jpg,1,"[[326, 120, 284, 145], [353, 465, 422, 280]]",Person,0,1024,768,annotator159,1968c9cbabd1ebbd_Human arm_4-5,1968c9cbabd1ebbd_Human arm_4-5_annotator159
+3,"[0, 0, 0, 1, 0, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 1, 0, 0, 0]",31,0,2,0,9,10,10,3,7,126674.jpg,0,"[[112, 183, 233, 101]]",Others,0,640,308,annotator159,126674_Object 0_0,126674_Object 0_0_annotator159
+6,"[1, 0, 0, 0, 0, 0]",1,"[0, 1, 0, 1, 0, 0, 0]","[0, 1, 0, 1, 0, 0, 0]",31,0,2,0,9,10,10,3,7,101401.jpg,0,"[[72, 195, 334, 412]]",Person,0,510,640,annotator159,101401_person_1,101401_person_1_annotator159

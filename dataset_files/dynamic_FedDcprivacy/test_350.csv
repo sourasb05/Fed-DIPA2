@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+0,"[1, 0, 1, 0, 1, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",68,0,0,0,8,8,10,2,10,6bf467287bbb6e8b.jpg,1,"[[0, 52, 1019, 514]]",Others,0,1024,681,annotator350,6bf467287bbb6e8b_Mobile phone_0,6bf467287bbb6e8b_Mobile phone_0_annotator350
+3,"[1, 0, 1, 1, 1, 0]",6,"[0, 1, 1, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",68,0,0,0,8,8,10,2,10,263604.jpg,0,"[[170, 303, 60, 50], [357, 297, 63, 56]]",Others,0,525,640,annotator350,263604_brassiere_4-5,263604_brassiere_4-5_annotator350

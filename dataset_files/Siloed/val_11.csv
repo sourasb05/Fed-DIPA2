@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+4,"[1, 0, 0, 0, 0, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",40,0,0,0,2,6,6,8,2,0ee131f55fb5b7f2.jpg,1,"[[189, 410, 136, 81], [203, 223, 9, 6]]",Vehicle Plate,0,1024,772,annotator11,0ee131f55fb5b7f2_Vehicle registration plate_7-8,0ee131f55fb5b7f2_Vehicle registration plate_7-8_annotator11

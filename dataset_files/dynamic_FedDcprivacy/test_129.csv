@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+0,"[0, 1, 0, 0, 0, 0]",4,"[0, 0, 0, 1, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",38,0,2,0,5,8,5,6,9,56e803d5e8c580e0.jpg,1,"[[0, 0, 1024, 681]]",Others,0,1024,681,annotator129,56e803d5e8c580e0_Building_2,56e803d5e8c580e0_Building_2_annotator129
+4,"[0, 0, 0, 1, 0, 0]",3,"[0, 0, 0, 0, 1, 0, 0]","[0, 0, 0, 1, 0, 0, 0]",38,0,2,0,5,8,5,6,9,183914.jpg,0,"[[111, 117, 82, 245]]",Others,0,500,400,annotator129,183914_cellular_telephone_2,183914_cellular_telephone_2_annotator129

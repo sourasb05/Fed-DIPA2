@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+4,"[1, 0, 0, 1, 1, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",37,0,1,0,8,7,8,5,8,146481.jpg,0,"[[68, 200, 303, 261]]",Printed Material,0,640,480,annotator73,146481_newspaper_4,146481_newspaper_4_annotator73

@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+2,"[1, 0, 0, 0, 0, 0]",2,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",28,0,0,0,4,5,6,8,6,172009b90976dfc6.jpg,1,"[[0, 4, 496, 324]]",Others,0,497,328,annotator44,172009b90976dfc6_identity_0,172009b90976dfc6_identity_0_annotator44
+0,"[0, 0, 0, 1, 0, 0]",1,"[1, 0, 0, 0, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",28,0,0,0,4,5,6,8,6,63a6c1a686088729.jpg,1,"[[89, 107, 682, 574]]",Machine,0,1024,683,annotator44,63a6c1a686088729_Sewing machine_0,63a6c1a686088729_Sewing machine_0_annotator44
+1,"[0, 1, 0, 0, 0, 0]",3,"[1, 0, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",28,0,0,0,4,5,6,8,6,120676.jpg,0,"[[479, 221, 55, 89], [52, 125, 17, 28]]",Clothing,0,640,426,annotator44,120676_dress_0-1,120676_dress_0-1_annotator44

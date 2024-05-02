@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+5,"[1, 0, 0, 0, 0, 0]",5,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",50,0,0,0,4,5,10,8,3,223761.jpg,0,"[[3, 208, 475, 430]]",Others,0,480,640,annotator431,223761_highchair_0,223761_highchair_0_annotator431

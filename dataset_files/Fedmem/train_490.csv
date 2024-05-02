@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+2,"[0, 1, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",27,0,3,0,8,9,9,6,5,110735.jpg,0,"[[175, 188, 212, 100]]",Pet,0,640,480,annotator490,110735_dog_0,110735_dog_0_annotator490
+0,"[0, 0, 1, 0, 0, 0]",4,"[0, 0, 0, 0, 1, 0, 0]","[0, 0, 0, 0, 1, 0, 0]",27,0,3,0,8,9,9,6,5,252576.jpg,0,"[[126, 147, 142, 99]]",Others,0,426,640,annotator490,252576_Object 0_1,252576_Object 0_1_annotator490
+1,"[0, 0, 0, 0, 0, 1]",5,"[0, 0, 1, 0, 0, 0, 0]","[0, 0, 1, 0, 0, 0, 0]",27,0,3,0,8,9,9,6,5,4aa5d7328d424408.jpg,1,"[[548, 340, 140, 220]]",Others,0,1024,768,annotator490,4aa5d7328d424408_Person_0,4aa5d7328d424408_Person_0_annotator490

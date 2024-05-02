@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+0,"[0, 0, 1, 1, 1, 0]",3,"[0, 1, 1, 1, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",48,0,1,0,3,7,6,8,8,0b9aec984321bf53.jpg,1,"[[508, 246, 448, 433]]",Clothing,0,1024,683,annotator252,0b9aec984321bf53_Clothing_2,0b9aec984321bf53_Clothing_2_annotator252
+4,"[1, 0, 0, 0, 0, 0]",1,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",48,0,1,0,3,7,6,8,8,150508.jpg,0,"[[356, 7, 86, 92]]",Others,0,640,427,annotator252,150508_Object 0_0,150508_Object 0_0_annotator252

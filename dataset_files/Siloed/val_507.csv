@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+14,"[1, 0, 0, 0, 0, 0]",5,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",23,0,2,0,5,8,6,6,8,131665.jpg,0,"[[12, 99, 163, 161]]",Home interior,0,640,480,annotator507,131665_bed_0,131665_bed_0_annotator507
+3,"[1, 0, 0, 0, 0, 0]",4,"[0, 1, 1, 1, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",23,0,2,0,5,8,6,6,8,2a3513ff487baa5e.jpg,1,"[[633, 241, 123, 273]]",Person,0,1024,768,annotator507,2a3513ff487baa5e_Human face_0,2a3513ff487baa5e_Human face_0_annotator507
+2,"[1, 0, 0, 0, 0, 0]",5,"[0, 1, 1, 1, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",23,0,2,0,5,8,6,6,8,03006368ed61dbea.jpg,1,"[[86, 216, 514, 425]]",Person,0,685,1024,annotator507,03006368ed61dbea_Human body_2,03006368ed61dbea_Human body_2_annotator507

@@ -1,0 +1,4 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+3,"[1, 0, 0, 0, 0, 0]",5,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",33,0,1,0,5,7,9,7,9,24b14dbf64eeced1.jpg,1,"[[19, 362, 123, 119], [459, 247, 175, 216]]",Person,0,1024,683,annotator467,24b14dbf64eeced1_Human head_5-6,24b14dbf64eeced1_Human head_5-6_annotator467
+7,"[0, 0, 1, 0, 0, 0]",3,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",33,0,1,0,5,7,9,7,9,126110.jpg,0,"[[104, 53, 57, 129]]",Pet,0,320,240,annotator467,126110_dog_0,126110_dog_0_annotator467
+10,"[0, 1, 0, 0, 0, 0]",1,"[0, 1, 1, 1, 1, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",33,0,1,0,5,7,9,7,9,235933.jpg,0,"[[104, 167, 59, 91]]",Others,0,338,450,annotator467,235933_swimsuit_0,235933_swimsuit_0_annotator467

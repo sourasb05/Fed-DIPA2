@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+3,"[0, 0, 0, 1, 1, 0]",4,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",38,0,1,0,8,6,8,4,7,188804.jpg,0,"[[296, 169, 113, 97], [133, 220, 100, 127]]",Screen,0,410,640,annotator246,188804_monitor_(computer_equipment) computer_monitor_0-1,188804_monitor_(computer_equipment) computer_monitor_0-1_annotator246

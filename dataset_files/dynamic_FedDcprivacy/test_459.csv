@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+0,"[1, 0, 1, 0, 0, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",59,0,3,0,6,8,10,5,7,505b4f9c1d24d83b.jpg,1,"[[29, 20, 601, 447]]",Others,0,635,1024,annotator459,505b4f9c1d24d83b_Bookcase_0,505b4f9c1d24d83b_Bookcase_0_annotator459

@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+0,"[1, 0, 0, 0, 0, 0]",3,"[0, 1, 1, 0, 0, 0, 0]","[0, 1, 1, 0, 0, 0, 0]",35,0,1,0,4,6,7,8,9,23282811e70b4df7.jpg,1,"[[28, 161, 655, 518]]",Person,0,1024,680,annotator9,23282811e70b4df7_Girl_5,23282811e70b4df7_Girl_5_annotator9
+4,"[1, 1, 0, 0, 1, 0]",4,"[1, 0, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",35,0,1,0,4,6,7,8,9,110784.jpg,0,"[[42, 269, 246, 116]]",Others,0,433,640,annotator9,110784_bus_(vehicle)_0,110784_bus_(vehicle)_0_annotator9

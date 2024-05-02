@@ -1,0 +1,3 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+1,"[1, 1, 0, 0, 1, 0]",6,"[0, 1, 1, 1, 0, 0, 0]","[0, 1, 1, 1, 0, 0, 0]",37,0,1,0,2,5,4,10,8,162557.jpg,0,"[[295, 259, 285, 112]]",Others,0,640,480,annotator131,162557_Object 0_15,162557_Object 0_15_annotator131
+2,"[0, 1, 0, 0, 1, 0]",5,"[0, 1, 1, 1, 0, 0, 0]","[0, 1, 1, 1, 0, 0, 0]",37,0,1,0,2,5,4,10,8,162557.jpg,0,"[[69, 73, 244, 308]]",Others,0,640,480,annotator131,162557_harmonium_0,162557_harmonium_0_annotator131
