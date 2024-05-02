@@ -181,8 +181,11 @@ class User():
             self.load_model()
 
     def load_model(self):
-        models_dir = "./models/FedDcprivacy/local_model/"
-        model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "best_local_checkpoint.pt"))["model_state_dict"]
+        models_dir = "./models/dynamic_FedDcprivacy/global_model/"
+        model_state_dict = torch.load(os.path.join(models_dir, "delta_0.5_kappa_0.8", "server_checkpoint_GR19.pt"))["model_state_dict"]
+
+        # models_dir = "./models/dynamic_FedDcprivacy/local_model/"
+        # model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "delta_1.0_kappa_1.0", "local_checkpoint_GR19.pt"))["model_state_dict"]
         self.local_model.load_state_dict(model_state_dict)
         self.local_model.eval()
         
@@ -458,4 +461,15 @@ class User():
 
             self.evaluate_model(t, iter)
     
+    
+    def test_eval(self):
+        self.local_model.eval()
 
+        results = []
+        for i, vdata in enumerate(self.test_loader):
+            vdata = [x.to('cuda') for x in vdata]
+            features, additional_info, information, informativeness, sharingOwner, sharingOthers = vdata
+            with torch.no_grad():
+                y_preds = self.local_model(features, additional_info)
+            results.append([information, informativeness, sharingOwner, sharingOthers, y_preds])
+        return results

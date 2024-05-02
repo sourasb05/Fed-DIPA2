@@ -431,7 +431,7 @@ class Fedmem_user():
         self.local_model.eval()
 
         results = []
-        for i, vdata in enumerate(self.val_loader):
+        for i, vdata in enumerate(self.test_loader):
             vdata = [x.to('cuda') for x in vdata]
             features, additional_info, information, informativeness, sharingOwner, sharingOthers = vdata
             with torch.no_grad():

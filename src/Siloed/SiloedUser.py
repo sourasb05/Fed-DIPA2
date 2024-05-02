@@ -150,17 +150,15 @@ class Siloeduser():
                 for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
         self.global_conf = [ConfusionMatrix(task="multilabel", num_labels=output_dim) \
                 for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
-        args.test = False
-        if args.test:
-            # print(args.test)
-            self.testing = True
-            self.load_model()
-        else:
-            self.testing = False
 
         self.minimum_test_loss = 10000000.0
+
+
+        if args.test:
+            self.load_model()
+
     def load_model(self):
-        models_dir = "./models/siloed/local_model/"
+        models_dir = "./models/%s/local_model/" % self.algorithm
         model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "best_local_checkpoint.pt"))["model_state_dict"]
         self.local_model.load_state_dict(model_state_dict)
         self.local_model.eval()  
@@ -379,4 +377,15 @@ class Siloeduser():
                 
             self.evaluate_model(iter)
 
+    def test_eval(self):
+        self.local_model.eval()
+
+        results = []
+        for i, vdata in enumerate(self.test_loader):
+            vdata = [x.to('cuda') for x in vdata]
+            features, additional_info, information, informativeness, sharingOwner, sharingOthers = vdata
+            with torch.no_grad():
+                y_preds = self.local_model(features, additional_info)
+            results.append([information, informativeness, sharingOwner, sharingOthers, y_preds])
+        return results
                  

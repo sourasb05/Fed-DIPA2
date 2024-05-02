@@ -15,6 +15,9 @@ import json
 from sklearn.cluster import KMeans
 import pickle
 
+from torchmetrics import Precision, Recall, F1Score
+from src.utils.results_utils import InformativenessMetrics
+
 class Server():
     def __init__(self,device, args, exp_no, current_directory):
                 
@@ -598,9 +601,42 @@ class Server():
 
 
     def test(self):
+        output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+        threshold = 0.5
+        average_method = 'weighted'
+        metrics = [Precision, Recall, F1Score]
+        metrics_data = {}
+        for metric in metrics:
+            metrics_data[metric.__name__] = [metric(task="multilabel",
+                                                    num_labels=output_dim,
+                                                    threshold = threshold,
+                                                    average=average_method,
+                                                    ignore_index = output_dim - 1) \
+                                                    for i, (output_name, output_dim) in enumerate(output_channel.items())]
+        informativeness_scores = [[], []]
+
         for user in self.users:
-            
-            #if user.train_samples > 30:
-            print("User ID", user.id)
-            user.test()
-            #sys.exit()
+            #print("User ID", user.id)
+            results = user.test_eval()
+
+            for result in results:
+                information, informativeness, sharingOwner, sharingOthers, y_preds = result
+                gt = [information, sharingOwner, sharingOthers]
+                output_dims = output_channel.values()
+                for o, (output_dim, gt) in enumerate(zip(output_dims, gt)):
+                    start_dim = o*(output_dim)
+                    end_dim = o*(output_dim)+output_dim
+                    for metric_name in metrics_data.keys():
+                        metrics_data[metric_name][o].update(y_preds[:, start_dim:end_dim], gt)
+                informativeness_scores[0].extend(informativeness.detach().cpu().numpy().tolist())
+                informativeness_scores[1].extend(y_preds[:, 6].detach().cpu().numpy().tolist())
+        results_data = {}
+        for metric_name in metrics_data.keys():
+            results_data[metric_name] = [i.compute().detach().cpu().numpy() for i in metrics_data[metric_name]]
+        for i, k in enumerate(output_channel.keys()):
+            for metric, values in results_data.items():
+                print("%.02f " % values[i], end="")
+
+        info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
+        print("%.02f %.02f %.02f %.02f %.02f" % (info_prec, info_rec, info_f1, info_cmae, info_mae))
+        
