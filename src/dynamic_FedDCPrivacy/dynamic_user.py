@@ -182,7 +182,7 @@ class User():
 
     def load_model(self):
         models_dir = "./models/dynamic_FedDcprivacy/global_model/"
-        model_state_dict = torch.load(os.path.join(models_dir, "delta_0.5_kappa_0.8", "server_checkpoint_GR19.pt"))["model_state_dict"]
+        model_state_dict = torch.load(os.path.join(models_dir, "delta_0.1_kappa_0.1", "server_checkpoint_GR19.pt"))["model_state_dict"]
 
         # models_dir = "./models/dynamic_FedDcprivacy/local_model/"
         # model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "delta_1.0_kappa_1.0", "local_checkpoint_GR19.pt"))["model_state_dict"]
