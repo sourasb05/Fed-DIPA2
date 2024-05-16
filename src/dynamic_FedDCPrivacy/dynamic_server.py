@@ -16,7 +16,8 @@ from sklearn.cluster import KMeans
 import pickle
 
 from torchmetrics import Precision, Recall, F1Score
-from src.utils.results_utils import InformativenessMetrics
+from src.utils.results_utils import CalculateMetrics
+import pprint
 
 class Server():
     def __init__(self,device, args, exp_no, current_directory):
@@ -59,11 +60,9 @@ class Server():
         self.c = []
         self.cluster_dict_user_id = {}
 
-
         # print(f"self.fixed_user_id : {self.fixed_user_id}")
 
         self.global_metric = []
-
 
         self.users = []
         self.selected_users = []
@@ -104,7 +103,12 @@ class Server():
         date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.wandb = wandb.init(project="DIPA2", name="dynamic_FedDCPrivacy_%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
                 
+        self.read_all_cluster_information()
+
+        if args.test: self.read_cluster_information()
         
+        count = 0
+
         for i in trange(self.total_users, desc="Data distribution to clients"):
             # print(f"client id : {self.user_ids[i]}")
             user = User(device, args, self.user_ids[i], exp_no, current_directory, wandb)
@@ -115,19 +119,22 @@ class Server():
                 if self.user_ids[i] == str(self.fixed_user_id):
                     self.fixed_user = user
                     # print(f'id found : {self.fixed_user.id}')
+                
+                if user.model_status == False:
+                    count+=1
+
         # print("Finished creating Fedmem server.")
 
         self.total_users = len(self.users) 
         self.num_users = self.total_users * args.users_frac    #selected users
         
+        print("Total Users Present :", self.total_users)
 
         self.global_model = copy.deepcopy(self.users[0].local_model)
 
         for _ in range(self.n_clusters):
             self.c.append(copy.deepcopy(list(self.global_model.parameters())))
-          
-
-
+       
         for user in self.users:
                 
             self.data_frac.append([user, user.id, user.train_samples/self.total_samples])
@@ -149,8 +156,8 @@ class Server():
             
             resourceless = [x for x in self.users if x not in resourceful]
             
-            print(len(resourceful))
-            print(len(resourceless))
+            #print(len(resourceful))
+            #print(len(resourceless))
 
        # print(resourceful)
        # print(resourceless)
@@ -192,9 +199,7 @@ class Server():
             total_train += user.train_samples
         for user in self.selected_users:
             self.add_parameters(user, user.train_samples / total_train)
-
-    
-
+   
     def save_model(self, glob_iter):
         if glob_iter == self.num_glob_iters-1:
             model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "/"
@@ -541,8 +546,6 @@ class Server():
         return None
 
 
-
-
     def train(self):
         loss = []
 
@@ -599,8 +602,91 @@ class Server():
             self.save_model(t)
         self.save_results()
 
+    def read_cluster_information(self):
+        cluster_path = self.current_directory + "/models/" + self.algorithm + "/cluster_model/"
+        print(f"cluster path :", cluster_path)
+        with open(os.path.join(cluster_path, self.cluster_save_path), 'rb') as handle:
+            self.cluster_dict_user_id = pickle.load(handle)
+
+        new_user_ids = []
+        for user_id in self.user_ids:
+            user_id_present = False
+            for cluster_user_ids in self.cluster_dict_user_id.values():
+                if user_id in cluster_user_ids:
+                    user_id_present = True
+            if user_id_present:
+                new_user_ids.append(user_id)
+
+        self.user_ids = new_user_ids
+        self.total_users = len(self.user_ids)
+
+    def read_all_cluster_information(self):
+
+        for delta in [0.1, 0.5, 0.8, 1.0]:
+            for kappa in [0.1, 0.5, 0.8, 1.0]:
+
+                if (delta != 1.0 and kappa == 1.0) or \
+                   (delta == 1.0 and kappa != 1.0):
+                    continue
+
+                cluster_save_path =  "delta_" + str(delta) + "_kappa_" + str(kappa) + "_best_clusters.pickle"
+
+                cluster_path = self.current_directory + "/models/" + self.algorithm + "/cluster_model/"
+                print(f"cluster path :", cluster_path)
+                with open(os.path.join(cluster_path, cluster_save_path), 'rb') as handle:
+                    self.cluster_dict_user_id = pickle.load(handle)
+                
+                # pprint.pprint(self.cluster_dict_user_id)
+
+                count = 0
+                for values in self.cluster_dict_user_id.values():
+                    count += len(values)
+
+                print(delta, kappa, count)
+
+    def test_all(self):
+        output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+        all_results = []
+        for user in self.users:
+            #print("User ID", user.id)
+            results = user.test_eval()
+            all_results.extend(results)
+        
+        results_data = CalculateMetrics(all_results)
+        for i, k in enumerate(output_channel.keys()):
+            for metric, values in results_data.items():
+                if metric != "info_metrics":
+                    print("%.02f " % values[i], end="")
+
+        info_prec, info_rec, info_f1, info_cmae, info_mae = results_data["info_metrics"]
+        print("%.02f %.02f %.02f %.02f %.02f" % (info_prec, info_rec, info_f1, info_cmae, info_mae))
 
     def test(self):
+        output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+
+        all_results_data = []
+        for user in self.users:
+            results = user.test_eval()
+            all_results_data.append(CalculateMetrics(results))
+
+        all_results = []
+        for results_data in all_results_data:
+            results = []
+            for i, k in enumerate(output_channel.keys()):
+                for metric, values in results_data.items():
+                    if metric != "info_metrics":
+                        results.append(values[i])        
+
+            results.extend(results_data["info_metrics"])
+            all_results.append(results)
+        
+        results_mean = np.mean(all_results, axis=0)
+        for result in results_mean:
+            print("%.02f" % result, end=" ")
+        print()
+
+    def test_old(self):
+
         output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
         threshold = 0.5
         average_method = 'weighted'

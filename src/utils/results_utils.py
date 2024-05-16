@@ -8,6 +8,7 @@ import csv
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import sklearn
+from torchmetrics import Precision, Recall, F1Score
 
 def ClassWiseMAE(gt, pred):
    gt = np.array(gt)
@@ -40,6 +41,38 @@ def InformativenessMetrics(gt, pred):
    f1 = sklearn.metrics.f1_score(gt, pred, average=average)
    return prec, recall, f1, cmae, mae
 
+def CalculateMetrics(results):
+    output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+    threshold = 0.5
+    average_method = 'weighted'
+    metrics = [Precision, Recall, F1Score]
+    metrics_data = {}
+    for metric in metrics:
+        metrics_data[metric.__name__] = [metric(task="multilabel",
+                                                num_labels=output_dim,
+                                                threshold = threshold,
+                                                average=average_method,
+                                                ignore_index = output_dim - 1) \
+                                                for i, (output_name, output_dim) in enumerate(output_channel.items())]
+    informativeness_scores = [[], []]
+
+    for result in results:
+        information, informativeness, sharingOwner, sharingOthers, y_preds = result
+        gt = [information, sharingOwner, sharingOthers]
+        output_dims = output_channel.values()
+        for o, (output_dim, gt) in enumerate(zip(output_dims, gt)):
+            start_dim = o*(output_dim)
+            end_dim = o*(output_dim)+output_dim
+            for metric_name in metrics_data.keys():
+                metrics_data[metric_name][o].update(y_preds[:, start_dim:end_dim], gt)
+        informativeness_scores[0].extend(informativeness.detach().cpu().numpy().tolist())
+        informativeness_scores[1].extend(y_preds[:, 6].detach().cpu().numpy().tolist())
+    results_data = {}
+    for metric_name in metrics_data.keys():
+        results_data[metric_name] = [i.compute().detach().cpu().numpy() for i in metrics_data[metric_name]]
+    results_data["info_metrics"] = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
+
+    return results_data
 
 def convert_csv_to_txt(input_file,output_file):
    
@@ -49,8 +82,6 @@ def convert_csv_to_txt(input_file,output_file):
             space_delimited_file.write(' '.join(row) + '\n')
 
     print(f'CSV file "{input_file}" converted to space-delimited file "{output_file}"')
-
-
 
 def read_file(file):
     hf = h5py.File(file, 'r')

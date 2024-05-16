@@ -24,6 +24,7 @@ import wandb
 import sys
 import math
 import os
+
 class User():
 
     def __init__(self,device, args, id, exp_no, current_directory, wandb):
@@ -96,9 +97,9 @@ class User():
         self.output_name = self.privacy_metrics
         self.output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
 
-
         self.local_model = PrivacyModel(input_dim=self.input_dim).to(self.device)
-        self.exchange_model = copy.deepcopy(self.local_model)
+        if not args.test:
+            self.exchange_model = copy.deepcopy(self.local_model)
 
         image_size = (224, 224)
         feature_folder = self.current_directory + '/object_features/resnet50/'
@@ -129,24 +130,26 @@ class User():
         val_df.to_csv("%s/val_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
         test_df.to_csv("%s/test_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
 
-        train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
-        val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)
-        test_dataset = ImageMaskDataset(test_df, feature_folder, self.input_channel, image_size)
 
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
-        self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'), shuffle=True)
-        self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=len(val_dataset))
-        self.test_loader = DataLoader(test_dataset, generator=torch.Generator(device='cuda'), batch_size=len(test_dataset))
+        if not args.test:
+            train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
+            val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)
+            self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
+            self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'), shuffle=True)
+            self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=len(val_dataset))
+
+            # self.optimizer = Fedmem(self.local_model.parameters(), lr=self.learning_rate)
+            self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
+            self.exchange_optimizer= torch.optim.Adam(self.exchange_model.parameters(), lr=self.learning_rate)
+
+        test_dataset = ImageMaskDataset(test_df, feature_folder, self.input_channel, image_size)
+        self.test_loader = DataLoader(test_dataset, generator=torch.Generator(device='cuda'), batch_size=16) #len(test_dataset))
         # Dataset Allocation ends
 
         self.train_samples = train_size
         self.val_samples = val_size
         self.samples = train_size + val_size
 
-        # self.optimizer = Fedmem(self.local_model.parameters(), lr=self.learning_rate)
-        self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
-        self.exchange_optimizer= torch.optim.Adam(self.exchange_model.parameters(), lr=self.learning_rate)
-        
         # metrics
 
         threshold = 0.5
@@ -178,16 +181,20 @@ class User():
         self.minimum_test_loss = 10000000.0
 
         if args.test:
-            self.load_model()
+            self.model_status = self.load_model()
 
     def load_model(self):
-        models_dir = "./models/dynamic_FedDcprivacy/global_model/"
-        model_state_dict = torch.load(os.path.join(models_dir, "delta_0.1_kappa_0.1", "server_checkpoint_GR19.pt"))["model_state_dict"]
+        # models_dir = "./models/dynamic_FedDcprivacy/global_model/"
+        # model_state_dict = torch.load(os.path.join(models_dir, "delta_0.1_kappa_0.1", "server_checkpoint_GR19.pt"))["model_state_dict"]
 
-        # models_dir = "./models/dynamic_FedDcprivacy/local_model/"
-        # model_state_dict = torch.load(os.path.join(models_dir, str(self.id), "delta_1.0_kappa_1.0", "local_checkpoint_GR19.pt"))["model_state_dict"]
-        self.local_model.load_state_dict(model_state_dict)
-        self.local_model.eval()
+        models_dir = "./models/dynamic_FedDcprivacy/local_model/"
+        model_path = os.path.join(models_dir, str(self.id), "delta_%s_kappa_%s" % (self.delta, self.kappa), "local_checkpoint_GR19.pt")
+        if os.path.exists(model_path):         
+            model_state_dict = torch.load(model_path)["model_state_dict"]
+            self.local_model.load_state_dict(model_state_dict)
+            self.local_model.eval()
+            return True
+        return False
         
     def set_parameters(self, global_model):
         for param, glob_param in zip(self.local_model.parameters(), global_model):
