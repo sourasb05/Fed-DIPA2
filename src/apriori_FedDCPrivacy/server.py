@@ -41,7 +41,7 @@ class Server():
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
-            self.user_ids = args.user_ids[3][:100]
+            self.user_ids = args.user_ids[3]
         else:
             self.user_ids = args.user_ids[2]
         
