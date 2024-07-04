@@ -102,7 +102,7 @@ class Server():
         self.data_in_cluster = [0.0,0.0]
 
         date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        self.wandb = wandb.init(project="DIPA2", name="dynamic_FedDCPrivacy_%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
+        self.wandb = wandb.init(project="DIPA2", name="%s_%s_%d" % (self.algorithm, date_and_time, self.total_users), mode=None if args.wandb else "disabled")
                 
         #self.read_all_cluster_information()
 
@@ -265,8 +265,7 @@ class Server():
             return np.random.choice(self.clusters[1], num_subset_users, replace=False)
         else: 
             assert (switch > 1)
-            
-    
+                
     def initialize_or_add(self, dest, src):
     
         for key, value in src.items():
@@ -658,6 +657,7 @@ class Server():
 
             self.evaluate(t)
             self.save_model(t)
+
         self.save_results()
 
     def train_org(self):

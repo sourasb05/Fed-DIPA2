@@ -7,7 +7,7 @@ def args_parser():
     parser.add_argument("--algorithm", type=str, default="apriori_FedDcprivacy",
                         choices=["FedAvg", "Fedmem", "FedProx", "FedDcprivacy", "Siloed", "Clustered_FedDC", "dynamic_FedDcprivacy", "apriori_FedDcprivacy"])
     parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--num_teams", type=int, default=10)
+    parser.add_argument("--num_teams", type=int, default=5)
     parser.add_argument("--gamma", type=float, default=1.0)
     parser.add_argument("--lambda_1", type=float, default=0.0, 
                         help="Regularization term lambda_1")
