@@ -7,6 +7,7 @@ from src.FedDCPrivacy.server import Server
 from src.dynamic_FedDCPrivacy.dynamic_server import Server
 from src.Siloed.SiloedServer import Siloedserver
 from src.ClusteredFedDC.clustered_server import C_server
+from src.apriori_FedDCPrivacy.server import Server as AprioriFedDCServer
 
 from src.TrainModels.trainmodels import *
 from src.utils.options import args_parser
@@ -36,6 +37,8 @@ def main(args):
                 server = Server(device, args, i, current_directory)
             elif args.algorithm == "Clustered_FedDC":
                 server = C_server(device, args, i, current_directory)
+            elif args.algorithm == "apriori_FedDcprivacy":
+                server = AprioriFedDCServer(device, args, i, current_directory)
 
         except ValueError:
             raise ValueError("Wrong algorithm selected")

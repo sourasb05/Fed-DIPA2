@@ -10,24 +10,43 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import sklearn
 from torchmetrics import Precision, Recall, F1Score
 
+# def ClassWiseMAE(gt, pred):
+#    gt = np.array(gt)
+#    pred = np.array([0 if x<0 else x for x in pred])
+
+#    num_classes = len(set(gt))
+#    cmae = [0 for x in range(num_classes)]
+#    unique, counts = np.unique(gt, return_counts=True)
+#    counts = dict(zip(unique, counts))
+
+#    for i in range(num_classes):
+#        for g, p in zip(gt, pred):
+#            if g == i:
+#                cmae[i] += abs(g - p)
+#        if i in counts:
+#            cmae[i] /= counts[i]
+#        else:    
+#            cmae[i] = 0
+#    return np.mean(cmae)
+
 def ClassWiseMAE(gt, pred):
-   gt = np.array(gt)
-   pred = np.array([0 if x<0 else x for x in pred])
+    gt = np.array(gt)
+    pred = np.array([0 if x<0 else x for x in pred])
 
-   num_classes = len(set(gt))
-   cmae = [0 for x in range(num_classes)]
-   unique, counts = np.unique(gt, return_counts=True)
-   counts = dict(zip(unique, counts))
+    classes = set(gt)
+    cmae = [0 for x in classes]
+    unique, counts = np.unique(gt, return_counts=True)
+    counts = dict(zip(unique, counts))
+    for i, c in enumerate(classes):
+        for g, p in zip(gt, pred):
+            if g == c:
+                cmae[i] += abs(g - p)
+        if c in counts:
+            cmae[i] /= counts[c]
+        else:
+            cmae[i] = 0
 
-   for i in range(num_classes):
-       for g, p in zip(gt, pred):
-           if g == i:
-               cmae[i] += abs(g - p)
-       if i in counts:
-           cmae[i] /= counts[i]
-       else:    
-           cmae[i] = 0
-   return np.mean(cmae)
+    return np.mean(cmae)
 
 def InformativenessMetrics(gt, pred):
    cmae = ClassWiseMAE(gt, pred)

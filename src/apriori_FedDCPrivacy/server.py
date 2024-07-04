@@ -1,7 +1,7 @@
 import torch
 import os
 import h5py
-from src.dynamic_FedDCPrivacy.dynamic_user import User
+from src.apriori_FedDCPrivacy.user import User
 import numpy as np
 import copy
 from tqdm import trange
@@ -18,6 +18,7 @@ import pickle
 from torchmetrics import Precision, Recall, F1Score
 from src.utils.results_utils import CalculateMetrics, InformativenessMetrics
 import pprint
+from sklearn.cluster import KMeans
 
 class Server():
     def __init__(self,device, args, exp_no, current_directory):
@@ -40,7 +41,7 @@ class Server():
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
-            self.user_ids = args.user_ids[3]
+            self.user_ids = args.user_ids[3][:100]
         else:
             self.user_ids = args.user_ids[2]
         
@@ -156,6 +157,7 @@ class Server():
             
             resourceless = [x for x in self.users if x not in resourceful]
             
+
             #print(len(resourceful))
             #print(len(resourceless))
 
@@ -174,7 +176,33 @@ class Server():
             
         for user in self.clusters[1]:
             self.data_in_cluster[1] += user.train_samples
+
+        #self.apriori_clusters = self.get_apriori_clusters(resourceful)
+        self.cluster_dict = self.get_apriori_clusters(resourceful)
+
+        self.resourceless = resourceless
+        self.resourceful = resourceful
         
+        
+    def get_apriori_clusters(self, users):
+
+        print("Total Users", len(users))
+
+        bigfives = []
+        for user in users:
+            bigfives.append(user.train_df[users[0].bigfives].iloc[0].tolist())
+
+        clusterer = KMeans(n_clusters=self.n_clusters, random_state=10)
+        clusters_ids = clusterer.fit_predict(bigfives)
+
+        clusters = {}
+        for i, cid in enumerate(clusters_ids):
+            if cid not in clusters:
+                clusters[cid] = []
+            clusters[cid].append(users[i])
+
+        return clusters
+
     def __del__(self):
         self.wandb.finish()
         
@@ -246,7 +274,6 @@ class Server():
                 dest[key] = [x + y for x, y in zip(dest[key], value)]
             else:
                 dest[key] = value.copy()  # Initialize with a copy of the first list
-
 
     def eval_train(self, t):
         avg_loss = 0.0
@@ -488,8 +515,6 @@ class Server():
         self.cluster_dict[key].append(value)
         self.cluster_dict_user_id[key].append(value.id)
         return found_key  # return the original key if the value was reassigned
-
-
               
     def combine_cluster_user(self,clusters):
         
@@ -518,7 +543,6 @@ class Server():
             for server_param, local_param in zip(self.global_model.parameters(), user.local_model.parameters()):
                 server_param.data += local_param.data.clone() * (user.train_samples/self.samples)
 
-
     def add_parameters_clusters(self, user, cluster_id):
         
         for cluster_param, user_param in zip(self.c[cluster_id], user.get_parameters()):
@@ -531,9 +555,19 @@ class Server():
                 param.data = torch.zeros_like(param.data)
         
             users = np.array(self.cluster_dict[clust_id])
-            # print(users)
-            # input("press")
-            # print(f"number of users are {len(users)} in cluster {clust_id} ")
+
+            if len(users) != 0:
+                for user in users:
+                    self.add_parameters_clusters(user, clust_id)
+
+    def aggregate_clusterhead_rl(self):
+
+        for clust_id in range(self.n_clusters):
+            if clust_id not in self.cluster_dict_rl:
+                continue
+
+            users = np.array(self.cluster_dict_rl[clust_id])
+
             if len(users) != 0:
                 for user in users:
                     self.add_parameters_clusters(user, clust_id)
@@ -543,9 +577,90 @@ class Server():
             if user_id in values:
                 return key
         return None
-
-
+    
+    def set_parameters(self, model, params):
+        for param, glob_param in zip(model.parameters(), params):
+            param.data = glob_param.data.clone()
+    
     def train(self):
+
+        for t in trange(self.num_glob_iters, desc=f"Global Rounds"):
+
+            # Training ResourceFul in Clustered Setting
+            self.samples = 0.0
+
+            for cluster_id in range(self.n_clusters):
+                for user in self.cluster_dict[cluster_id]:
+                    self.samples += user.train_samples
+
+            for cluster_id in tqdm(range(self.n_clusters), desc=f"Training RF"):
+                for user in self.cluster_dict[cluster_id]:
+                    user.train(self.c[cluster_id],t)
+
+            self.aggregate_clusterhead()
+
+            # Identifying Best Clusters for ResourceLess
+            self.cluster_dict_rl = {}
+
+            for user in tqdm(self.resourceless, desc=f"Evaluating Clusters for RL"):
+                min_cmae = 1000
+                min_cluster_id = -1
+                for cluster_id in range(self.n_clusters):   
+                    info_cmae = user.test_model(self.c[cluster_id])
+                    if min_cmae > info_cmae:
+                        min_cmae = info_cmae
+                        min_cluster_id = cluster_id
+                
+                user.cluster_id = min_cluster_id
+
+                if min_cluster_id not in self.cluster_dict_rl:
+                    self.cluster_dict_rl[min_cluster_id] = []
+                self.cluster_dict_rl[min_cluster_id].append(user)
+
+            # Daisy Chaining
+            for cluster_id in tqdm(range(self.n_clusters), desc=f"Daisy Chaining"):
+                if cluster_id not in self.cluster_dict_rl:
+                    continue
+
+                self.cluster_dict_rl[cluster_id][0].train(self.c[cluster_id],t)
+
+                if len(self.cluster_dict_rl[cluster_id]) == 1:
+                    continue
+
+                for ui in range(len(self.cluster_dict_rl[cluster_id])):
+
+                    src_user_id = ui
+                    dst_user_id = ui + 1
+                    if dst_user_id == len(self.cluster_dict_rl[cluster_id]):
+                        dst_user_id = 0
+
+                    src_user = self.cluster_dict_rl[cluster_id][src_user_id]
+                    dst_user = self.cluster_dict_rl[cluster_id][dst_user_id]
+                    dst_user.train(src_user.get_parameters(), t)
+
+            # Aggregation with RL
+            for cluster_id in range(self.n_clusters):
+                if cluster_id in self.cluster_dict_rl:
+                    for user in self.cluster_dict_rl[cluster_id]:
+                        self.samples += user.train_samples
+
+            self.selected_users = []
+            for cluster_id in range(self.n_clusters):
+                for user in self.cluster_dict[cluster_id]:
+                    self.selected_users.append(user)
+                
+                if cluster_id in self.cluster_dict_rl:
+                    for user in self.cluster_dict_rl[cluster_id]:
+                        self.selected_users.append(user)       
+
+            self.aggregate_clusterhead_rl()   
+            self.global_update()
+
+            self.evaluate(t)
+            self.save_model(t)
+        self.save_results()
+
+    def train_org(self):
         loss = []
 
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} number of clients: {self.num_users} / Global Rounds :"):
