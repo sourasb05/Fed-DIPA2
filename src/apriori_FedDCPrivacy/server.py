@@ -183,14 +183,21 @@ class Server():
         for user in self.clusters[1]:
             self.data_in_cluster[1] += user.train_samples
 
-        #self.apriori_clusters = self.get_apriori_clusters(resourceful)
-        self.cluster_dict = self.get_apriori_clusters(resourceful)
+        self.include_rl_in_apriori_clustering = False
+
+        self.cluster_dict, self.cluster_dict_rl = self.get_apriori_clusters(resourceful, resourceless)
 
         self.resourceless = resourceless
         self.resourceful = resourceful
+
+    def get_apriori_clusters(self, rf, rl):
+
+        users = rf
         
-        
-    def get_apriori_clusters(self, users):
+        if self.include_rl_in_apriori_clustering:
+            users += rl
+            rf_ids = [user.id for user in rf]
+            rl_ids = [user.id for user in rl]
 
         print("Total Users", len(users))
 
@@ -201,14 +208,21 @@ class Server():
         clusterer = KMeans(n_clusters=self.n_clusters, random_state=10)
         clusters_ids = clusterer.fit_predict(bigfives)
 
-        clusters = {}
+        rf_clusters = {}
+        rl_clusters = {}
         for i, cid in enumerate(clusters_ids):
-            if cid not in clusters:
-                clusters[cid] = []
-            clusters[cid].append(users[i])
+            if (not self.include_rl_in_apriori_clustering) or \
+                users[i].id in rf_ids:
+                if cid not in rf_clusters:
+                    rf_clusters[cid] = []
+                rf_clusters[cid].append(users[i])
+            else:
+                if cid not in rl_clusters:
+                    rl_clusters[cid] = []
+                rl_clusters[cid].append(users[i])
 
-        return clusters
-
+        return rf_clusters, rl_clusters
+    
     def __del__(self):
         self.wandb.finish()
         
@@ -638,32 +652,33 @@ class Server():
 
             self.aggregate_clusterhead()
 
-            # Identifying Best Clusters for ResourceLess
-            self.cluster_dict_rl = {}
+            if not self.include_rl_in_apriori_clustering:
+                # Identifying Best Clusters for ResourceLess
+                self.cluster_dict_rl = {}
 
-            for user in tqdm(self.resourceless, desc=f"Evaluating Clusters for RL"):
-                min_cmae = 1000
-                min_cluster_id = -1
-                for cluster_id in range(self.n_clusters):   
-                    info_cmae = user.test_model(self.c[cluster_id])
-                    if min_cmae > info_cmae:
-                        min_cmae = info_cmae
-                        min_cluster_id = cluster_id
+                for user in tqdm(self.resourceless, desc=f"Evaluating Clusters for RL"):
+                    min_cmae = 1000
+                    min_cluster_id = -1
+                    for cluster_id in range(self.n_clusters):   
+                        info_cmae = user.test_model(self.c[cluster_id])
+                        if min_cmae > info_cmae:
+                            min_cmae = info_cmae
+                            min_cluster_id = cluster_id
+                    
+                    user.cluster_id = min_cluster_id
+
+                    if min_cluster_id not in self.cluster_dict_rl:
+                        self.cluster_dict_rl[min_cluster_id] = []
+                    self.cluster_dict_rl[min_cluster_id].append(user)
                 
-                user.cluster_id = min_cluster_id
-
-                if min_cluster_id not in self.cluster_dict_rl:
-                    self.cluster_dict_rl[min_cluster_id] = []
-                self.cluster_dict_rl[min_cluster_id].append(user)
-            
-            print(f"total resourceless : {len(self.resourceless)}")
-            for cluster_id in range(self.n_clusters):
-                cnt = 0
-                if cluster_id in self.cluster_dict_rl:
-                    for user in self.cluster_dict_rl[cluster_id]:
-                        #print(user.id)
-                        cnt +=1
-                    print(f"cluster_id {cluster_id} num_users : {cnt}")
+                print(f"total resourceless : {len(self.resourceless)}")
+                for cluster_id in range(self.n_clusters):
+                    cnt = 0
+                    if cluster_id in self.cluster_dict_rl:
+                        for user in self.cluster_dict_rl[cluster_id]:
+                            #print(user.id)
+                            cnt +=1
+                        print(f"cluster_id {cluster_id} num_users : {cnt}")
 
             #sys.exit()
             
