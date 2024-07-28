@@ -100,6 +100,7 @@ class User():
         self.output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
 
         self.local_model = PrivacyModel(input_dim=self.input_dim).to(self.device)
+        self.old_model = copy.deepcopy(self.local_model)
         if not args.test:
             self.exchange_model = copy.deepcopy(self.local_model)
 
@@ -281,6 +282,8 @@ class User():
         # Set the model to evaluation mode
         self.local_model.eval()
         if global_model != None:
+            #print("here")
+            #sys.exit()
             self.update_parameters(global_model)
         avg_loss=0.0
         distance = 0.0
@@ -417,16 +420,74 @@ class User():
                         }
             torch.save(checkpoint, os.path.join(model_path, "best_local_checkpoint" + ".pt"))
 
+    def set_parameters_old(self):
+        for old_param, new_param in zip(self.old_model.parameters(), self.local_model.parameters()):
+            old_param.data = new_param.data.clone()
+
+    def calculate_entropies(self, old_params, new_params, global_params):
+        total_entropy_old_global = 0.0
+        total_entropy_new_global = 0.0
+        total_entropy_new_old = 0.0
+        total_entropy = 0.0
+    
+        for old_param, new_param, global_param in zip(old_params, new_params, global_params):
+            # Flatten the parameters
+            old_param_flat = old_param.view(-1)
+            new_param_flat = new_param.view(-1)
+            global_param_flat = global_param.view(-1)
+            
+            # Normalize the parameters to form probability distributions
+            old_prob = F.softmax(old_param_flat, dim=0)   #z_prev
+            new_prob = F.softmax(new_param_flat, dim=0)   #z_newm
+            global_prob = F.softmax(global_param_flat, dim=0)  #z_global
+            
+            # Calculate relative entropy using KL divergence
+            entropy_old_global = F.kl_div(old_prob.log(), global_prob, reduction='batchmean')  # >
+            entropy_new_global = F.kl_div(new_prob.log(), global_prob, reduction='batchmean')  # <
+            # entropy_old_new = F.kl_div(old_prob.log(), new_prob, reduction='batchmean')
+            entropy_new_old = F.kl_div(new_prob.log(), old_prob, reduction='batchmean')
+
+            
+            # Add it to the total
+            total_entropy_old_global += entropy_old_global
+            total_entropy_new_global += entropy_new_global
+            total_entropy_new_old += entropy_new_old
+        
+        # total_entropy = total_entropy_old_global + exp(total_entropy_new_global)/exp(total_entropy_old_new)
+
+        # total_entropy = lambda_1 * total_entropy_old_new + lambda_2(total_entropy_new_global - total_entropy_old_global)
+        
+        total_entropy = -math.log(math.exp(total_entropy_new_global)/(math.exp(total_entropy_old_global) + math.exp(total_entropy_new_old)))
+        
+        #print(total_entropy)
+        #sys.exit()
+        return total_entropy
+
+        
     def train(self,cluster_model,t):
         # print(f"user id : {self.id}")
         self.set_parameters(cluster_model)
+        self.set_parameters_old()
         self.local_model.train()
         for iter in range(self.local_iters):
             for batch in self.train_loader:
                 features, additional_information, information, informativeness, sharingOwner, sharingOthers = batch
                 self.optimizer.zero_grad()
                 y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
-                loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
+                loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)  # + gamma * entropy
+                
+                """proximal_term = 0
+                for param, global_param in zip(self.local_model.parameters(), cluster_model):
+                    proximal_term += (param - global_param).norm(2)
+                loss += (1 / 2) * proximal_term"""
+                # Initialize the total entropy
+                
+                
+                total_entropy = self.calculate_entropies( list(self.old_model.parameters()), 
+                list(self.local_model.parameters()), list(cluster_model))
+                
+                #print("total_entropy_at_main",total_entropy)
+                loss += 0.05*total_entropy
                 loss.backward()
                 self.optimizer.step()
                 

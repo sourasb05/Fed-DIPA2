@@ -42,12 +42,14 @@ class Server():
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
             self.user_ids = args.user_ids[3]
+            
         else:
             self.user_ids = args.user_ids[2]
         
         self.cluster_save_path =  "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_best_clusters.pickle"
 
         self.total_users = len(self.user_ids)
+
         self.total_samples = 0
         self.total_selected_samples = 0
         self.exp_no = exp_no
@@ -106,13 +108,16 @@ class Server():
                 
         #self.read_all_cluster_information()
 
-        if args.test: self.read_cluster_information()
+        #if args.test: self.read_cluster_information()
         
         count = 0
-
+        print(f"tot users : {self.total_users}")
         for i in trange(self.total_users, desc="Data distribution to clients"):
             # print(f"client id : {self.user_ids[i]}")
+
             user = User(device, args, self.user_ids[i], exp_no, current_directory, wandb)
+            print(f"user.id : {user.id}")
+            sys.stdout.flush()
             if user.valid:
                 self.users.append(user)
                 self.total_samples += user.train_samples
@@ -126,11 +131,12 @@ class Server():
 
         # print("Finished creating Fedmem server.")
 
-        self.total_users = len(self.users) 
+        # self.total_users = len(self.users) 
         self.num_users = self.total_users * args.users_frac    #selected users
-        
-        print("Total Users Present :", self.total_users)
+        print("total_users", self.total_users)
+        print("Total Users Present :", self.num_users)
 
+        print(f"len users: {len(self.users)}")
         self.global_model = copy.deepcopy(self.users[0].local_model)
 
         for _ in range(self.n_clusters):
@@ -336,13 +342,46 @@ class Server():
         print(f"Test Performance metric : {average_dict}")
         print(f"Test global mae : {avg_mae}")
 
+    def eval_test_cluster(self, t):
+        avg_loss = 0.0
+        avg_distance = 0.0
+        accumulator = {}
+        avg_mae = 0.0
+        for c in self.selected_users:
+            loss, distance, c_dict, mae = c.test(self.global_model.parameters(), t)
+            avg_loss += (1/len(self.selected_users))*loss
+            avg_distance += (1/len(self.selected_users))*distance
+            avg_mae += (1/len(self.selected_users))*mae
+            if c_dict:  # Check if test_dict is not None or empty
+                self.initialize_or_add(accumulator, c_dict)
+        average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
+
+        
+        self.wandb.log(data={ "global_val_loss" : avg_loss})
+        self.wandb.log(data={ "global_mae" : avg_mae})
+        self.wandb.log(data={ "global_Accuracy"  : average_dict['Accuracy'][0]})
+        self.wandb.log(data={ "global_precision"  : average_dict['Precision'][0]})
+        self.wandb.log(data={ "global_Recall" : average_dict['Recall'][0]})
+        self.wandb.log(data={ "global_f1"  : average_dict['f1'][0]})
+        
+        self.global_test_metric.append(average_dict)
+        self.global_test_loss.append(avg_loss)
+        self.global_test_distance.append(avg_distance)
+        self.global_test_mae.append(avg_mae)
+            
+                    
+        print(f"Global round {t} Global Test loss {avg_loss} avg distance {avg_distance}") 
+        print(f"Test Performance metric : {average_dict}")
+        print(f"Test global mae : {avg_mae}")
+
+
 
     def evaluate(self, t):
         self.eval_test(t)
         self.eval_train(t)
 
     def evaluate_cluster(self, t):
-        self.eval_test(t)
+        self.eval_test_cluster(t)
         self.eval_train(t)
 
     def save_results(self):
@@ -566,6 +605,7 @@ class Server():
                 continue
 
             users = np.array(self.cluster_dict_rl[clust_id])
+            print(f"num_RL_users : {len(users)} cluster : {clust_id}")
 
             if len(users) != 0:
                 for user in users:
@@ -615,7 +655,18 @@ class Server():
                 if min_cluster_id not in self.cluster_dict_rl:
                     self.cluster_dict_rl[min_cluster_id] = []
                 self.cluster_dict_rl[min_cluster_id].append(user)
+            
+            print(f"total resourceless : {len(self.resourceless)}")
+            for cluster_id in range(self.n_clusters):
+                cnt = 0
+                if cluster_id in self.cluster_dict_rl:
+                    for user in self.cluster_dict_rl[cluster_id]:
+                        #print(user.id)
+                        cnt +=1
+                    print(f"cluster_id {cluster_id} num_users : {cnt}")
 
+            #sys.exit()
+            
             # Daisy Chaining
             for cluster_id in tqdm(range(self.n_clusters), desc=f"Daisy Chaining"):
                 if cluster_id not in self.cluster_dict_rl:
@@ -656,6 +707,7 @@ class Server():
             self.global_update()
 
             self.evaluate(t)
+            # self.evaluate_cluster(t)
             self.save_model(t)
 
         self.save_results()
@@ -717,11 +769,12 @@ class Server():
         self.save_results()
 
     def read_cluster_information(self):
-        cluster_path = self.current_directory + "/models/" + self.algorithm + "/cluster_model/"
+        cluster_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
         print(f"cluster path :", cluster_path)
         with open(os.path.join(cluster_path, self.cluster_save_path), 'rb') as handle:
             self.cluster_dict_user_id = pickle.load(handle)
-
+        print(f"self.cluster_save_path : {self.cluster_save_path}")
+        print(self.cluster_dict_user_id)
         new_user_ids = []
         for user_id in self.user_ids:
             user_id_present = False

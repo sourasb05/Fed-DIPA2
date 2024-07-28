@@ -6,7 +6,7 @@ def args_parser():
     
     parser.add_argument("--algorithm", type=str, default="apriori_FedDcprivacy",
                         choices=["FedAvg", "Fedmem", "FedProx", "FedDcprivacy", "Siloed", "Clustered_FedDC", "dynamic_FedDcprivacy", "apriori_FedDcprivacy"])
-    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--num_teams", type=int, default=5)
     parser.add_argument("--gamma", type=float, default=1.0)
     parser.add_argument("--lambda_1", type=float, default=0.0, 
@@ -113,8 +113,8 @@ def args_parser():
                         help="regularizer for resourceless clients")
     
     
-    parser.add_argument("--num_global_iters", type=int, default=5)
-    parser.add_argument("--local_iters", type=int, default=10)
+    parser.add_argument("--num_global_iters", type=int, default=10)
+    parser.add_argument("--local_iters", type=int, default=2)
     parser.add_argument("--optimizer", type=str, default="SGD")
     
     parser.add_argument("--times", type=int, default=1, 
