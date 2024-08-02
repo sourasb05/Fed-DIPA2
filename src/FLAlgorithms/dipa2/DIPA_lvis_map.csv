@@ -1,0 +1,20 @@
+﻿DIPA Category,LVIS Category
+Person,person
+Place Identifier,banner|map|traffic_light|signboard
+Identity,passport
+Home interior,air_conditioner|bed|sofa_bed|deck_chair|sofa
+Vehicle Plate,license_plate
+Food,apple|alcohol|applesauce|asparagus|avocado|bagel|banana|batter_(food)|bean_curd|beef_(food)|beer_bottle|beer_can|bell_pepper|birthday_cake|blackberry|blueberry|boiled_egg|bread|broccoli|cake|carrot|chocolate_mousse|cornbread|crabmeat|fish_(food)|egg|liquor|potato|sushi
+Printed Material,birthday_card|calendar|clipboard|notebook|tag|newspaper
+Screen,laptop_computer|monitor_(computer_equipment) computer_monitor
+Clothing,bib|blazer|breechcloth|cloak|coat|costume|tux|dress|glove|jersey|kimono|skirt
+Scenery,streetlight
+Pet,cat|dog|kitten|pet
+Book,book|comic_book|hardback_book|magazine|paperback_book
+Machine,beeper|dispenser|printer|sewing_machine
+Table,coffee_table|desk|dining_table
+Electronic Devices,remote_control|antenna|amplifier|earphone
+Toy,Lego|toy
+Cigarettes,cigarette
+Musical instrument,cornet|drum_(musical_instrument)|guitar|musical_instrument|piano|tambourine|violin
+Accessory,necklace|ring

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "dispenser", "bbox": [171.37, 327.42, 22.62, 55.4]}, "1": {"category": "dispenser", "bbox": [175.99, 341.14, 11.98, 52.08]}, "2": {"category": "mirror", "bbox": [214.43, 92.75, 152.87, 196.82]}}, "width": 425, "height": 640, "source": "LVIS"}

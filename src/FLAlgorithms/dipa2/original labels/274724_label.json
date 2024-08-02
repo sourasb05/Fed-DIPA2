@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Object 0", "bbox": [216, 114, 106, 117]}, "1": {"category": "fan", "bbox": [46.37, 2.74, 131.09, 59.15]}, "2": {"category": "ring", "bbox": [351.15, 215.57, 8.7, 8.04]}, "3": {"category": "cigarette", "bbox": [282.0, 192.66, 32.65, 16.41]}}, "width": 480, "height": 640, "source": "LVIS"}

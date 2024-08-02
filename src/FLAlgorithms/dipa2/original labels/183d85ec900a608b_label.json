@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Person", "bbox": [0, 52, 144, 550]}, "1": {"category": "Human hand", "bbox": [0, 48, 140, 465]}, "2": {"category": "Mammal", "bbox": [0, 49, 140, 465]}, "3": {"category": "Human arm", "bbox": [0, 49, 140, 460]}}, "width": 1024, "height": 683, "source": "OpenImages"}

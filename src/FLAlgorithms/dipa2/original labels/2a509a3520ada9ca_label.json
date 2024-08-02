@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Baked goods", "bbox": [0, 201, 1024, 566]}, "1": {"category": "Clothing", "bbox": [544, 0, 478, 132]}, "2": {"category": "Toy", "bbox": [368, 235, 99, 147]}, "3": {"category": "Toy", "bbox": [438, 260, 136, 151]}, "4": {"category": "Toy", "bbox": [579, 398, 171, 182]}}, "width": 1024, "height": 768, "source": "OpenImages"}

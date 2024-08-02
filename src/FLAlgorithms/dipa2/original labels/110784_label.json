@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "bus_(vehicle)", "bbox": [42.21, 269.59, 246.2, 116.44]}, "1": {"category": "streetlight", "bbox": [5.88, 109.11, 68.1, 136.76]}, "2": {"category": "Object 0", "bbox": [326, 187, 106, 55]}}, "width": 433, "height": 640, "source": "LVIS"}

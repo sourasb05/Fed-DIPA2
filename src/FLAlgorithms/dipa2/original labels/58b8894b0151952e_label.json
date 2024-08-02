@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Furniture", "bbox": [0, 303, 1024, 376]}, "1": {"category": "Person", "bbox": [9, 203, 34, 40]}, "2": {"category": "Person", "bbox": [847, 511, 33, 22]}, "3": {"category": "Person", "bbox": [868, 203, 36, 73]}, "4": {"category": "House", "bbox": [0, 0, 1020, 676]}}, "width": 1024, "height": 680, "source": "OpenImages"}

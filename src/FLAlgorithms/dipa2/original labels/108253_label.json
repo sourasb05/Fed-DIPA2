@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "beer_bottle", "bbox": [237.79, 0.0, 127.1, 318.19]}, "1": {"category": "fork", "bbox": [188.69, 238.52, 40.65, 17.02]}, "2": {"category": "toothpick", "bbox": [412.67, 240.14, 7.79, 20.96]}, "3": {"category": "toothpick", "bbox": [412.54, 237.31, 10.82, 61.69]}}, "width": 480, "height": 640, "source": "LVIS"}

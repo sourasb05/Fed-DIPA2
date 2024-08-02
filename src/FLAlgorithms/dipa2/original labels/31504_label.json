@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "cigarette", "bbox": [263.21, 180.38, 13.89, 17.53]}, "1": {"category": "handbag", "bbox": [382.26, 54.18, 88.03, 78.65]}, "2": {"category": "cellular_telephone", "bbox": [307.47, 120.19, 22.54, 22.71]}}, "width": 500, "height": 332, "source": "LVIS"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "curtain", "bbox": [0.0, 0.0, 223.48, 456.86]}, "1": {"category": "television_set", "bbox": [54.68, 90.87, 504.47, 355.34]}, "2": {"category": "tablecloth", "bbox": [2.6, 419.84, 615.44, 60.16]}}, "width": 640, "height": 480, "source": "LVIS"}

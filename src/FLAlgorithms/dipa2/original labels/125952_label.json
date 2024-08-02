@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "tag", "bbox": [154.76, 426.25, 45.55, 47.61]}, "1": {"category": "tag", "bbox": [274.44, 315.0, 34.87, 37.68]}, "2": {"category": "suitcase", "bbox": [61.16, 4.55, 249.37, 580.87]}, "3": {"category": "suitcase", "bbox": [155.24, 430.14, 29.58, 36.26]}}, "width": 358, "height": 640, "source": "LVIS"}

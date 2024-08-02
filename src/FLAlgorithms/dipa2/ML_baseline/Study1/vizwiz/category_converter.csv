@@ -1,0 +1,24 @@
+originalCategory,DIPACategory
+Object:Framed Photo,Photo
+Text:Street Sign,Printed Material
+Text:Business Card,Printed Material
+Object:Suspicious,Others
+Text:Book,Book
+Text:Miscellaneous Papers,Printed Material
+Text:Suspicious,Others
+Text:Pill Bottle/Box,Printed Material
+Text:Menu,Printed Material
+Text:Letter,Printed Material
+Text:Computer Screen,Screen
+Text:License Plate,Vehicle Plate
+Object:Face Reflection,Person
+Object:Pregnancy Test Result,Others
+Text:Newspaper,Printed Material
+Object:Face,Person
+Text:Other,Others
+Text:Credit Card,Identity
+Text:Clothing,Clothing
+Text:Poster,Printed Material
+Text:Receipt,Printed Material
+Object:Other,Others
+Object:Tattoo,Person

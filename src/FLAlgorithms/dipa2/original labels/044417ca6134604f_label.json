@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Building", "bbox": [0, 0, 1020, 397]}, "1": {"category": "Car", "bbox": [25, 154, 888, 400]}, "2": {"category": "Car", "bbox": [557, 60, 466, 406]}, "3": {"category": "Vehicle registration plate", "bbox": [706, 353, 107, 46]}}, "width": 1024, "height": 683, "source": "OpenImages"}

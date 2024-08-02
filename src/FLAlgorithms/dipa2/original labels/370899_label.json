@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "mirror", "bbox": [0.0, 9.25, 69.85, 144.23]}, "1": {"category": "bookcase", "bbox": [162.57, 88.04, 101.67, 198.84]}, "2": {"category": "bookcase", "bbox": [440.96, 85.24, 78.25, 178.64]}, "3": {"category": "sewing_machine", "bbox": [451.19, 190.3, 52.62, 29.63]}}, "width": 640, "height": 480, "source": "LVIS"}

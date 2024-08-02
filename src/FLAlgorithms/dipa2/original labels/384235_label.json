@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "printer", "bbox": [4.98, 98.16, 172.66, 95.26]}, "1": {"category": "desk", "bbox": [178.26, 162.07, 461.74, 264.93]}, "2": {"category": "desk", "bbox": [0.34, 131.38, 296.92, 294.89]}}, "width": 640, "height": 427, "source": "LVIS"}

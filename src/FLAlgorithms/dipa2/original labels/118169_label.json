@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "watch", "bbox": [188.52, 361.38, 31.2, 25.43]}, "1": {"category": "tag", "bbox": [349.34, 167.9, 19.74, 30.83]}, "2": {"category": "tag", "bbox": [57.92, 455.59, 21.81, 15.93]}, "3": {"category": "mail_slot", "bbox": [265.32, 454.5, 24.89, 20.91]}}, "width": 640, "height": 558, "source": "LVIS"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Object 0", "bbox": [436, 238, 55, 61]}, "1": {"category": "trash_can", "bbox": [208.08, 319.41, 76.73, 88.38]}, "2": {"category": "streetlight", "bbox": [561.78, 126.79, 46.77, 21.05]}, "3": {"category": "necklace", "bbox": [482.72, 305.96, 50.84, 122.11]}}, "width": 640, "height": 480, "source": "LVIS"}

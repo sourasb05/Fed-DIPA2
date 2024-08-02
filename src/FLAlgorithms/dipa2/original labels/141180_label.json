@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "cellular_telephone", "bbox": [134.0, 236.83, 87.01, 93.61]}, "1": {"category": "cellular_telephone", "bbox": [228.69, 170.61, 81.49, 90.14]}, "2": {"category": "iPod", "bbox": [128.11, 182.79, 107.74, 68.07]}, "3": {"category": "quilt", "bbox": [0.14, 2.57, 499.1, 371.98]}}, "width": 500, "height": 375, "source": "LVIS"}

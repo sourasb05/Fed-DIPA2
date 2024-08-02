@@ -476,13 +476,6 @@ class User():
                 y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)  # + gamma * entropy
                 
-                """proximal_term = 0
-                for param, global_param in zip(self.local_model.parameters(), cluster_model):
-                    proximal_term += (param - global_param).norm(2)
-                loss += (1 / 2) * proximal_term"""
-                # Initialize the total entropy
-                
-                
                 total_entropy = self.calculate_entropies( list(self.old_model.parameters()), 
                 list(self.local_model.parameters()), list(cluster_model))
                 

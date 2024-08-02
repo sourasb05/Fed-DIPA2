@@ -7,3 +7,15 @@ models/
 *.DS_Store
 *.pyc
 wandb/
+
+src/FLAlgorithm/dataset_files/
+src/FLAlgorithm/feature_clients/
+src/FLAlgorithm/image_feature/
+src/FLAlgorithm/models/
+src/FLAlgorithm/object_features/
+src/FLAlgorithm/dipa2/
+
+MOON/*
+image_features/
+dataset_files/apriori_FedDcprivacy/
+Experiments_on_generic_datasets/*

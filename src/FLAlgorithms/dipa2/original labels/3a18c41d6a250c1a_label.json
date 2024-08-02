@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Bookcase", "bbox": [0, 0, 987, 768]}, "1": {"category": "Person", "bbox": [838, 374, 62, 60]}, "2": {"category": "Person", "bbox": [979, 222, 44, 62]}, "3": {"category": "Book", "bbox": [0, 0, 1024, 768]}, "4": {"category": "Woman", "bbox": [321, 265, 296, 500]}}, "width": 1024, "height": 768, "source": "OpenImages"}

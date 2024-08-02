@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+Human hair,"[1, 0, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[1, 0, 0, 0, 0, 0, 0]",24,Female,3,Prolific,3,8,6,9,8,1fb9783df691b0ad.jpg,OpenImages,"[[55, 115, 553, 441]]",Person,UK,680,1024,annotator566,1fb9783df691b0ad_Human hair_1,1fb9783df691b0ad_Human hair_1_annotator566

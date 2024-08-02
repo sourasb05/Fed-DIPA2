@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "tissue_paper", "bbox": [60.02, 159.76, 35.66, 24.66]}, "1": {"category": "toilet", "bbox": [33.89, 240.6, 135.84, 194.88]}, "2": {"category": "toilet", "bbox": [274.88, 208.54, 72.16, 152.45]}, "3": {"category": "bathtub", "bbox": [195.01, 257.45, 153.19, 118.35]}}, "width": 375, "height": 500, "source": "LVIS"}

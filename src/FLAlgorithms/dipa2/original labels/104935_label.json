@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "car_(automobile)", "bbox": [0.0, 256.4, 22.09, 20.27]}, "1": {"category": "car_(automobile)", "bbox": [74.6, 240.97, 59.09, 56.41]}, "2": {"category": "car_(automobile)", "bbox": [132.37, 112.49, 443.17, 259.16]}, "3": {"category": "bus_(vehicle)", "bbox": [132.36, 112.9, 443.39, 257.93]}}, "width": 640, "height": 427, "source": "LVIS"}

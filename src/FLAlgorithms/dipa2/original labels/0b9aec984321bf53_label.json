@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Hat", "bbox": [536, 15, 258, 157]}, "1": {"category": "Person", "bbox": [510, 15, 425, 667]}, "2": {"category": "Clothing", "bbox": [508, 246, 448, 433]}, "3": {"category": "Human head", "bbox": [569, 142, 172, 160]}, "4": {"category": "Microphone", "bbox": [421, 302, 114, 229]}}, "width": 1024, "height": 683, "source": "OpenImages"}

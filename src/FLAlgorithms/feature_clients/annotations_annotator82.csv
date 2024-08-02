@@ -1,0 +1,2 @@
+category,informationType,informativeness,sharingOwner,sharingOthers,age,gender,frequency,platform,extraversion,agreeableness,conscientiousness,neuroticism,openness,imagePath,originalDataset,bbox,DIPACategory,nationality,width,height,AnnotatorId,ObjectId,ObjectAnnotatorId
+Manual Label,"[1, 0, 0, 0, 0, 0]",5,"[0, 1, 0, 0, 0, 0, 0]","[0, 1, 0, 0, 0, 0, 0]",25,Female,2,CrowdWorks,6,6,6,6,4,0d6ca8553971fefd.jpg,OpenImages,"[[307, 285, 24, 132]]",Others,Japan,1024,683,annotator82,0d6ca8553971fefd_Manual Label_0,0d6ca8553971fefd_Manual Label_0_annotator82

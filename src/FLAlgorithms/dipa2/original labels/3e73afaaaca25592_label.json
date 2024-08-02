@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Pumpkin", "bbox": [235, 96, 617, 625]}, "1": {"category": "Fruit", "bbox": [230, 97, 617, 632]}, "2": {"category": "Tool", "bbox": [678, 505, 286, 260]}, "3": {"category": "Tool", "bbox": [886, 222, 91, 265]}}, "width": 1024, "height": 768, "source": "OpenImages"}

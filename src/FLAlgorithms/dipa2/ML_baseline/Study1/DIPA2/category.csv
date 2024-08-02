@@ -1,0 +1,24 @@
+category,number
+Accessory,0
+Book,1
+Cigarettes,2
+Clothing,3
+Cosmetics,4
+Electronic Devices,5
+Finger,6
+Food,7
+Home interior,8
+Identity,9
+Machine,10
+Musical instrument,11
+Person,12
+Pet,13
+Photo,14
+Place Identifier,15
+Printed Material,16
+Scenery,17
+Screen,18
+Table,19
+Toy,20
+Vehicle Plate,21
+Others,22

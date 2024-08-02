@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "cow", "bbox": [0.0, 219.7, 220.69, 260.3]}, "1": {"category": "cow", "bbox": [348.64, 280.82, 86.19, 199.18]}, "2": {"category": "cow", "bbox": [247.17, 252.23, 147.38, 227.77]}, "3": {"category": "cow", "bbox": [383.06, 0.52, 201.47, 479.2]}}, "width": 640, "height": 480, "source": "LVIS"}

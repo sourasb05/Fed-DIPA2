@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "box", "bbox": [368.9, 291.46, 83.8, 41.1]}, "1": {"category": "dog", "bbox": [173.6, 209.11, 83.11, 46.34]}, "2": {"category": "Object 0", "bbox": [3, 1, 493, 373]}}, "width": 500, "height": 375, "source": "LVIS"}

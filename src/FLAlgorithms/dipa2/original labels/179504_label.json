@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "necktie", "bbox": [434.78, 161.16, 35.79, 238.84]}, "1": {"category": "cigarette", "bbox": [581.81, 125.55, 8.8, 6.21]}, "2": {"category": "lollipop", "bbox": [581.87, 125.49, 8.85, 5.94]}, "3": {"category": "lollipop", "bbox": [202.42, 175.53, 18.83, 48.88]}}, "width": 640, "height": 400, "source": "LVIS"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "street_sign", "bbox": [330.27, 111.68, 37.04, 187.6]}, "1": {"category": "street_sign", "bbox": [13.45, 143.08, 15.08, 40.08]}, "2": {"category": "street_sign", "bbox": [355.88, 126.5, 51.14, 189.29]}, "3": {"category": "painting", "bbox": [44.1, 71.99, 328.37, 160.9]}}, "width": 500, "height": 375, "source": "LVIS"}

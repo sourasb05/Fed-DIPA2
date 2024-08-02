@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "sofa", "bbox": [0.0, 340.43, 72.33, 276.51]}, "1": {"category": "beanbag", "bbox": [327.09, 409.25, 152.91, 118.46]}, "2": {"category": "beanbag", "bbox": [342.67, 372.06, 134.84, 55.58]}, "3": {"category": "curtain", "bbox": [416.96, 62.79, 60.35, 304.08]}}, "width": 480, "height": 640, "source": "LVIS"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "snowboard", "bbox": [226.13, 263.71, 25.19, 13.5]}, "1": {"category": "jacket", "bbox": [154.76, 168.83, 59.48, 68.37]}, "2": {"category": "goggles", "bbox": [169.68, 169.24, 14.43, 9.09]}}, "width": 640, "height": 428, "source": "LVIS"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Human face", "bbox": [211, 92, 197, 203]}, "1": {"category": "Tableware", "bbox": [128, 823, 380, 163]}, "2": {"category": "Tableware", "bbox": [406, 838, 142, 37]}, "3": {"category": "Human ear", "bbox": [210, 80, 40, 81]}, "4": {"category": "Wok", "bbox": [435, 564, 247, 66]}}, "width": 683, "height": 1024, "source": "OpenImages"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "streetlight", "bbox": [105.22, 591.04, 25.81, 48.96]}, "1": {"category": "telephone_pole", "bbox": [321.35, 612.66, 32.24, 27.34]}, "2": {"category": "telephone_pole", "bbox": [146.34, 620.8, 22.3, 19.2]}}, "width": 480, "height": 640, "source": "LVIS"}

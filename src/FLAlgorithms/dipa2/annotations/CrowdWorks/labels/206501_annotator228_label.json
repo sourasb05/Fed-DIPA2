@@ -1,0 +1,1 @@
+{"source": "LVIS", "workerId": "annotator228", "defaultAnnotation": {"skateboard": {"category": "skateboard", "informationType": [0, 0, 0, 1, 0, 0], "informationTypeInput": "", "informativeness": "5", "sharingOwner": [0, 1, 1, 0, 0, 0, 0], "sharingOwnerInput": "", "sharingOthers": [0, 1, 1, 0, 0, 0, 0], "sharingOthersInput": "", "ifNoPrivacy": false}}, "manualAnnotation": {}}

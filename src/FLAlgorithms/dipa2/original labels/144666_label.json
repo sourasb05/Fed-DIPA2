@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "can", "bbox": [57.67, 99.98, 16.84, 11.86]}, "1": {"category": "plastic_bag", "bbox": [45.3, 54.86, 37.01, 29.38]}, "2": {"category": "plastic_bag", "bbox": [279.06, 119.36, 35.59, 49.76]}, "3": {"category": "napkin", "bbox": [93.32, 490.21, 235.59, 126.95]}}, "width": 383, "height": 640, "source": "LVIS"}

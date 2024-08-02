@@ -12,7 +12,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_sc
 
 class UserProx():
 
-        def __init__(self,device, args, id, exp_no, current_directory):
+    def __init__(self,device, args, id, exp_no, current_directory):
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
         self.device = device
         
@@ -39,7 +39,7 @@ class UserProx():
         
         
         self.bigfives = ["extraversion", "agreeableness", "conscientiousness",
-                         "neuroticism", "openness"]
+                        "neuroticism", "openness"]
         self.basic_info = [ "age", "gender", 'nationality', 'frequency']
         self.category = ['category']
         self.privacy_metrics = ['informationType', 'informativeness', 'sharingOwner', 'sharingOthers']
@@ -52,13 +52,13 @@ class UserProx():
                                                 'It tells others\' private/confidential information',
                                                 'Other things'],
                                                 'informativeness':['Strongly disagree',
-                                                                   'Disagree',
-                                                                   'Slightly disagree',
-                                                                   'Neither', 'Slightly agree',
-                                                                   'Agree','Strongly agree'],
+                                                                'Disagree',
+                                                                'Slightly disagree',
+                                                                'Neither', 'Slightly agree',
+                                                                'Agree','Strongly agree'],
                             'sharingOwner': ['I won\'t share it', 
-                                             'Close relationship',
-                                             'Regular relationship',
+                                            'Close relationship',
+                                            'Regular relationship',
                                             'Acquaintances', 
                                             'Public', 
                                             'Broadcast program', 

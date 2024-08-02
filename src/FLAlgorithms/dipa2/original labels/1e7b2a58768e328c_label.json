@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Human face", "bbox": [135, 50, 420, 344]}, "1": {"category": "Girl", "bbox": [58, 50, 584, 973]}, "2": {"category": "Human body", "bbox": [53, 52, 584, 970]}, "3": {"category": "Human head", "bbox": [135, 49, 405, 344]}, "4": {"category": "Woman", "bbox": [59, 50, 581, 973]}}, "width": 667, "height": 1024, "source": "OpenImages"}

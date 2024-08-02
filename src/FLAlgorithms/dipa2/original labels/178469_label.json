@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "cabinet", "bbox": [583.0, 0.0, 41.33, 39.35]}, "1": {"category": "cabinet", "bbox": [73.16, 0.0, 171.95, 148.63]}, "2": {"category": "cabinet", "bbox": [506.75, 1.04, 37.59, 38.11]}, "3": {"category": "notepad", "bbox": [573.27, 178.43, 66.13, 14.65]}}, "width": 640, "height": 427, "source": "LVIS"}

@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Computer monitor", "bbox": [340, 166, 385, 311]}, "1": {"category": "Bottle", "bbox": [883, 326, 81, 305]}, "2": {"category": "Microphone", "bbox": [51, 236, 84, 337]}, "3": {"category": "Office building", "bbox": [0, 0, 1022, 766]}}, "width": 1024, "height": 768, "source": "OpenImages"}

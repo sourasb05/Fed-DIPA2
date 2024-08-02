@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Human face", "bbox": [163, 152, 35, 36]}, "1": {"category": "Person", "bbox": [68, 104, 142, 535]}, "2": {"category": "Van", "bbox": [56, 1, 960, 766]}, "3": {"category": "Human head", "bbox": [132, 104, 80, 79]}}, "width": 1024, "height": 768, "source": "OpenImages"}

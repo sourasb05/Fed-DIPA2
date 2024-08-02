@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "passport", "bbox": [436.63, 4.97, 170.6, 103.57]}, "1": {"category": "bottle", "bbox": [70.29, 0.28, 153.54, 108.11]}, "2": {"category": "jean", "bbox": [2.22, 259.2, 636.31, 220.06]}, "3": {"category": "plastic_bag", "bbox": [208.69, 0.92, 364.71, 123.86]}}, "width": 640, "height": 480, "source": "LVIS"}

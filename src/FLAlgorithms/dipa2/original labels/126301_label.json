@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "laptop_computer", "bbox": [137.86, 174.64, 70.96, 34.99]}, "1": {"category": "handbag", "bbox": [125.02, 201.82, 86.52, 26.54]}, "2": {"category": "basket", "bbox": [295.56, 167.9, 66.42, 64.45]}, "3": {"category": "bicycle", "bbox": [262.59, 159.15, 325.7, 197.9]}}, "width": 640, "height": 425, "source": "LVIS"}

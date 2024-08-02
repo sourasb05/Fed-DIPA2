@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Person", "bbox": [0, 235, 305, 447]}, "1": {"category": "Person", "bbox": [512, 389, 512, 293]}, "2": {"category": "Human head", "bbox": [84, 235, 137, 151]}, "3": {"category": "Human head", "bbox": [818, 388, 178, 163]}, "4": {"category": "Harp", "bbox": [350, 0, 490, 683]}}, "width": 1024, "height": 683, "source": "OpenImages"}

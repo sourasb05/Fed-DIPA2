@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "parking_meter", "bbox": [47.13, 216.62, 142.1, 323.91]}, "1": {"category": "license_plate", "bbox": [368.76, 293.23, 8.61, 14.09]}, "2": {"category": "license_plate", "bbox": [23.55, 288.53, 12.68, 11.12]}}, "width": 480, "height": 640, "source": "LVIS"}

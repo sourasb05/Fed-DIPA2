@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "sunglasses", "bbox": [197.43, 191.94, 112.4, 58.13]}, "1": {"category": "toothbrush", "bbox": [207.87, 272.25, 51.52, 94.68]}, "2": {"category": "hat", "bbox": [185.64, 104.74, 160.87, 150.76]}}, "width": 480, "height": 640, "source": "LVIS"}

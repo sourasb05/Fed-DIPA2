@@ -1,0 +1,1 @@
+{"source": "LVIS", "workerId": "annotator578", "defaultAnnotation": {"dog": {"category": "dog", "informationType": [0, 0, 0, 0, 0, 1], "informationTypeInput": "whos dog it is", "informativeness": "5", "sharingOwner": [1, 0, 0, 0, 0, 0, 0], "sharingOwnerInput": "", "sharingOthers": [1, 0, 0, 0, 0, 0, 0], "sharingOthersInput": "", "ifNoPrivacy": false}}, "manualAnnotation": {}}

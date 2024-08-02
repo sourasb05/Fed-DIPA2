@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "Person", "bbox": [130, 158, 288, 418]}, "1": {"category": "Person", "bbox": [601, 195, 366, 673]}, "2": {"category": "Clothing", "bbox": [133, 251, 282, 322]}, "3": {"category": "Clothing", "bbox": [617, 304, 347, 564]}, "4": {"category": "Cello", "bbox": [288, 58, 310, 810]}}, "width": 1024, "height": 869, "source": "OpenImages"}

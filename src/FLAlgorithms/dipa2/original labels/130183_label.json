@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "bracelet", "bbox": [166.59, 80.38, 50.33, 65.4]}, "1": {"category": "laptop_computer", "bbox": [0.0, 172.7, 342.27, 202.3]}, "2": {"category": "computer_keyboard", "bbox": [63.12, 210.57, 193.66, 164.43]}}, "width": 500, "height": 375, "source": "LVIS"}

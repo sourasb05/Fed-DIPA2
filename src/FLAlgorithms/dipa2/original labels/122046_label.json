@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "dress", "bbox": [112.56, 255.8, 164.12, 269.36]}, "1": {"category": "chair", "bbox": [102.25, 335.65, 148.22, 247.99]}, "2": {"category": "scarf", "bbox": [123.95, 256.68, 120.08, 170.03]}}, "width": 427, "height": 640, "source": "LVIS"}

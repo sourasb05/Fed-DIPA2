@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "apron", "bbox": [0.0, 111.97, 100.77, 528.03]}, "1": {"category": "kitchen_table", "bbox": [94.3, 271.43, 385.7, 368.57]}, "2": {"category": "Object 0", "bbox": [35, 24, 276, 292]}, "3": {"category": "earphone", "bbox": [93.43, 81.72, 23.76, 53.09]}}, "width": 480, "height": 640, "source": "LVIS"}

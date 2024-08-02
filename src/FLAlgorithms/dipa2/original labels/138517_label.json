@@ -1,0 +1,1 @@
+{"annotations": {"0": {"category": "flower_arrangement", "bbox": [49.41, 206.07, 72.4, 97.4]}, "1": {"category": "flower_arrangement", "bbox": [100.35, 336.68, 153.35, 87.32]}, "2": {"category": "ring", "bbox": [275.26, 243.53, 20.31, 22.44]}}, "width": 640, "height": 424, "source": "LVIS"}
