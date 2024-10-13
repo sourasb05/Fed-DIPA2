@@ -16,7 +16,7 @@ import torch
 import torch.nn as nn
 
 class ImageMaskDataset(Dataset):
-    def __init__(self, mega_table, feature_folder, input_vector, image_size, flip = False, save_mask = False, flip_prob = 0.5, device='cpu'):
+    def __init__(self, mega_table, model_name, input_vector, image_size, flip = False, save_mask = False, flip_prob = 0.5, device='cpu'):
         self.mega_table = mega_table
         self.category_num = len(mega_table['category'].unique())
         self.input_dim = len(input_vector)
@@ -28,17 +28,25 @@ class ImageMaskDataset(Dataset):
         self.padding_color = (0, 0, 0)
         self.device = device
 
-        self.features_dir = feature_folder
-        self.roi_sampling_ratio = 1
-        self.max_bboxes = 32
+        # openai_ViT-L/14@336px, resnet50
+        self.org_model_name = model_name
+        self.model_name = self.org_model_name.replace("/", "-")
 
-        resnet = torchvision.models.resnet50(pretrained=True)
-        self.avg_pool = nn.Sequential(list(resnet.children())[-2])
-        self.avg_pool.eval()
+        self.features_dir = "object_features/%s/" % self.model_name
+        self.roi_sampling_ratio = 1
+        self.max_bboxes, self.features_dim = self.get_features_dim()
 
     def __len__(self):
         return len(self.mega_table)
 
+    def get_features_dim(self):
+
+        object_id = self.mega_table['ObjectAnnotatorId'].iloc[0]
+        features_path = os.path.join(self.features_dir, object_id + ".pt")
+        bb_features = torch.load(features_path).to(self.device)
+        max_bboxes, features_dim = bb_features.shape
+        return max_bboxes, features_dim
+    
     def __getitem__(self, idx):
         
         object_id = self.mega_table['ObjectAnnotatorId'].iloc[idx]

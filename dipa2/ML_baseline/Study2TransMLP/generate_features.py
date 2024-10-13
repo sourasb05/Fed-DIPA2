@@ -19,6 +19,7 @@ import torchvision.transforms.functional as TF
 
 import pandas as pd
 import json
+import clip
 
 from torchvision.ops import roi_align
 
@@ -26,10 +27,14 @@ class FeatureGenerator():
     def __init__(self):
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model_name = "resnet50"
+
+        ## "openai_ViT-L/14@336px" , "resnet50"
+        self.org_model_name = "openai_ViT-L/14@336px"
+        # self.org_model_name = "resnet50"
+        self.model_name = self.org_model_name.replace("/", "-")
         self.model = self.get_model()
 
-        self.images_dir = "../dipa2/images/"
+        self.images_dir = "./dipa2/images/"
         self.features_dir = "image_features/"
         self.object_features_dir = "object_features/"
         self.annotation_file = "annotations_filtered_bbox.csv"
@@ -38,21 +43,48 @@ class FeatureGenerator():
         self.max_bboxes = 32
         self.roi_sampling_ratio = 1
 
-        resnet = torchvision.models.resnet50(pretrained=True)
-        self.avg_pool = nn.Sequential(list(resnet.children())[-2])
-        self.avg_pool.eval()
-
     def get_model(self):
         model = None
         if self.model_name == "resnet50":       
             resnet = torchvision.models.resnet50(pretrained=True)
             model = nn.Sequential(*list(resnet.children())[:-2])
+            model.eval()
+            model.to(self.device)
 
-        model.eval()
-        model.to(self.device)
+            self.avg_pool = nn.Sequential(list(resnet.children())[-2])
+            self.avg_pool.eval()
+
+        elif "openai" in self.model_name:
+            model = clip.load(self.org_model_name.split("_")[1], device=self.device)
+
         return model
 
     def generate_image_features(self, image_path):
+        features = None
+
+        if self.model_name == "resnet50":
+            features = self.generate_image_features_cnn(image_path)
+        elif "openai" in self.model_name:
+            features = self.generate_image_features_clip(image_path)
+
+        return features
+    
+    def generate_image_features_clip(self, image_or_path, is_image=False):
+        clip_model, preprocess = self.model
+
+        image_data = image_or_path
+        if not is_image:
+            image_data = Image.open(image_or_path)
+
+        image = preprocess(image_data).unsqueeze(0).to(self.device)
+
+        features = None
+        with torch.no_grad():
+            img_emb = clip_model.encode_image(image)[0]
+            features = torch.tensor(img_emb)  
+        return features
+
+    def generate_image_features_cnn(self, image_path):
         image = Image.open(image_path).convert('RGB')
         w, h = image.size
         ratio = min(self.image_size[0] / h, self.image_size[1] / w)
@@ -112,10 +144,6 @@ class FeatureGenerator():
             unique_object_id = row["ObjectAnnotatorId"]
 
             image_name = os.path.splitext(image_basename)[0]
-            image_features_path =  os.path.join(self.features_dir, self.model_name, image_name + ".pt")
-            object_features_path = os.path.join(model_features_dir, unique_object_id + ".pt")
-
-            image_features = torch.load(image_features_path).to(self.device)
 
             image_height = row['height']
             image_width = row['width']
@@ -143,7 +171,7 @@ class FeatureGenerator():
                 if x1 >= x2 or y1 >= y2:
                     #print("improper bbox - ", [x1, y1, x2, y2])
                     continue
-                
+
                 bboxes.append(list(map(int, [0, x1, y1, x2, y2])))
 
             num_bboxes = len(bboxes)
@@ -156,31 +184,57 @@ class FeatureGenerator():
                 print("number of bboxes limit exceeded - %d vs %d (max-limit) " % (num_bboxes, self.max_bboxes-1))
                 sys.exit(1)
 
-            bboxes = torch.tensor(bboxes).float().to(self.device)
+            image_features_path =  os.path.join(self.features_dir, self.model_name, image_name + ".pt")
+            image_features = torch.load(image_features_path).to(self.device)
 
-            roi_output_dim = tuple(image_features.shape[1:])
-            roi_spatial_scale = image_features.shape[-1]/float(self.image_size[0])
-
+            object_features_path = os.path.join(model_features_dir, unique_object_id + ".pt")
             bb_features = torch.zeros((self.max_bboxes, 
                                     image_features.shape[0]))
+            
+            if self.model_name == "resnet50":
 
-            with torch.no_grad():
+                roi_output_dim = tuple(image_features.shape[1:])
+                roi_spatial_scale = image_features.shape[-1]/float(self.image_size[0])
 
-                bb_features[0] = self.avg_pool(image_features).flatten()
+                with torch.no_grad():
 
-                roi_image_features = torch.stack([image_features.clone()])
+                    bb_features[0] = self.avg_pool(image_features).flatten()
+                    roi_image_features = torch.stack([image_features.clone()])
+                    bboxes = torch.tensor(bboxes).float().to(self.device)
 
-                for ib, bbox in enumerate(bboxes):
-                    roi_bbox = torch.stack([bbox])
-                    ra_features = roi_align(roi_image_features,
-                                            roi_bbox,
-                                            roi_output_dim,
-                                            roi_spatial_scale,
-                                            sampling_ratio=self.roi_sampling_ratio,
-                                            aligned=True)
+                    for ib, bbox in enumerate(bboxes):
+                        roi_bbox = torch.stack([bbox])
+                        ra_features = roi_align(roi_image_features,
+                                                roi_bbox,
+                                                roi_output_dim,
+                                                roi_spatial_scale,
+                                                sampling_ratio=self.roi_sampling_ratio,
+                                                aligned=True)
 
-                    ra_features = self.avg_pool(ra_features).flatten(start_dim=1)
-                    bb_features[ib+1] = ra_features[0]
+                        ra_features = self.avg_pool(ra_features).flatten(start_dim=1)
+                        bb_features[ib+1] = ra_features[0]
+
+            elif "openai" in self.model_name:
+                image_path = os.path.join(self.images_dir, image_name + ".jpg")
+                image = Image.open(image_path)
+
+                with torch.no_grad():
+                    bb_features[0] = image_features
+                    count = 0
+                    for ib, bbox in enumerate(bboxes):
+                        _, x1, y1, x2, y2 = bbox
+
+                        width = x2-x1
+                        height = y2-y1
+
+                        if width < 5 or height < 5:
+                            continue
+
+                        crop = image.crop((x1, y1, x2, y2))
+
+                        crop_features = self.generate_image_features_clip(crop, is_image=True)
+                        bb_features[count+1] = crop_features
+                        count += 1
 
             torch.save(bb_features.clone().detach().cpu(), object_features_path)
         #print("#ignored_samples", ignored_sample)

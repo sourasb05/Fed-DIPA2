@@ -97,12 +97,7 @@ class User():
         self.output_name = self.privacy_metrics
         self.output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
 
-        self.local_model = PrivacyModel(input_dim=self.input_dim).to(self.device)
-        if not args.test:
-            self.exchange_model = copy.deepcopy(self.local_model)
-
         image_size = (224, 224)
-        feature_folder = self.current_directory + '/object_features/resnet50/'
 
         # Dataset Allocation
         num_rows = len(self.mega_table)
@@ -130,21 +125,26 @@ class User():
         val_df.to_csv("%s/val_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
         test_df.to_csv("%s/test_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
 
-
         if not args.test:
-            train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
-            val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)
+            train_dataset = ImageMaskDataset(train_df, args.model_name, self.input_channel, image_size, flip = True)
+            val_dataset = ImageMaskDataset(val_df, args.model_name, self.input_channel, image_size)
             self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
             self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'), shuffle=True)
             self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=len(val_dataset))
 
+        test_dataset = ImageMaskDataset(test_df, args.model_name, self.input_channel, image_size)
+        self.test_loader = DataLoader(test_dataset, generator=torch.Generator(device='cuda'), batch_size=16) #len(test_dataset))
+        # Dataset Allocation ends
+
+        self.local_model = PrivacyModel(input_dim=self.input_dim,
+                                        max_bboxes=test_dataset.max_bboxes,
+                                        features_dim=test_dataset.features_dim).to(self.device)
+        if not args.test:
+            self.exchange_model = copy.deepcopy(self.local_model)
+
             # self.optimizer = Fedmem(self.local_model.parameters(), lr=self.learning_rate)
             self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
             self.exchange_optimizer= torch.optim.Adam(self.exchange_model.parameters(), lr=self.learning_rate)
-
-        test_dataset = ImageMaskDataset(test_df, feature_folder, self.input_channel, image_size)
-        self.test_loader = DataLoader(test_dataset, generator=torch.Generator(device='cuda'), batch_size=16) #len(test_dataset))
-        # Dataset Allocation ends
 
         self.train_samples = train_size
         self.val_samples = val_size

@@ -41,7 +41,7 @@ class Server():
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
-            self.user_ids = args.user_ids[3]
+            self.user_ids = args.user_ids[3][:200]
             
         else:
             self.user_ids = args.user_ids[2]
@@ -163,7 +163,6 @@ class Server():
             
             resourceless = [x for x in self.users if x not in resourceful]
             
-
             #print(len(resourceful))
             #print(len(resourceless))
 
@@ -183,7 +182,7 @@ class Server():
         for user in self.clusters[1]:
             self.data_in_cluster[1] += user.train_samples
 
-        self.include_rl_in_apriori_clustering = False
+        self.include_rl_in_apriori_clustering = True
 
         self.cluster_dict, self.cluster_dict_rl = self.get_apriori_clusters(resourceful, resourceless)
 

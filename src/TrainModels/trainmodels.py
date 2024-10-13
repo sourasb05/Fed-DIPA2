@@ -83,14 +83,14 @@ class TransformerModel(nn.Module):
 
 
 class PrivacyModel(nn.Module):
-    def __init__(self, input_dim, learning_rate = 0.01, dropout_prob=0.2):
+    def __init__(self, input_dim, max_bboxes=32, features_dim=2048, learning_rate = 0.01, dropout_prob=0.2):
         ## output_channel: key: output_name value: output_dim
         super().__init__()
         self.learning_rate = learning_rate
 
-        self.features_dim = (2048, 7, 7)
-        self.max_bboxes = 32
-        self.bb_features_channels = self.features_dim[0]
+        # self.features_dim = (2048, 7, 7)
+        self.max_bboxes = max_bboxes
+        self.bb_features_channels = features_dim
         self.num_additional_input = input_dim
         self.final_features_dim = 512
         self.object_mlp_out_dim = 256
@@ -129,7 +129,7 @@ class PrivacyModel(nn.Module):
         self.entropy_loss1 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,0.]))
         self.entropy_loss2 = nn.BCEWithLogitsLoss(reduction = 'sum', pos_weight = torch.tensor([1.,1.,1.,1.,1.,1.,0.]))
 
-    def forward(self, object_features, additional_input):
+    def forward(self, object_features, additional_input, return_rep=False):
 
         B, L, C = object_features.shape
         object_mlp_out = self.object_mlp(object_features.view(B*L, C))
@@ -150,12 +150,14 @@ class PrivacyModel(nn.Module):
         x = self.fusion_fc1(x)
         x = self.act(x)
         x = self.dropout(x)
-        x = self.fusion_fc2(x)
-        x = self.act(x)
+        rep = self.fusion_fc2(x)
+        x = self.act(rep)
         x = self.dropout(x)
-        x = self.fusion_fc3(x)
+        y = self.fusion_fc3(x)
 
-        return x
+        if return_rep: return y, rep
+
+        return y
 
     # def __init__(self, input_dim, learning_rate = 0.01, dropout_prob=0.2):
     #     ## output_channel: key: output_name value: output_dim
