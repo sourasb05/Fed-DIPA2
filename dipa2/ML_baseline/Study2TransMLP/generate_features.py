@@ -37,7 +37,7 @@ class FeatureGenerator():
         self.images_dir = "./dipa2/images/"
         self.features_dir = "image_features/"
         self.object_features_dir = "object_features/"
-        self.annotation_file = "annotations_filtered_bbox.csv"
+        self.annotation_file = "./dipa2/annotations_filtered_bbox.csv"
         self.image_size = (224, 224)
         self.padding_color = (0, 0, 0)
         self.max_bboxes = 32
