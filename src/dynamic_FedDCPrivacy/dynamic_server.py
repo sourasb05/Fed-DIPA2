@@ -14,9 +14,13 @@ import datetime
 import json
 from sklearn.cluster import KMeans
 import pickle
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 from torchmetrics import Precision, Recall, F1Score
 from src.utils.results_utils import CalculateMetrics, InformativenessMetrics
+import torch.nn as nn
 import pprint
 
 class Server():
@@ -544,7 +548,19 @@ class Server():
                 return key
         return None
 
-
+    # Extracting parameters and flattening them into feature vectors
+    def get_model_parameters(self, user):
+        split_model = nn.Sequential(*list(user.local_model.children())[-10:])
+        #print(f"user model : {user.local_model}")
+        #print(f"split model : {split_model}")
+        #input("press")
+        params = []
+        #for param in split_model.parameters():
+        for param in user.local_model.parameters():
+            params.extend(param.detach().cpu().numpy().flatten())  # Flatten each parameter tensor
+        
+        return np.array(params)
+        
     def train(self):
         loss = []
 
@@ -590,16 +606,46 @@ class Server():
             for user in tqdm(self.selected_rf_users, desc=f"model exchange training"):
                 user.exchange_train(exchange_dict[user], t)
             
-            similarity_matrix = self.similarity_check()
-            clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
-            print(clusters)
-            self.combine_cluster_user(clusters)
+            # similarity_matrix = self.similarity_check()
+            # clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
+            
+            feature_matrix = np.array([self.get_model_parameters(user) for user in self.selected_users])
 
-            self.aggregate_clusterhead()
-            self.global_update()
-            self.evaluate(t)
-            self.save_model(t)
-        self.save_results()
+            # Standardize features for better clustering
+            scaler = StandardScaler()
+            feature_matrix_scaled = scaler.fit_transform(feature_matrix)
+
+            # Optional: Reduce dimensionality to 2 or 3 for better clustering (KMeans can handle high-dimensions too)
+            # PCA might improve clustering performance if models are highly complex
+            #pca = PCA(n_components=3)  # Adjust components based on your needs
+            #feature_matrix_pca = pca.fit_transform(feature_matrix_scaled)
+
+            # Applying K-Means with an arbitrary choice of clusters (e.g., 3)
+            k = 5
+            kmeans = KMeans(n_clusters=k, random_state=0)
+            kmeans.fit(feature_matrix)  # Use feature_matrix_scaled if not reducing with PCA
+
+            # Cluster assignments
+            labels = kmeans.labels_
+
+            # Printing results
+            for i, label in enumerate(labels):
+                print(f"Model {i+1} is in Cluster {label}")
+
+            print(np.unique(labels, return_counts=True))
+
+            sys.exit()
+
+
+            
+            # print(clusters)
+            # self.combine_cluster_user(clusters)
+
+            #self.aggregate_clusterhead()
+            #self.global_update()
+            #self.evaluate(t)
+            #self.save_model(t)
+        #self.save_results()
 
     def read_cluster_information(self):
         cluster_path = self.current_directory + "/models/" + self.algorithm + "/cluster_model/"
