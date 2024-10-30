@@ -13,6 +13,9 @@ import wandb
 import datetime
 import json
 from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+import torch.nn as nn
 import pickle
 
 from torchmetrics import Precision, Recall, F1Score
@@ -40,7 +43,7 @@ class Server():
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
-            self.user_ids = args.user_ids[3]
+            self.user_ids = args.user_ids[3][:30]
         else:
             self.user_ids = args.user_ids[2]
         
@@ -56,9 +59,12 @@ class Server():
         self.fixed_user_id = args.fixed_user_id
         self.n_clusters = args.num_teams
         self.cluster_dict = {}
+        self.rl_to_rf_selections = {}
         self.clusters_list = []
         self.c = []
+        self.c_model = []
         self.cluster_dict_user_id = {}
+        self.counter=0
 
         # print(f"self.fixed_user_id : {self.fixed_user_id}")
 
@@ -94,7 +100,9 @@ class Server():
         self.local_train_loss = []
         self.local_train_distance = []
         self.local_train_mae = []
-        self.minimum_test_loss = 0.0
+        self.minimum_test_loss = 10000000.0
+        self.min_c_loss = []
+        
 
         self.data_frac = []
 
@@ -105,7 +113,7 @@ class Server():
                 
         #self.read_all_cluster_information()
 
-        if args.test: self.read_cluster_information()
+        # if args.test: self.read_cluster_information()
         
         count = 0
 
@@ -131,9 +139,12 @@ class Server():
         print("Total Users Present :", self.total_users)
 
         self.global_model = copy.deepcopy(self.users[0].local_model)
+        self.cluster_model = copy.deepcopy(self.global_model)
+
 
         for _ in range(self.n_clusters):
             self.c.append(copy.deepcopy(list(self.global_model.parameters())))
+            self.min_c_loss.append(10000000)
        
         for user in self.users:
                 
@@ -158,9 +169,15 @@ class Server():
             
             #print(len(resourceful))
             #print(len(resourceless))
-
-       # print(resourceful)
-       # print(resourceless)
+        #("RF")
+        #for user in resourceful:
+        #    print(user.id)
+        #print("RL")
+        # input("press")
+        """for user in resourceless:
+            print(user.id)
+        sys.exit()
+        """
         self.participated_rf_clients = self.kappa*len(resourceful)  #selected resourceful users
         self.participated_rl_clients = self.delta*len(resourceless) #selected resourceful users
         self.num_users = self.participated_rf_clients + self.participated_rl_clients
@@ -201,7 +218,9 @@ class Server():
    
     def save_model(self, glob_iter):
         if glob_iter == self.num_glob_iters-1:
-            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "/"
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+            #model_path = self.current_directory + "/models/FedMEM"  + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+            
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
@@ -212,8 +231,10 @@ class Server():
             
         if self.global_test_loss[glob_iter] < self.minimum_test_loss:
             self.minimum_test_loss = self.global_test_loss[glob_iter]
-            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "/"
-            print(f"model path :", model_path)
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+           # model_path = self.current_directory + "/models/FedMEM" + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+            
+            # print(f"model path :", model_path)
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
@@ -222,11 +243,46 @@ class Server():
                         }
             torch.save(checkpoint, os.path.join(model_path, "best_server_checkpoint" + ".pt"))
         cluster_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
-        print(f"cluster path :", cluster_path)
+        # print(f"cluster path :", cluster_path)
         if not os.path.exists(cluster_path):
             os.makedirs(cluster_path)
         with open(os.path.join(cluster_path, self.cluster_save_path), 'wb') as handle:
             pickle.dump(self.cluster_dict_user_id, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+
+    def save_cluster_model(self, glob_iter, current_loss):
+        for i in range(len(self.c)):
+            # Get the current state_dict of the cluster model to retrieve the parameter names
+            for model_param, list_param in zip(self.cluster_model.parameters(), self.c[i]):
+                model_param.data = list_param.data.clone()
+
+            if glob_iter == self.num_glob_iters-1:
+                
+                model_path = self.current_directory + "/models/" + self.algorithm + "/cluster_model/" + str(i) + "/delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+                
+                if not os.path.exists(model_path):
+                    os.makedirs(model_path)
+                checkpoint = {'GR': glob_iter,
+                            'model_state_dict': self.cluster_model.state_dict(),
+                            'loss': self.min_c_loss[i]
+                            }
+                torch.save(checkpoint, os.path.join(model_path, "cluster_checkpoint_GR" + str(glob_iter) + ".pt"))
+                
+            if current_loss < self.min_c_loss[i]:
+                self.min_c_loss[i] = current_loss
+                
+                model_path = self.current_directory + "/models/" + self.algorithm + "/cluster_model/" + str(i) + "/delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+                
+                # print(f"model path :", model_path)
+                if not os.path.exists(model_path):
+                    os.makedirs(model_path)
+                checkpoint = {'GR': glob_iter,
+                            'model_state_dict': self.cluster_model.state_dict(),
+                            'loss': self.min_c_loss[i]
+                            }
+                torch.save(checkpoint, os.path.join(model_path, "best_cluster_checkpoint" + ".pt"))
+
             
     def select_users(self, round, switch, num_subset_users):
         if switch == 0:
@@ -276,7 +332,39 @@ class Server():
 
 
 
-    
+
+    def eval_test_cluster(self, t):
+        for clust_id in range(self.n_clusters):
+            print(clust_id)
+            users = np.array(self.cluster_dict[clust_id])
+            # print(self.cluster_dict)
+            print([user for user in users])
+            
+
+            avg_loss = 0.0
+            avg_distance = 0.0
+            accumulator = {}
+            avg_mae = 0.0
+            for user_id in users:
+                user_obj = self.find_user_by_id(user_id) 
+                loss, distance, c_dict, mae = user_obj.test(self.c[clust_id], t)
+                avg_loss += (1/len(users))*loss
+                avg_distance += (1/len(users))*distance
+                avg_mae += (1/len(users))*mae
+                if c_dict:  # Check if test_dict is not None or empty
+                    self.initialize_or_add(accumulator, c_dict)
+            average_dict = {key: [x / len(users) for x in value] for key, value in accumulator.items()}
+
+          
+            #self.global_test_metric.append(average_dict)
+            #self.global_test_loss.append(avg_loss)
+            #self.global_test_distance.append(avg_distance)
+            #self.global_test_mae.append(avg_mae)
+                
+                       
+            print(f"\n Global round {t} : Cluster {clust_id} : users : {len(users)} : Test loss {avg_loss} : Test Performance metric : {average_dict}: Test cluster mae : {avg_mae} \n") 
+            
+            self.save_cluster_model(t, avg_loss)
   
     def eval_test(self, t):
         avg_loss = 0.0
@@ -306,19 +394,39 @@ class Server():
         self.global_test_mae.append(avg_mae)
             
                     
-        print(f"Global round {t} Global Test loss {avg_loss} avg distance {avg_distance}") 
+        """print(f"Global round {t} Global Test loss {avg_loss} avg distance {avg_distance}") 
         print(f"Test Performance metric : {average_dict}")
         print(f"Test global mae : {avg_mae}")
+        """
+        print(f"\n Global round {t} : Global Test loss {avg_loss} : Global Test Performance metric : {average_dict}: Global Test mae : {avg_mae} \n") 
 
+    def eval_test_local(self, t):
+        avg_loss = 0.0
+        avg_distance = 0.0
+        accumulator = {}
+        avg_mae = 0.0
+        for c in self.users:
+            loss, distance, c_dict, mae = c.test(None, t)
+            avg_loss += (1/len(self.users))*loss
+            avg_distance += (1/len(self.selected_users))*distance
+            avg_mae += (1/len(self.selected_users))*mae
+            if c_dict:  # Check if test_dict is not None or empty
+                self.initialize_or_add(accumulator, c_dict)
+        average_dict = {key: [x / len(self.users) for x in value] for key, value in accumulator.items()}
+    
+        
+        print(f"\n Global round {t} : Local Test loss {avg_loss} : Local Test Performance metric : {average_dict}: Local Test mae : {avg_mae} \n") 
+
+    def evaluate_local(self, t):
+        self.eval_test_local(t)     
 
     def evaluate(self, t):
         self.eval_test(t)
-        self.eval_train(t)
+        
 
     def evaluate_cluster(self, t):
-        self.eval_test(t)
-        self.eval_train(t)
-
+        self.eval_test_cluster(t)
+        
     def save_results(self):
        
         file = "exp_no_" + str(self.exp_no) + self.algorithm + "_GR_" + str(self.num_glob_iters) + "_BS_" + str(self.batch_size) + "_delta_" + str(self.delta) + "_kappa_" + str(self.kappa)
@@ -530,12 +638,13 @@ class Server():
             for param in self.c[clust_id]:
                 param.data = torch.zeros_like(param.data)
         
-            users = np.array(self.cluster_dict[clust_id])
-            # print(users)
-            # input("press")
+            users_id = np.array(self.cluster_dict[clust_id])
+            print(users_id)
             # print(f"number of users are {len(users)} in cluster {clust_id} ")
-            if len(users) != 0:
-                for user in users:
+            if len(users_id) != 0:
+                for user_id in users_id:
+                    user = self.find_user_by_id(user_id) 
+
                     self.add_parameters_clusters(user, clust_id)
 
     def find_cluster_id(self, user_id):
@@ -544,6 +653,69 @@ class Server():
                 return key
         return None
 
+    # Extracting parameters and flattening them into feature vectors
+    def get_model_parameters(self, user):
+        split_model = nn.Sequential(*list(user.local_model.children())[-10:])
+        
+        params = []
+        
+        for param in user.local_model.parameters():
+            params.extend(param.detach().cpu().numpy().flatten())  # Flatten each parameter tensor
+        
+        return np.array(params)
+
+    def assign_rf_users_to_rl(self):
+        
+        # Initialize a dictionary to store selected RF users for each RL user
+        self.rl_to_rf_selections = {}
+
+        rf_user = [user.id for user in self.selected_rf_users]
+        print(f"rf_user: {rf_user}")
+
+        rl_user = [user.id for user in self.selected_rl_users]
+        print(f"rl_user: {rl_user}")
+
+        for rl_user in self.selected_rl_users:
+            # Find the cluster of the current RL user
+            user_cluster = None
+            for cluster, users in self.cluster_dict.items():
+                #print(f"rl_user: {rl_user.id}")
+                #print(cluster)
+                #print(users)
+                
+                if rl_user.id in users:
+                    user_cluster = cluster
+                    break
+
+            # If cluster is found, filter RF users from the same cluster and select up to 2
+            #print(f"user_cluster :{user_cluster}")
+            if user_cluster is not None:
+                rf_users_in_cluster = [rf_user for rf_user in self.selected_rf_users if rf_user.id in self.cluster_dict[user_cluster]]
+                # print(f"rf_users_in_cluster : {rf_users_in_cluster}")
+                # rl_to_rf_selections[rl_user.id] = rf_users_in_cluster[:2] if rf_users_in_cluster else None
+                if rf_users_in_cluster:
+                    self.rl_to_rf_selections[rl_user.id] = random.sample(rf_users_in_cluster, min(2, len(rf_users_in_cluster)))
+                else:
+                    self.rl_to_rf_selections[rl_user.id] = None
+
+            else:
+                self.rl_to_rf_selections[rl_user.id] = None
+
+        # Print the dictionary showing RL users and their assigned RF users
+        #print("RL to RF user selections:", rl_to_rf_selections)
+        for rl_user, rf_users in self.rl_to_rf_selections.items():
+            if rf_users:
+                rf_user_ids = [rf_user.id for rf_user in rf_users]  # Extracting `id` from each RF user object
+                print(f"RL User {rl_user}: Selected RF User IDs {rf_user_ids}")
+            else:
+                print(f"RL User {rl_user}: No RF users available")
+    
+    def find_rl_user_by_id(self, rl_user_id):
+        return next((user for user in self.selected_rl_users if user.id == rl_user_id), None)
+    
+    def find_user_by_id(self, user_id):
+        return next((user for user in self.selected_users if user.id == user_id), None)
+    
 
     def train(self):
         loss = []
@@ -560,8 +732,6 @@ class Server():
             for user in self.selected_users:
                 self.samples += user.train_samples
 
-            exchange_dict = {key: random.sample(self.selected_rl_users, 2) for key in self.selected_rf_users} 
-
             list_user_id = [[],[]]
             for user in self.selected_rf_users:
                 #print(f"rf : {user.id}")
@@ -577,9 +747,13 @@ class Server():
                 # print(f"clust_id : {clust_id}")
 
                 if clust_id is not None:
+                    # user.flag = 0
                     user.train(self.c[clust_id],t)
+                    
                 else:
+                    # user.flag = 0
                     user.train(self.global_model.parameters(),t)
+            
             for user in tqdm(self.selected_rl_users, desc=f"total selected users  from resourceless {len(self.selected_rl_users)}"):
                 clust_id = self.find_cluster_id(user.id)
                 # print(f"clust_id : {clust_id}")
@@ -587,19 +761,71 @@ class Server():
                     user.train(self.c[clust_id],t)
                 else:
                     user.train(self.global_model.parameters(),t)
-            for user in tqdm(self.selected_rf_users, desc=f"model exchange training"):
-                user.exchange_train(exchange_dict[user], t)
             
-            similarity_matrix = self.similarity_check()
-            clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
-            print(clusters)
-            self.combine_cluster_user(clusters)
 
+            # exchange_dict = {key: random.sample(self.selected_rl_users, 2) for key in self.selected_rf_users} 
+
+            feature_matrix = np.array([self.get_model_parameters(user) for user in self.selected_users])
+            user_ids = np.array([user.id for user in self.selected_users])
+            # Standardize features for better clustering
+            # scaler = StandardScaler()
+            # feature_matrix_scaled = scaler.fit_transform(feature_matrix)
+
+            # Optional: Reduce dimensionality to 2 or 3 for better clustering (KMeans can handle high-dimensions too)
+            # PCA might improve clustering performance if models are highly complex
+            # pca = PCA(n_components=3)  # Adjust components based on your needs
+            # feature_matrix_pca = pca.fit_transform(feature_matrix_scaled)
+
+            # Applying K-Means with an arbitrary choice of clusters (e.g., 3)
+
+            kmeans = KMeans(n_clusters=self.n_clusters, random_state=0)
+            kmeans.fit(feature_matrix)  # Use feature_matrix_scaled if not reducing with PCA
+
+            # Cluster assignments
+            labels = kmeans.labels_
+
+            # Printing results
+            self.cluster_dict = {}
+            for user_id, label in zip(user_ids, labels):
+                if label not in self.cluster_dict:
+                    self.cluster_dict[label] = []
+                self.cluster_dict[label].append(user_id)
+                #print(f"user_id {user_id} is in Cluster {label}")
+
+            print(f" Clusters: {np.unique(labels, return_counts=True)}")
+            print(self.cluster_dict)
+            self.assign_rf_users_to_rl()
+            
+            for rl_user_id, rf_users in tqdm(self.rl_to_rf_selections.items(), desc="model exchange training"):
+                if rf_users:  # Check if there are RF users assigned
+                # Perform exchange training for each RF user in the list
+                    for rf_user in rf_users:
+                        rl_user = self.find_rl_user_by_id(rl_user_id) 
+                        rf_user.exchange_train(rl_user, t)  # Call `exchange_train` with `rl_user_id` and `t`
+            else:
+                print(f"No RF users available for RL user {rl_user_id}")
+            # for user in tqdm(self.selected_rf_users, desc=f"model exchange training"):
+            #    user.exchange_train(exchange_dict[user], t)
+            
+            #similarity_matrix = self.similarity_check()
+            
+            # clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
+            # print(clusters)
+            self.evaluate_local(t)
+            #self.combine_cluster_user(clusters)
             self.aggregate_clusterhead()
+            self.evaluate_cluster(t)
             self.global_update()
             self.evaluate(t)
             self.save_model(t)
-        self.save_results()
+
+        #for user in self.users:
+        #    self.counter += user.send_to_server
+        #    print(f"user id : {user.id} : communicated to server : {user.send_to_server} times")
+        #print(f"Total communication {self.counter}")
+             
+        #self.save_results()
+
 
     def read_cluster_information(self):
         cluster_path = self.current_directory + "/models/" + self.algorithm + "/cluster_model/"
@@ -684,44 +910,68 @@ class Server():
             print("%.02f" % result, end=" ")
         print()
 
-    def test(self):
 
+
+    def test(self):
         output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
         threshold = 0.5
         average_method = 'weighted'
         metrics = [Precision, Recall, F1Score]
         metrics_data = {}
+        
         for metric in metrics:
             metrics_data[metric.__name__] = [metric(task="multilabel",
                                                     num_labels=output_dim,
-                                                    threshold = threshold,
+                                                    threshold=threshold,
                                                     average=average_method,
-                                                    ignore_index = output_dim - 1) \
+                                                    ignore_index=output_dim - 1) \
                                                     for i, (output_name, output_dim) in enumerate(output_channel.items())]
+        
         informativeness_scores = [[], []]
-
+        
+        # Iterate over each user and evaluate
         for user in self.users:
-            #print("User ID", user.id)
-            results = user.test_eval()
-
+            print(f"User ID: {user.id}")  # Assuming each user object has an 'id' attribute
+            results = user.test_eval()  # Get the evaluation results for the user
+            
+            # Iterate through the results
             for result in results:
                 information, informativeness, sharingOwner, sharingOthers, y_preds = result
                 gt = [information, sharingOwner, sharingOthers]
                 output_dims = output_channel.values()
-                for o, (output_dim, gt) in enumerate(zip(output_dims, gt)):
-                    start_dim = o*(output_dim)
-                    end_dim = o*(output_dim)+output_dim
+                
+                # Process metrics for each output channel
+                for o, (output_dim, gt_value) in enumerate(zip(output_dims, gt)):
+                    start_dim = o * output_dim
+                    end_dim = start_dim + output_dim
                     for metric_name in metrics_data.keys():
-                        metrics_data[metric_name][o].update(y_preds[:, start_dim:end_dim], gt)
+                        metrics_data[metric_name][o].update(y_preds[:, start_dim:end_dim], gt_value)
+                
+                # Collect informativeness scores
                 informativeness_scores[0].extend(informativeness.detach().cpu().numpy().tolist())
                 informativeness_scores[1].extend(y_preds[:, 6].detach().cpu().numpy().tolist())
+            
+            # Compute and print metric results for the current user
+            print("Metrics for this user:")
+            for metric_name in metrics_data.keys():
+                user_results_data = [i.compute().detach().cpu().numpy() for i in metrics_data[metric_name]]
+                for i, value in enumerate(user_results_data):
+                    output_name = list(output_channel.keys())[i]
+                    print(f"{output_name} - {metric_name}: {value:.02f}")
+            
+            # Print informativeness metrics for the user
+            info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
+            print(f"Informativeness Precision: {info_prec:.02f}, Recall: {info_rec:.02f}, F1: {info_f1:.02f}, CMAE: {info_cmae:.02f}, MAE: {info_mae:.02f}")
+            print("=" * 50)  # Separator for each user
+
+        # Final results for all users
         results_data = {}
         for metric_name in metrics_data.keys():
             results_data[metric_name] = [i.compute().detach().cpu().numpy() for i in metrics_data[metric_name]]
+        
         for i, k in enumerate(output_channel.keys()):
             for metric, values in results_data.items():
-                print("%.02f " % values[i], end="")
+                print(f"{k} - {metric}: {values[i]:.02f}", end=" ")
 
         info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
-        print("%.02f %.02f %.02f %.02f %.02f" % (info_prec, info_rec, info_f1, info_cmae, info_mae))
-        
+        print(f"{info_prec:.02f} {info_rec:.02f} {info_f1:.02f} {info_cmae:.02f} {info_mae:.02f}")

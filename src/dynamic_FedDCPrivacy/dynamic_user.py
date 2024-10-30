@@ -38,6 +38,9 @@ class User():
         self.num_glob_iters = args.num_global_iters
         self.delta=args.delta
         self.kappa=args.kappa
+        self.lamda=args.lamda_sim_sta
+        self.send_to_server=0
+        self.flag=0
         """
         Hyperparameters
         """
@@ -128,6 +131,9 @@ class User():
         if not args.test:
             train_dataset = ImageMaskDataset(train_df, args.model_name, self.input_channel, image_size, flip = True)
             val_dataset = ImageMaskDataset(val_df, args.model_name, self.input_channel, image_size)
+            #print(len(val_dataset))
+            #print(len(train_dataset))
+            #input("press")
             self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
             self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'), shuffle=True)
             self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=len(val_dataset))
@@ -141,7 +147,7 @@ class User():
                                         features_dim=test_dataset.features_dim).to(self.device)
         if not args.test:
             self.exchange_model = copy.deepcopy(self.local_model)
-
+            self.old_model = copy.deepcopy(self.local_model)
             # self.optimizer = Fedmem(self.local_model.parameters(), lr=self.learning_rate)
             self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
             self.exchange_optimizer= torch.optim.Adam(self.exchange_model.parameters(), lr=self.learning_rate)
@@ -184,17 +190,28 @@ class User():
             self.model_status = self.load_model()
 
     def load_model(self):
-        # models_dir = "./models/dynamic_FedDcprivacy/global_model/"
+        # models_dir = "./models/dynamic_FedDcprivacy/global_model/delta_1.0_kappa_1.0_GE_25_LE_2"
         # model_state_dict = torch.load(os.path.join(models_dir, "delta_0.1_kappa_0.1", "server_checkpoint_GR19.pt"))["model_state_dict"]
 
-        models_dir = "./models/dynamic_FedDcprivacy/local_model/"
-        model_path = os.path.join(models_dir, str(self.id), "delta_%s_kappa_%s" % (self.delta, self.kappa), "local_checkpoint_GR19.pt")
+        models_dir = "./models/dynamic_FedDcprivacy/local_model/" + str(self.id) + "/delta_1.0_kappa_1.0_lambda_0.3_GE_5_LE_10"
+        # models_dir = "./models/FedMEM/local_model/" + str(71) + "/delta_1.0_kappa_1.0_lambda_0.5_GE_50_LE_1"
+        
+        # model_path = os.path.join(models_dir, str(self.id), "delta_%s_kappa_%s" % (self.delta, self.kappa), "local_checkpoint_GR19.pt")
+        model_path = os.path.join(models_dir,  "best_local_checkpoint.pt")
+        # model_path = os.path.join(models_dir,  "local_checkpoint_GR29.pt")
+
+        
         if os.path.exists(model_path):         
             model_state_dict = torch.load(model_path)["model_state_dict"]
             self.local_model.load_state_dict(model_state_dict)
             self.local_model.eval()
             return True
         return False
+
+    def set_parameters_old(self):
+        for old_param, new_param in zip(self.old_model.parameters(), self.local_model.parameters()):
+            old_param.data = new_param.data.clone()
+
         
     def set_parameters(self, global_model):
         for param, glob_param in zip(self.local_model.parameters(), global_model):
@@ -339,6 +356,85 @@ class User():
     def l1_distance_loss(self, prediction, target):
         loss = np.abs(prediction - target)
         return np.mean(loss)
+    
+
+    def evaluate_rl_model(self, t, rl_user):
+        rl_user.local_model.eval()
+        avg_loss=0.0
+        mae=0.0
+        distance=0.0
+        for i, vdata in enumerate(rl_user.val_loader):
+            features, additional_information, information, informativeness, sharingOwner, sharingOthers = vdata
+            y_preds = rl_user.local_model(features.to(rl_user.device), additional_information.to(rl_user.device))
+            loss = rl_user.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
+            
+            avg_loss += loss.item()/len(features)
+            
+            rl_user.acc[0].update(y_preds[:, :6], information.to(rl_user.device))
+            rl_user.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(rl_user.device))
+            rl_user.rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(rl_user.device))
+            rl_user.f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(rl_user.device))
+            rl_user.conf[0].update(y_preds[:, :6], information.to(rl_user.device))
+
+            rl_user.acc[1].update(y_preds[:, 7:14], sharingOwner.to(rl_user.device))
+            rl_user.pre[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(rl_user.device))
+            rl_user.rec[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(rl_user.device))
+            rl_user.f1[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(rl_user.device))
+            rl_user.conf[1].update(y_preds[:, 7:14], sharingOwner.to(rl_user.device))
+
+            rl_user.acc[2].update(y_preds[:, 14:21], sharingOthers.to(rl_user.device))
+            rl_user.pre[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(rl_user.device))
+            rl_user.rec[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(rl_user.device))
+            rl_user.f1[2].update(y_preds[:, 14:21], sharingOthers.type(torch.FloatTensor).to(rl_user.device))
+            rl_user.conf[2].update(y_preds[:, 14:21], sharingOthers.to(rl_user.device))
+
+            true_values = informativeness.cpu().detach().numpy()
+            predicted_values = y_preds[:, 6].cpu().detach().numpy()
+            mae = mean_absolute_error(true_values, predicted_values)
+            distance += rl_user.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
+
+        #print("avg_loss_outside_loop:",avg_loss)
+        #input("press")
+            
+           
+        pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in rl_user.acc], 
+                    'Precision' : [i.compute().detach().cpu().numpy() for i in rl_user.pre], 
+                    'Recall': [i.compute().detach().cpu().numpy() for i in rl_user.rec], 
+                    'f1': [i.compute().detach().cpu().numpy() for i in rl_user.f1]}
+       
+        pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
+        #print("pandas_data :",pandas_data)
+
+        self.save_rl_model(t, avg_loss, rl_user)
+
+    def save_rl_model(self, glob_iter, current_loss, rl_user):
+        if glob_iter == rl_user.num_glob_iters-1:
+            model_path = rl_user.current_directory + "/models/" + rl_user.algorithm + "/local_model/" + str(rl_user.id) + "/"  + "delta_" + str(rl_user.delta) + "_kappa_" + str(rl_user.kappa) + "_lambda_" + str(rl_user.lamda) + "_GE_" + str(rl_user.num_glob_iters) + "_LE_" + str(rl_user.local_iters)
+            #model_path = self.current_directory + "/models/FedMEM" + "/local_model/" + str(self.id) + "/"  + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters)
+            
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': rl_user.local_model.state_dict(),
+                        'loss': rl_user.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "local_checkpoint_GR" + str(glob_iter) + ".pt"))
+            
+        if current_loss < rl_user.minimum_test_loss:
+            if self.flag == 0:
+                self.send_to_server+=1
+                self.flag = 1
+            self.minimum_test_loss = current_loss
+            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) 
+            #model_path = self.current_directory + "/models/FedMEM" + "/local_model/" + str(self.id) + "/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) 
+            
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.local_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "best_local_checkpoint" + ".pt"))
         
     def evaluate_model(self, t, epoch):
         self.local_model.eval()
@@ -349,20 +445,14 @@ class User():
             features, additional_information, information, informativeness, sharingOwner, sharingOthers = vdata
             y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
             loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
-            avg_loss += loss.item()/len(features)
             
-            # print(y_preds[:, :6].shape, information.shape)
+            avg_loss += loss.item()/len(features)
             
             self.acc[0].update(y_preds[:, :6], information.to(self.device))
             self.pre[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.rec[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.f1[0].update(y_preds[:, :6], information.type(torch.FloatTensor).to(self.device))
             self.conf[0].update(y_preds[:, :6], information.to(self.device))
-            
-            """for gt, y_pred in zip(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy()):
-                informativeness_gt.append(int(gt))
-                informativeness_pred.append(int(y_pred))"""
-            # print(f"disance: {self.distance}")
 
             self.acc[1].update(y_preds[:, 7:14], sharingOwner.to(self.device))
             self.pre[1].update(y_preds[:, 7:14], sharingOwner.type(torch.FloatTensor).to(self.device))
@@ -380,19 +470,26 @@ class User():
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
             mae = mean_absolute_error(true_values, predicted_values)
             distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
+
+        #print("avg_loss_outside_loop:",avg_loss)
+        #input("press")
             
+           
         pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.acc], 
                     'Precision' : [i.compute().detach().cpu().numpy() for i in self.pre], 
                     'Recall': [i.compute().detach().cpu().numpy() for i in self.rec], 
                     'f1': [i.compute().detach().cpu().numpy() for i in self.f1]}
        
         pandas_data = {k: [float(v) for v in values] for k, values in pandas_data.items()}
+        #print("pandas_data :",pandas_data)
 
         self.save_model(t,epoch, avg_loss)
 
     def save_model(self, glob_iter, epoch, current_loss):
         if glob_iter == self.num_glob_iters-1:
-            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"  + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "/"
+            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"  + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters)
+            #model_path = self.current_directory + "/models/FedMEM" + "/local_model/" + str(self.id) + "/"  + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters)
+            
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
@@ -402,8 +499,13 @@ class User():
             torch.save(checkpoint, os.path.join(model_path, "local_checkpoint_GR" + str(glob_iter) + ".pt"))
             
         if current_loss < self.minimum_test_loss:
+            if self.flag == 0:
+                self.send_to_server+=1
+                self.flag = 1
             self.minimum_test_loss = current_loss
-            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"
+            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) 
+            #model_path = self.current_directory + "/models/FedMEM" + "/local_model/" + str(self.id) + "/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) 
+            
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
@@ -411,6 +513,31 @@ class User():
                         'loss': self.minimum_test_loss
                         }
             torch.save(checkpoint, os.path.join(model_path, "best_local_checkpoint" + ".pt"))
+    
+    def calculate_similarity(self, cluster_model):
+        l_similarity = 0.0
+        for global_param, curr_local_param in zip(cluster_model, self.local_model.parameters()):
+            l_similarity +=  0.5*torch.norm(curr_local_param - global_param) ** 2
+        
+        return l_similarity
+
+    def calculate_stability(self):
+        l_stability = 0.0
+        for prev_param, curr_param in zip(self.old_model.parameters(), self.local_model.parameters()):
+            l_stability += 0.5* torch.norm(prev_param - curr_param) ** 2
+
+        return l_stability 
+
+    # Extracting parameters and flattening them into feature vectors
+    def get_model_parameters(self, user):
+        split_model = nn.Sequential(*list(user.local_model.children())[-10:])
+        
+        params = []
+        
+        for param in user.local_model.parameters():
+            params.extend(param.detach().cpu().numpy().flatten())  # Flatten each parameter tensor
+        
+        return np.array(params)
 
     def train(self,cluster_model,t):
         # print(f"user id : {self.id}")
@@ -422,6 +549,10 @@ class User():
                 self.optimizer.zero_grad()
                 y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
                 loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
+                loss1 = self.calculate_similarity(cluster_model)
+                loss2 = self.calculate_stability()
+                self.set_parameters_old()
+                loss = loss + self.lamda*loss1 + (1-self.lamda)*loss2
                 loss.backward()
                 self.optimizer.step()
                 
@@ -446,27 +577,23 @@ class User():
 
         
 
-    def exchange_train(self, exchange_dict_users, t):
-        for rl_user in exchange_dict_users:
-            # print(f"low resource user id : {rl_user.id} and exchanged with user id : {self.id}")
-            #print(rl_user.local_model)
-            self.exchange_parameters(rl_user.local_model.parameters())
+    def exchange_train(self, rl_user, t):
+        self.exchange_parameters(rl_user.local_model.parameters())
             
-            self.exchange_model.train()
-            for iter in range(self.local_iters):
-                mae = 0
-                for batch in self.train_loader:
-                    features, additional_information, information, informativeness, sharingOwner, sharingOthers = batch
-                    self.exchange_optimizer.zero_grad()
-                    y_preds = self.exchange_model(features.to(self.device), additional_information.to(self.device))
-                    criterion = self.exchange_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
-                    criterion.backward()
-                    self.exchange_optimizer.step()
-                    # print(f"RL_user : {rl_user.id} and RF_user : {self.id} During exchange Epoch : {iter} Training loss : {criterion.item()}")
+        self.exchange_model.train()
+        for iter in range(self.local_iters):
+            mae = 0
+            for batch in self.train_loader:
+                features, additional_information, information, informativeness, sharingOwner, sharingOthers = batch
+                self.exchange_optimizer.zero_grad()
+                y_preds = self.exchange_model(features.to(self.device), additional_information.to(self.device))
+                criterion = self.exchange_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
+                criterion.backward()
+                self.exchange_optimizer.step()
+                # print(f"RL_user : {rl_user.id} and RF_user : {self.id} During exchange Epoch : {iter} Training loss : {criterion.item()}")
                     
-            self.transfer_model(rl_user.local_model.parameters())
-
-            self.evaluate_model(t, iter)
+        self.transfer_model(rl_user.local_model.parameters())
+        # self.evaluate_rl_model(t, iter, rl_user)
     
     
     def test_eval(self):
