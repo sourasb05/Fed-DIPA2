@@ -43,7 +43,7 @@ class Server():
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
-            self.user_ids = args.user_ids[3][:30]
+            self.user_ids = args.user_ids[3][:50]
         else:
             self.user_ids = args.user_ids[2]
         
@@ -659,7 +659,8 @@ class Server():
         
         params = []
         
-        for param in user.local_model.parameters():
+        # for param in user.local_model.parameters():
+        for param in split_model.parameters():
             params.extend(param.detach().cpu().numpy().flatten())  # Flatten each parameter tensor
         
         return np.array(params)
