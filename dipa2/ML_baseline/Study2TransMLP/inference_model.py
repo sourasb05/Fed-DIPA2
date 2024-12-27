@@ -109,8 +109,23 @@ class BaseModel(pl.LightningModule):
 
         # self.fusion_fc1 = nn.Linear(self.final_features_dim, 512)
         self.fusion_fc1 = nn.Linear(self.final_features_dim*2, 512)
-        self.fusion_fc2 = nn.Linear(512, 256)
-        self.fusion_fc3 = nn.Linear(256, 21)
+
+        self.multi_head = True
+        self.classes_div = [6, 1, 7, 7]
+
+        if self.multi_head:
+            self.fusion_fc2_0 = nn.Linear(512, 256)
+            self.fusion_fc2_1 = nn.Linear(512, 256)
+            self.fusion_fc2_2 = nn.Linear(512, 256)
+            self.fusion_fc2_3 = nn.Linear(512, 256)
+
+            self.fusion_fc3_0 = nn.Linear(256, self.classes_div[0])
+            self.fusion_fc3_1 = nn.Linear(256, self.classes_div[1])
+            self.fusion_fc3_2 = nn.Linear(256, self.classes_div[2])
+            self.fusion_fc3_3 = nn.Linear(256, self.classes_div[3])
+        else:
+            self.fusion_fc2 = nn.Linear(512, 256)
+            self.fusion_fc3 = nn.Linear(256, 21)
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.2)
@@ -159,13 +174,38 @@ class BaseModel(pl.LightningModule):
         x = self.fusion_fc1(x)
         x = self.act(x)
         x = self.dropout(x)
-        x = self.fusion_fc2(x)
-        x = self.act(x)
-        x = self.dropout(x)
-        x = self.fusion_fc3(x)
+
+        if self.multi_head:
+
+            hx0 = self.fusion_fc2_0(x)
+            hx0 = self.act(hx0)
+            hx0 = self.dropout(hx0)
+            hx0 = self.fusion_fc3_0(hx0)
+
+            hx1 = self.fusion_fc2_1(x)
+            hx1 = self.act(hx1)
+            hx1 = self.dropout(hx1)
+            hx1 = self.fusion_fc3_1(hx1)
+
+            hx2 = self.fusion_fc2_2(x)
+            hx2 = self.act(hx2)
+            hx2 = self.dropout(hx2)
+            hx2 = self.fusion_fc3_2(hx2)
+
+            hx3 = self.fusion_fc2_3(x)
+            hx3 = self.act(hx3)
+            hx3 = self.dropout(hx3)
+            hx3 = self.fusion_fc3_3(hx3)
+
+            x = torch.hstack([hx0, hx1, hx2, hx3])
+        else:
+            x = self.fusion_fc2(x)
+            x = self.act(x)
+            x = self.dropout(x)
+            x = self.fusion_fc3(x)
 
         return x
-            
+
         # x = self.net(torch.cat((image, mask), dim = 1))
         # x = self.dropout(x)
         # x = self.act(self.fc1(x))
