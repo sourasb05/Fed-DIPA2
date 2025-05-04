@@ -14,7 +14,8 @@ import json
 
 import torch
 from torchmetrics import Precision, Recall, F1Score
-from src.utils.results_utils import InformativenessMetrics
+from src.utils.results_utils import CalculateMetrics, InformativenessMetrics
+
 
 class FedAvg():
     def __init__(self,device, args, exp_no, current_directory):
@@ -181,73 +182,80 @@ class FedAvg():
         print(f"Global round {t} avg loss {avg_loss} avg distance {avg_distance}") 
         
 
-    
-  
-    def eval_test(self, t):
-        avg_loss = 0.0
-        avg_distance = 0.0
-        accumulator = {}
-        for c in self.selected_users:
-            loss, distance, c_dict, mae= c.test(self.global_model.parameters(), t)
-            avg_loss += (1/len(self.selected_users))*loss
-            avg_distance += (1/len(self.selected_users))*distance
-            if c_dict:  # Check if test_dict is not None or empty
-                self.initialize_or_add(accumulator, c_dict)
-        average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
-
-        
-        self.wandb.log(data={ "global_val_loss" : avg_loss})
-
-        self.global_test_metric.append(average_dict)
-        self.global_test_loss.append(avg_loss)
-        self.global_test_distance.append(avg_distance)
-        self.global_test_mae.append(mae)
+    def save_global_model(self, glob_iter, current_loss):
             
-                    
-        print(f"Global round {t} avg loss {avg_loss} avg distance {avg_distance}") 
+        model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/""_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+
+        if glob_iter == self.num_glob_iters-1:
+            
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.global_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "server_checkpoint_GR" + str(glob_iter) + ".pt"))
+            
+        if current_loss < self.minimum_test_loss:
+            self.minimum_test_loss = current_loss
+            
+            
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.global_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "best_server_checkpoint" + ".pt"))
+
+  
+    def evaluate_global(self, t):
+        avg_mae = 0.0
+        avg_cmae = 0.0
+        avg_loss = 0.0
+        for c in self.users:
+            loss, info_prec, info_rec, info_f1, info_cmae, info_mae, _ = c.test_global_model_val(self.global_model.parameters())
+            test_loss, test_info_prec, test_info_rec, test_info_f1, test_info_cmae, test_info_mae, _ = c.test_global_model_val(self.global_model.parameters())
+
+            print(f"info_prec {info_prec}, info_rec {info_rec}, info_f1 {info_f1}, info_cmae {info_cmae}, info_mae {info_mae}")
+            
+            avg_mae += (1/len(self.selected_users))*info_mae
+            avg_cmae += (1/len(self.selected_users))*info_cmae
+            avg_loss += (1/len(self.select_users))*loss
+            avg_f1 += (1/len(self.select_users))*info_f1
+            
+            test_avg_mae += (1/len(self.selected_users))*test_info_mae
+            test_avg_cmae += (1/len(self.selected_users))*test_info_cmae
+            test_avg_loss += (1/len(self.select_users))*test_loss
+            test_avg_f1 += (1/len(self.select_users))*test_info_f1
+
+            
         
+        print(f"\n Global round {t} : Global val f1: {avg_f1} Global val cmae {avg_cmae} global val mae : {avg_mae} \n")
+        print(f"\n Global round {t} : Global test f1: {test_avg_f1} Global test cmae {test_avg_cmae} global test mae : {test_avg_mae} \n")
 
-
-    def evaluate(self, t):
-        self.eval_test(t)
-        self.eval_train(t)
-
-    def save_results(self):
-       
-        file = "exp_no_" + str(self.exp_no) + "_GR_" + str(self.num_glob_iters) + "_BS_" + str(self.batch_size)
+        self.save_global_model(t, avg_loss)
+    
+    def evaluate_local(self, t):
+        val_avg_mae = 0.0
+        val_avg_cmae = 0.0
+        test_avg_mae = 0.0
+        test_avg_cmae = 0.0
+        for c in self.users:
+            info_prec, info_rec, info_f1, info_cmae, info_mae, _ = c.test_local_model_val()
+            test_info_prec, test_info_rec, test_info_f1, test_info_cmae, test_info_mae, _ = c.test_local_model_test()
+            
+            # print(f"info_prec {info_prec}, info_rec {info_rec}, info_f1 {info_f1}, info_cmae {info_cmae}, info_mae {info_mae}")
+            
+            val_avg_mae += (1/len(self.selected_users))*info_mae
+            val_avg_cmae += (1/len(self.selected_users))*info_cmae
+            test_avg_mae += (1/len(self.selected_users))*test_info_mae
+            test_avg_cmae += (1/len(self.selected_users))*test_info_cmae
         
-        print(file)
-       
-        directory_name = str(self.algorithm) + "/" +"h5" + "/global_model/"
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/results/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/" + directory_name)
+        print(f"\033[92m\n Global round {t} : Local val cmae {val_avg_cmae} Local val mae : {val_avg_mae} \n\033[0m")   # Green
+        print(f"\033[93m\n Global round {t} : Local Test cmae {test_avg_cmae} Local Test mae : {test_avg_mae} \n\033[0m")  # Yellow
 
-        json_test_metric = json.dumps(self.global_test_metric)
-        json_train_metric = json.dumps(self.global_train_metric)
-
-
-        with h5py.File(self.current_directory + "/results/" + directory_name + "/" + '{}.h5'.format(file), 'w') as hf:
-            hf.create_dataset('Global rounds', data=self.num_glob_iters)
-            hf.create_dataset('Local iters', data=self.local_iters)
-            hf.create_dataset('Learning rate', data=self.learning_rate)
-            hf.create_dataset('Batch size', data=self.batch_size)
-            hf.create_dataset('global_test_metric', data=[json_test_metric.encode('utf-8')])
-            hf.create_dataset('global_test_loss', data=self.global_test_loss)
-            hf.create_dataset('global_test_distance', data=self.global_test_distance)
-            hf.create_dataset('global_test_mae', data=self.global_test_mae)
-
-            hf.create_dataset('global_train_metric', data=[json_train_metric.encode('utf-8')])
-            hf.create_dataset('global_train_loss', data=self.global_train_loss)
-            hf.create_dataset('global_train_distance', data=self.global_train_distance)
-            hf.create_dataset('global_train_mae', data=self.global_train_mae)
-
-            hf.close()
 
 
     def train(self):
-        loss = []
         
         for glob_iter in trange(self.num_glob_iters, desc="Global Rounds"):
             self.send_parameters()
@@ -258,10 +266,11 @@ class FedAvg():
             #print(f"Exp no{self.exp_no} : users selected for global iteration {glob_iter} are : {list_user_id}")
 
             for user in self.selected_users:
-                user.train()  # * user.train_samples
+                user.train(glob_iter)  # * user.train_samples
 
             self.aggregate_parameters()
-            self.evaluate(glob_iter)
+            self.evaluate_global(glob_iter)
+            self.evaluate_local(glob_iter)
             self.save_model(glob_iter)
         self.save_results()
 
@@ -303,3 +312,63 @@ class FedAvg():
 
         info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
         print("%.02f %.02f %.02f %.02f %.02f" % (info_prec, info_rec, info_f1, info_cmae, info_mae))
+
+
+    def save_results(self):
+        for user in self.users:
+            val_dict = user.val_round_result_dict
+            test_dict = user.test_round_result_dict
+            global_val_dict = user.val_global_round_result_dict
+            global_test_dict = user.test_global_round_result_dict
+        
+
+            user_id = str(user.id)
+            val_json_path = f"results/client_level/FedAvg/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/FedAvg/local_test/user_{user_id}_test_round_results.json"
+            val_global_json_path = f"results/client_level/FedAvg/global_val/user_{user_id}_val_round_results.json"
+            test_global_json_path = f"results/client_level/FedAvg/global_test/user_{user_id}_test_round_results.json"
+
+        
+            # Combine resource category and val_dict into one JSON object
+            val_full_output = {
+                "User": user_id,
+                "validation_results": val_dict
+            }
+
+            test_full_output = {
+               "User": user_id,
+                "validation_results": test_dict
+            }
+
+                        # Combine resource category and val_dict into one JSON object
+            val_global_full_output = {
+                "User": user_id,
+                "validation_results": global_val_dict
+            }
+
+            test_global_full_output = {
+               "User": user_id,
+                "validation_results": global_test_dict
+            }
+
+
+            # Ensure the parent folder exists
+            os.makedirs(os.path.dirname(val_json_path), exist_ok=True)
+            os.makedirs(os.path.dirname(test_json_path), exist_ok=True)
+            os.makedirs(os.path.dirname(val_global_json_path), exist_ok=True)
+            os.makedirs(os.path.dirname(test_global_json_path), exist_ok=True)
+
+
+            # Save to JSON file (overwrite if it exists)
+            with open(val_json_path, 'w') as f:
+                json.dump(val_full_output, f, indent=2, default=self.convert_numpy)
+            # Save to JSON file (overwrite if it exists)
+            with open(test_json_path, 'w') as f:
+                json.dump(test_full_output, f, indent=2, default=self.convert_numpy)
+
+            # Save to JSON file (overwrite if it exists)
+            with open(val_global_json_path, 'w') as f:
+                json.dump(val_global_full_output, f, indent=2, default=self.convert_numpy)
+            # Save to JSON file (overwrite if it exists)
+            with open(test_global_json_path, 'w') as f:
+                json.dump(test_global_full_output, f, indent=2, default=self.convert_numpy)
