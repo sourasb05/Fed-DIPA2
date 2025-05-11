@@ -14,16 +14,17 @@ import json
 
 import torch
 from torchmetrics import Precision, Recall, F1Score
-from src.utils.results_utils import InformativenessMetrics
+from src.utils.results_utils import CalculateMetrics, InformativenessMetrics
 
 class Siloedserver():
     def __init__(self,device, args, exp_no, current_directory):
-                
+        self.t = 1
         self.device = device
         self.local_iters = args.local_iters
         self.batch_size = args.batch_size
         self.learning_rate = args.alpha
         
+        self.user_ids = args.user_ids
         self.total_train_samples = 0
         self.exp_no = exp_no
         self.algorithm = args.algorithm
@@ -37,43 +38,34 @@ class Siloedserver():
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
             self.total_users = len(self.user_ids)
-        
         elif args.country == "both":
             self.user_ids = args.user_ids[3]
             self.total_users = len(self.user_ids)
-        
         else:
             self.user_ids = args.user_ids[2]
+            print(self.user_ids)
             self.total_users = len(self.user_ids)
-            print(f"self.total_users : {self.total_users}")
-            
-            
-  
+
+        print(f"total users : {self.total_users}")
+         
         self.users = []
         self.selected_users = []
-
-        self.global_test_metric = []
-        self.global_test_loss = []
-        self.global_test_distance = []
-        self.global_test_mae = []
-
-        self.global_train_metric = []
-        self.global_train_loss = []
-        self.global_train_distance = []
-        self.global_train_mae = []
 
         self.data_frac = []
         
         self.minimum_test_loss = 1000000.0
 
         date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        self.wandb = wandb.init(project="DIPA2", name="Siloed_%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
+        self.wandb = wandb.init(project="DIPA2", name="FedAvg_%s_%d" % (date_and_time, self.total_users), mode=None if args.wandb else "disabled")
                 
         for i in trange(self.total_users, desc="Data distribution to clients"):
             user = Siloeduser(device, args, int(self.user_ids[i]), exp_no, current_directory, self.wandb)
             if user.valid: # Copy for all algorithms
                 self.users.append(user)
                 self.total_train_samples += user.train_samples
+        
+        self.total_users = len(self.users) 
+        self.num_users = self.total_users * args.users_frac    #selected users
         
         #Create Global_model
         for user in self.users:
@@ -83,7 +75,6 @@ class Siloedserver():
         for param in self.global_model.parameters():
             param.data.zero_()
         
-
         print("Finished creating FedAvg server.")
 
     def __del__(self):
@@ -93,34 +84,16 @@ class Siloedserver():
         assert (self.users is not None and len(self.users) > 0)
         for user in self.users:
             user.set_parameters(self.global_model)
+
+
+    def select_users(self, subset_users):
+
+        if subset_users == len(self.users):
+            return self.users
+        else: 
+            assert (self.subset_users != len(self.users))
+            
     
-    def eval_train(self):
-        avg_loss = 0.0
-        avg_distance = 0.0
-        avg_mae = 0.0
-        accumulator = {}
-        for c in self.users:
-            loss, distance, c_dict, mae = c.train_evaluation()
-            avg_loss += (1/len(self.users))*loss
-            avg_distance += (1/len(self.users))*distance
-            avg_mae += (1/len(self.users))*mae
-            if c_dict:  # Check if test_dict is not None or empty
-                self.initialize_or_add(accumulator, c_dict)
-        average_dict = {key: [x / len(self.users) for x in value] for key, value in accumulator.items()}
-
-        self.wandb.log(data={ "global_train_loss" : avg_loss})
-
-        self.global_train_metric.append(average_dict)
-        self.global_train_loss.append(avg_loss)
-        self.global_train_distance.append(avg_distance)
-        self.global_train_mae.append(avg_mae)
-
-                    
-        print(f"siloed avg Train loss {avg_loss} avg distance {avg_distance}") 
-        print(f"siloed avg Train Performance metric : {average_dict}")
-        print(f"siloed avg Train global mae : {avg_mae}")
-
-
     def initialize_or_add(self, dest, src):
     
         for key, value in src.items():
@@ -129,83 +102,72 @@ class Siloedserver():
             else:
                 dest[key] = value.copy()  # Initialize with a copy of the first list
 
-    
-  
-    def eval_test(self):
+
+    def eval_train(self, t):
         avg_loss = 0.0
         avg_distance = 0.0
         accumulator = {}
-        avg_mae = 0.0
-        for c in self.users:
-            loss, distance, c_dict, mae = c.test()
-            avg_loss += (1/len(self.users))*loss
-            avg_distance += (1/len(self.users))*distance
-            avg_mae += (1/len(self.users))*mae
+        for c in self.selected_users:
+            loss, distance, c_dict, mae = c.train_evaluation(self.global_model.parameters(), t)
+            avg_loss += (1/len(self.selected_users))*loss
+            avg_distance += (1/len(self.selected_users))*distance
             if c_dict:  # Check if test_dict is not None or empty
                 self.initialize_or_add(accumulator, c_dict)
-        average_dict = {key: [x / len(self.users) for x in value] for key, value in accumulator.items()}
+        average_dict = {key: [x / len(self.selected_users) for x in value] for key, value in accumulator.items()}
 
-        
-        self.wandb.log(data={ "global_val_loss" : avg_loss})
-        self.wandb.log(data={ "global_mae" : avg_mae})
-        self.global_test_metric.append(average_dict)
-        self.global_test_loss.append(avg_loss)
-        self.global_test_distance.append(avg_distance)
-        self.global_test_mae.append(avg_mae)
-            
+        self.wandb.log(data={ "global_train_loss" : avg_loss})
+
+        self.global_train_metric.append(average_dict)
+        self.global_train_loss.append(avg_loss)
+        self.global_train_distance.append(avg_distance)
+        self.global_train_mae.append(mae)
+
                     
-        print(f"siloed avg Test loss {avg_loss} avg distance {avg_distance}") 
-        print(f"siloed avg Performance metric : {average_dict}")
-        print(f"siloed avg Test global mae : {avg_mae}")
+        print(f"Global round {t} avg loss {avg_loss} avg distance {avg_distance}") 
 
-
-    def evaluate(self):
-        self.eval_test()
-        self.eval_train()
-        self.save_results()
     
-    def save_results(self):
-        date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    def evaluate_local(self, t):
+        val_avg_mae = 0.0
+        val_avg_cmae = 0.0
+        val_avg_f1 = 0.0
+        test_avg_mae = 0.0
+        test_avg_cmae = 0.0
+        test_avg_f1 = 0.0
+        for c in self.users:
+            info_prec, info_rec, info_f1, info_cmae, info_mae, _ = c.test_local_model_val()
+            test_info_prec, test_info_rec, test_info_f1, test_info_cmae, test_info_mae, _ = c.test_local_model_test()
+            
+            # print(f"info_prec {info_prec}, info_rec {info_rec}, info_f1 {info_f1}, info_cmae {info_cmae}, info_mae {info_mae}")
+            
+            val_avg_mae += (1/len(self.selected_users))*info_mae
+            val_avg_cmae += (1/len(self.selected_users))*info_cmae
+            val_avg_f1 += (1/len(self.selected_users))*info_f1
+
+            test_avg_mae += (1/len(self.selected_users))*test_info_mae
+            test_avg_cmae += (1/len(self.selected_users))*test_info_cmae
+            test_avg_f1 += (1/len(self.selected_users))*test_info_f1
         
-        file = "avg_siloed_model" +  date_and_time
-        
-        print(file)
-       
-        directory_name = str(self.algorithm) + "/" +"h5" + "/siloed_model/" 
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/results/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/" + directory_name)
+        print(f"\033[92m\n Global round {t} : Local val cmae {val_avg_cmae} Local val mae : {val_avg_mae} \n\033[0m")   # Green
+        print(f"\033[93m\n Global round {t} : Local Test cmae {test_avg_cmae} Local Test mae : {test_avg_mae} \n\033[0m")  # Yellow
 
-        json_test_metric = json.dumps(self.global_test_metric)
-        json_train_metric = json.dumps(self.global_train_metric)
-
-
-        with h5py.File(self.current_directory + "/results/" + directory_name + "/" + '{}.h5'.format(file), 'w') as hf:
-            hf.create_dataset('Local iters', data=self.local_iters)
-            hf.create_dataset('Learning rate', data=self.learning_rate)
-            hf.create_dataset('Batch size', data=self.batch_size)
-            hf.create_dataset('global_test_metric', data=[json_test_metric.encode('utf-8')])
-            hf.create_dataset('global_test_loss', data=self.global_test_loss)
-            hf.create_dataset('global_test_distance', data=self.global_test_distance)
-            hf.create_dataset('global_test_mae', data=self.global_test_mae)
-
-            hf.create_dataset('global_train_metric', data=[json_train_metric.encode('utf-8')])
-            hf.create_dataset('global_train_loss', data=self.global_train_loss)
-            hf.create_dataset('global_train_distance', data=self.global_train_distance)
-            hf.create_dataset('global_train_mae', data=self.global_train_mae)
-
-            hf.close()
 
 
     def train(self):
+        
         self.send_parameters()
+        self.selected_users = self.select_users(self.num_users)
         list_user_id = []
-        for user in self.users:
+        for user in self.selected_users:
             list_user_id.append(user.id)
-            user.train()
-        self.evaluate()
-    
+        #print(f"Exp no{self.exp_no} : users selected for global iteration {glob_iter} are : {list_user_id}")
+
+        for user in tqdm(self.selected_users, desc="Training selected users"):
+            user.train(self.t)
+
+        self.evaluate_local(self.t)
+            # self.save_model(glob_iter)
+        self.save_results()
+
     def test(self):
         output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
         threshold = 0.5
@@ -244,3 +206,47 @@ class Siloedserver():
 
         info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
         print("%.02f %.02f %.02f %.02f %.02f" % (info_prec, info_rec, info_f1, info_cmae, info_mae))
+
+    def convert_numpy(self, obj):
+        if isinstance(obj, (np.integer, np.floating)):
+            return obj.item()
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+    def save_results(self):
+        for user in self.users:
+            val_dict = user.val_round_result_dict
+            test_dict = user.test_round_result_dict
+            
+
+            user_id = str(user.id)
+            val_json_path = f"results/client_level/siloed/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/siloed/local_test/user_{user_id}_test_round_results.json"
+            
+        
+            # Combine resource category and val_dict into one JSON object
+            val_full_output = {
+                "User": user_id,
+                "validation_results": val_dict
+            }
+
+            test_full_output = {
+               "User": user_id,
+                "validation_results": test_dict
+            }
+
+           
+            # Ensure the parent folder exists
+            os.makedirs(os.path.dirname(val_json_path), exist_ok=True)
+            os.makedirs(os.path.dirname(test_json_path), exist_ok=True)
+            
+
+            # Save to JSON file (overwrite if it exists)
+            with open(val_json_path, 'w') as f:
+                json.dump(val_full_output, f, indent=2, default=self.convert_numpy)
+            # Save to JSON file (overwrite if it exists)
+            with open(test_json_path, 'w') as f:
+                json.dump(test_full_output, f, indent=2, default=self.convert_numpy)
+
+            

@@ -52,12 +52,15 @@ class UserAvg():
         """
         self.learning_rate = args.alpha
         self.local_iters = args.local_iters
+        self.num_glob_iters = args.num_global_iters
         self.eta = args.eta
         self.algorithm = args.algorithm
         self.fixed_user_id = args.fixed_user_id
         self.country = args.country
-        
+        self.minimum_test_loss = float('inf')
         self.distance = 0.0
+        self.send_to_server = 0
+        self.flag = 0
         
         
         self.bigfives = ["extraversion", "agreeableness", "conscientiousness",
@@ -136,6 +139,7 @@ class UserAvg():
         val_df.to_csv("%s/val_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
         test_df.to_csv("%s/test_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
 
+    
         if not args.test:
             train_dataset = ImageMaskDataset(train_df, args.model_name, self.input_channel, image_size, flip = True)
             val_dataset = ImageMaskDataset(val_df, args.model_name, self.input_channel, image_size)
@@ -167,32 +171,6 @@ class UserAvg():
             return None
         else:
             self.valid = True
-
-        train_per, val_per, test_per = 65, 10, 25
-        train_size = math.floor((train_per/100.0) * num_rows)
-        val_size = math.ceil((val_per/100.0) * num_rows)
-        test_size = num_rows - train_size - val_size
-
-        train_df = self.mega_table.sample(n=train_size, random_state=0)
-        rem_df = self.mega_table.drop(train_df.index)
-        val_df = rem_df.sample(n=val_size, random_state=0)
-        test_df = rem_df.drop(val_df.index)
-
-        dataset_files_dir = "dataset_files/%s/" % self.algorithm
-        os.makedirs(dataset_files_dir, exist_ok=True)
-
-        train_df.to_csv("%s/train_%d.csv" % (dataset_files_dir, self.id), index=False)
-        val_df.to_csv("%s/val_%d.csv" % (dataset_files_dir, self.id), index=False)
-
-        train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
-        val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)
-        test_dataset = ImageMaskDataset(test_df, feature_folder, self.input_channel, image_size)
-
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
-        self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'), shuffle=True)
-        self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=len(val_dataset))
-        self.test_loader = DataLoader(test_dataset, generator=torch.Generator(device='cuda'), batch_size=len(test_dataset))
-        # Dataset Allocation ends
 
         
         self.optimizer= torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
@@ -410,7 +388,7 @@ class UserAvg():
         return np.mean(loss)
     
     def save_model(self, glob_iter, epoch, current_loss):
-        model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters)
+        model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/_user_" + str(self.id) + "/"
             
         if not os.path.exists(model_path):
             os.makedirs(model_path)
@@ -531,7 +509,7 @@ class UserAvg():
 
 
     def test_global_model_val(self, global_model):
-        
+        print("here I am")
         self.set_parameters(global_model)
         self.local_model.eval()
 
@@ -605,7 +583,7 @@ class UserAvg():
 
 
 
-    def test_global_model_test(self):
+    def test_local_model_test(self):
        
         self.local_model.eval()
 
@@ -683,7 +661,7 @@ class UserAvg():
         return info_prec, info_rec, info_f1, info_cmae, info_mae, result_dict
 
 
-    def test_global_model_val(self):
+    def test_local_model_val(self):
       
         self.local_model.eval()
 

@@ -47,9 +47,7 @@ class Server():
         self.current_directory = current_directory
         self.algorithm = args.algorithm
         self.fix_client_every_GR = args.fix_client_every_GR
-        self.fixed_user_id = args.fixed_user_id
 
-        # print(f"self.fixed_user_id : {self.fixed_user_id}")
 
         self.global_metric = []
 
@@ -97,14 +95,13 @@ class Server():
         for i in trange(self.total_users, desc="Data distribution to clients"):
             # print(f"client id : {self.user_ids[i]}")
             user = User(device, args, self.user_ids[i], exp_no, current_directory, wandb)
-            self.users.append(user)
-            self.total_samples += user.samples
-            
+            if user.valid:
+                self.users.append(user)
+                self.total_samples += user.train_samples
+                
         
-            if self.user_ids[i] == str(self.fixed_user_id):
-                self.fixed_user = user
-                # print(f'id found : {self.fixed_user.id}')
-        # print("Finished creating Fedmem server.")
+        print("Finished creating FedDC server.")
+
         self.global_model = copy.deepcopy(self.users[0].local_model)
 
     
@@ -129,8 +126,8 @@ class Server():
             
             resourceless = [x for x in self.users if x not in resourceful]
             
-            print(len(resourceful))
-            print(len(resourceless))
+            # print(len(resourceful))
+            # print(len(resourceless))
 
        # print(resourceful)
        # print(resourceless)
@@ -173,29 +170,6 @@ class Server():
         for user in self.selected_users:
             self.add_parameters(user, user.train_samples / total_train)
 
-    
-
-    def save_model(self, glob_iter):
-        if glob_iter == self.num_glob_iters-1:
-            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
-            if not os.path.exists(model_path):
-                os.makedirs(model_path)
-            checkpoint = {'GR': glob_iter,
-                        'model_state_dict': self.global_model.state_dict(),
-                        'loss': self.minimum_test_loss
-                        }
-            torch.save(checkpoint, os.path.join(model_path, "server_checkpoint_GR" + str(glob_iter) + ".pt"))
-            
-        if self.global_test_loss[glob_iter] < self.minimum_test_loss:
-            self.minimum_test_loss = self.global_test_loss[glob_iter]
-            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
-            if not os.path.exists(model_path):
-                os.makedirs(model_path)
-            checkpoint = {'GR': glob_iter,
-                        'model_state_dict': self.global_model.state_dict(),
-                        'loss': self.minimum_test_loss
-                        }
-            torch.save(checkpoint, os.path.join(model_path, "best_server_checkpoint" + ".pt"))
             
     def select_users(self, round, switch, num_subset_users):
         if switch == 0:
@@ -280,42 +254,197 @@ class Server():
         print(f"Test global mae : {avg_mae}")
 
 
-    def evaluate(self, t):
-        self.eval_test(t)
-        self.eval_train(t)
+
+    
+
+    def save_global_model(self, glob_iter, current_loss):
+            
+        model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/""_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+
+        if glob_iter == self.num_glob_iters-1:
+            
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.global_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "server_checkpoint_GR" + str(glob_iter) + ".pt"))
+            
+        if current_loss < self.minimum_test_loss:
+            self.minimum_test_loss = current_loss
+            
+            
+            checkpoint = {'GR': glob_iter,
+                        'model_state_dict': self.global_model.state_dict(),
+                        'loss': self.minimum_test_loss
+                        }
+            torch.save(checkpoint, os.path.join(model_path, "best_server_checkpoint" + ".pt"))
+
+  
+    def evaluate_global(self, t):
+        avg_mae = 0.0
+        avg_cmae = 0.0
+        avg_f1 = 0.0
+        test_avg_mae = 0.0
+        test_avg_cmae = 0.0
+        test_avg_f1 = 0.0
+        for c in self.users:
+            info_prec, info_rec, info_f1, info_cmae, info_mae, results = c.test_global_model_val(self.global_model)
+            test_info_prec, test_info_rec, test_info_f1, test_info_cmae, test_info_mae, test_results = c.test_global_model_test(self.global_model)
+
+            print(f"info_prec {info_prec}, info_rec {info_rec}, info_f1 {info_f1}, info_cmae {info_cmae}, info_mae {info_mae}")
+            
+            avg_mae += (1/len(self.selected_users))*info_mae
+            avg_cmae += (1/len(self.selected_users))*info_cmae
+            # avg_loss += (1/len(self.select_users))*loss
+            avg_f1 += (1/len(self.selected_users))*info_f1
+            
+            test_avg_mae += (1/len(self.selected_users))*test_info_mae
+            test_avg_cmae += (1/len(self.selected_users))*test_info_cmae
+            # test_avg_loss += (1/len(self.select_users))*test_loss
+            test_avg_f1 += (1/len(self.selected_users))*test_info_f1
+
+            
+        
+        print(f"\n Global round {t} : Global val f1: {avg_f1} Global val cmae {avg_cmae} global val mae : {avg_mae} \n")
+        print(f"\n Global round {t} : Global test f1: {test_avg_f1} Global test cmae {test_avg_cmae} global test mae : {test_avg_mae} \n")
+
+        self.save_global_model(t, avg_cmae)
+    
+    def evaluate_local(self, t):
+        val_avg_mae = 0.0
+        val_avg_cmae = 0.0
+        val_avg_f1 = 0.0
+        test_avg_mae = 0.0
+        test_avg_cmae = 0.0
+        test_avg_f1 = 0.0
+        for c in self.users:
+            info_prec, info_rec, info_f1, info_cmae, info_mae, _ = c.test_local_model_val()
+            test_info_prec, test_info_rec, test_info_f1, test_info_cmae, test_info_mae, _ = c.test_local_model_test()
+            
+            # print(f"info_prec {info_prec}, info_rec {info_rec}, info_f1 {info_f1}, info_cmae {info_cmae}, info_mae {info_mae}")
+            
+            val_avg_mae += (1/len(self.selected_users))*info_mae
+            val_avg_cmae += (1/len(self.selected_users))*info_cmae
+            val_avg_f1 += (1/len(self.selected_users))*info_f1
+
+            test_avg_mae += (1/len(self.selected_users))*test_info_mae
+            test_avg_cmae += (1/len(self.selected_users))*test_info_cmae
+            test_avg_f1 += (1/len(self.selected_users))*test_info_f1
+        
+        print(f"\033[92m\n Global round {t} : Local val cmae {val_avg_cmae} Local val mae : {val_avg_mae} \n\033[0m")   # Green
+        print(f"\033[93m\n Global round {t} : Local Test cmae {test_avg_cmae} Local Test mae : {test_avg_mae} \n\033[0m")  # Yellow
+
+
+
+    
+    def test(self):
+        output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+        threshold = 0.5
+        average_method = 'weighted'
+        metrics = [Precision, Recall, F1Score]
+        metrics_data = {}
+        for metric in metrics:
+            metrics_data[metric.__name__] = [metric(task="multilabel",
+                                                    num_labels=output_dim,
+                                                    threshold = threshold,
+                                                    average=average_method,
+                                                    ignore_index = output_dim - 1) \
+                                                    for i, (output_name, output_dim) in enumerate(output_channel.items())]
+        informativeness_scores = [[], []]
+
+        for user in self.users:
+            results = user.test_eval()
+
+            for result in results:
+                information, informativeness, sharingOwner, sharingOthers, y_preds = result
+                gt = [information, sharingOwner, sharingOthers]
+                output_dims = output_channel.values()
+                for o, (output_dim, gt) in enumerate(zip(output_dims, gt)):
+                    start_dim = o*(output_dim)
+                    end_dim = o*(output_dim)+output_dim
+                    for metric_name in metrics_data.keys():
+                        metrics_data[metric_name][o].update(y_preds[:, start_dim:end_dim], gt)
+                informativeness_scores[0].extend(informativeness.detach().cpu().numpy().tolist())
+                informativeness_scores[1].extend(y_preds[:, 6].detach().cpu().numpy().tolist())
+        results_data = {}
+        for metric_name in metrics_data.keys():
+            results_data[metric_name] = [i.compute().detach().cpu().numpy() for i in metrics_data[metric_name]]
+        for i, k in enumerate(output_channel.keys()):
+            for metric, values in results_data.items():
+                print("%.02f " % values[i], end="")
+
+        info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
+        print("%.02f %.02f %.02f %.02f %.02f" % (info_prec, info_rec, info_f1, info_cmae, info_mae))
+
+    def convert_numpy(self, obj):
+        if isinstance(obj, (np.integer, np.floating)):
+            return obj.item()
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
     def save_results(self):
-       
-        file = "exp_no_" + str(self.exp_no) + self.algorithm + "_GR_" + str(self.num_glob_iters) + "_BS_" + str(self.batch_size)
+        for user in self.users:
+            val_dict = user.val_round_result_dict
+            test_dict = user.test_round_result_dict
+            global_val_dict = user.val_global_round_result_dict
+            global_test_dict = user.test_global_round_result_dict
         
-        print(file)
-       
-        directory_name = str(self.algorithm) + "/" +"h5" + "/global_model/" + self.country + "/"
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/results/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/" + directory_name)
 
-        json_test_metric = json.dumps(self.global_test_metric)
-        json_train_metric = json.dumps(self.global_train_metric)
+            user_id = str(user.id)
+            val_json_path = f"results/client_level/FedDC/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/FedDC/local_test/user_{user_id}_test_round_results.json"
+            val_global_json_path = f"results/client_level/FedDC/global_val/user_{user_id}_val_round_results.json"
+            test_global_json_path = f"results/client_level/FedDC/global_test/user_{user_id}_test_round_results.json"
+
+        
+            # Combine resource category and val_dict into one JSON object
+            val_full_output = {
+                "User": user_id,
+                "validation_results": val_dict
+            }
+
+            test_full_output = {
+               "User": user_id,
+                "validation_results": test_dict
+            }
+
+                        # Combine resource category and val_dict into one JSON object
+            val_global_full_output = {
+                "User": user_id,
+                "validation_results": global_val_dict
+            }
+
+            test_global_full_output = {
+               "User": user_id,
+                "validation_results": global_test_dict
+            }
 
 
-        with h5py.File(self.current_directory + "/results/" + directory_name + "/" + '{}.h5'.format(file), 'w') as hf:
-            hf.create_dataset('Global rounds', data=self.num_glob_iters)
-            hf.create_dataset('Local iters', data=self.local_iters)
-            hf.create_dataset('Learning rate', data=self.learning_rate)
-            hf.create_dataset('Batch size', data=self.batch_size)
-            hf.create_dataset('global_test_metric', data=[json_test_metric.encode('utf-8')])
-            hf.create_dataset('global_test_loss', data=self.global_test_loss)
-            hf.create_dataset('global_test_distance', data=self.global_test_distance)
-            hf.create_dataset('global_test_mae', data=self.global_test_mae)
+            # Ensure the parent folder exists
+            os.makedirs(os.path.dirname(val_json_path), exist_ok=True)
+            os.makedirs(os.path.dirname(test_json_path), exist_ok=True)
+            os.makedirs(os.path.dirname(val_global_json_path), exist_ok=True)
+            os.makedirs(os.path.dirname(test_global_json_path), exist_ok=True)
 
-            hf.create_dataset('global_train_metric', data=[json_train_metric.encode('utf-8')])
-            hf.create_dataset('global_train_loss', data=self.global_train_loss)
-            hf.create_dataset('global_train_distance', data=self.global_train_distance)
-            hf.create_dataset('global_train_mae', data=self.global_train_mae)
 
-            hf.close()
+            # Save to JSON file (overwrite if it exists)
+            with open(val_json_path, 'w') as f:
+                json.dump(val_full_output, f, indent=2, default=self.convert_numpy)
+            # Save to JSON file (overwrite if it exists)
+            with open(test_json_path, 'w') as f:
+                json.dump(test_full_output, f, indent=2, default=self.convert_numpy)
+
+            # Save to JSON file (overwrite if it exists)
+            with open(val_global_json_path, 'w') as f:
+                json.dump(val_global_full_output, f, indent=2, default=self.convert_numpy)
+            # Save to JSON file (overwrite if it exists)
+            with open(test_global_json_path, 'w') as f:
+                json.dump(test_global_full_output, f, indent=2, default=self.convert_numpy)
+
+
 
 
 
@@ -329,7 +458,11 @@ class Server():
             self.selected_rf_users = self.select_users(t,0, subset_rf).tolist()
             self.selected_rl_users = self.select_users(t,1, subset_rl).tolist()
             self.selected_users = self.selected_rf_users + self.selected_rl_users
-            exchange_dict = {key: random.sample(self.selected_rl_users, 2) for key in self.selected_rf_users} 
+            exchange_dict = {key: random.sample(self.selected_rl_users, 1) for key in self.selected_rl_users} 
+
+
+            # exchange_dict = { key: random.sample([u for u in self.selected_rl_users if u != key], 2) 
+            # for key in self.selected_rl_users }
 
             list_user_id = [[],[]]
             for user in self.selected_rf_users:
@@ -342,19 +475,19 @@ class Server():
             # print(f"selected users : {list_user_id}")
             
             for user in tqdm(self.selected_rf_users, desc=f"selected users from resourceful cluster {len(self.selected_rf_users)}"):
-                user.train(t)
-            for user in tqdm(self.selected_rl_users, desc=f"total selected users  from resourceless cluster {len(self.selected_rl_users)}"):
-                user.train(t)
-            for user in tqdm(self.selected_rf_users, desc=f"model exchange training"):
+                 user.train(t)
+            # for user in tqdm(self.selected_rl_users, desc=f"total selected users  from resourceless cluster {len(self.selected_rl_users)}"):
+            #     user.train(t)
+            
+            for user in tqdm(self.selected_rl_users, desc=f"model exchange training"):
                 user.exchange_train(exchange_dict[user], t)
             
 
 
             self.aggregate_parameters()
             
-            # self.evaluate_localmodel(t)
-            self.evaluate(t)
-            self.save_model(t)
+            self.evaluate_local(t)
+            self.evaluate_global(t)
         self.save_results()
 
     def test(self):

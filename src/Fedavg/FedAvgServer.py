@@ -210,35 +210,40 @@ class FedAvg():
     def evaluate_global(self, t):
         avg_mae = 0.0
         avg_cmae = 0.0
-        avg_loss = 0.0
+        avg_f1 = 0.0
+        test_avg_mae = 0.0
+        test_avg_cmae = 0.0
+        test_avg_f1 = 0.0
         for c in self.users:
-            loss, info_prec, info_rec, info_f1, info_cmae, info_mae, _ = c.test_global_model_val(self.global_model.parameters())
-            test_loss, test_info_prec, test_info_rec, test_info_f1, test_info_cmae, test_info_mae, _ = c.test_global_model_val(self.global_model.parameters())
+            info_prec, info_rec, info_f1, info_cmae, info_mae, results = c.test_global_model_val(self.global_model)
+            test_info_prec, test_info_rec, test_info_f1, test_info_cmae, test_info_mae, test_results = c.test_global_model_test(self.global_model)
 
             print(f"info_prec {info_prec}, info_rec {info_rec}, info_f1 {info_f1}, info_cmae {info_cmae}, info_mae {info_mae}")
             
             avg_mae += (1/len(self.selected_users))*info_mae
             avg_cmae += (1/len(self.selected_users))*info_cmae
-            avg_loss += (1/len(self.select_users))*loss
-            avg_f1 += (1/len(self.select_users))*info_f1
+            # avg_loss += (1/len(self.select_users))*loss
+            avg_f1 += (1/len(self.selected_users))*info_f1
             
             test_avg_mae += (1/len(self.selected_users))*test_info_mae
             test_avg_cmae += (1/len(self.selected_users))*test_info_cmae
-            test_avg_loss += (1/len(self.select_users))*test_loss
-            test_avg_f1 += (1/len(self.select_users))*test_info_f1
+            # test_avg_loss += (1/len(self.select_users))*test_loss
+            test_avg_f1 += (1/len(self.selected_users))*test_info_f1
 
             
         
         print(f"\n Global round {t} : Global val f1: {avg_f1} Global val cmae {avg_cmae} global val mae : {avg_mae} \n")
         print(f"\n Global round {t} : Global test f1: {test_avg_f1} Global test cmae {test_avg_cmae} global test mae : {test_avg_mae} \n")
 
-        self.save_global_model(t, avg_loss)
+        # self.save_global_model(t, avg_loss)
     
     def evaluate_local(self, t):
         val_avg_mae = 0.0
         val_avg_cmae = 0.0
+        val_avg_f1 = 0.0
         test_avg_mae = 0.0
         test_avg_cmae = 0.0
+        test_avg_f1 = 0.0
         for c in self.users:
             info_prec, info_rec, info_f1, info_cmae, info_mae, _ = c.test_local_model_val()
             test_info_prec, test_info_rec, test_info_f1, test_info_cmae, test_info_mae, _ = c.test_local_model_test()
@@ -247,8 +252,11 @@ class FedAvg():
             
             val_avg_mae += (1/len(self.selected_users))*info_mae
             val_avg_cmae += (1/len(self.selected_users))*info_cmae
+            val_avg_f1 += (1/len(self.selected_users))*info_f1
+
             test_avg_mae += (1/len(self.selected_users))*test_info_mae
             test_avg_cmae += (1/len(self.selected_users))*test_info_cmae
+            test_avg_f1 += (1/len(self.selected_users))*test_info_f1
         
         print(f"\033[92m\n Global round {t} : Local val cmae {val_avg_cmae} Local val mae : {val_avg_mae} \n\033[0m")   # Green
         print(f"\033[93m\n Global round {t} : Local Test cmae {test_avg_cmae} Local Test mae : {test_avg_mae} \n\033[0m")  # Yellow
@@ -271,7 +279,7 @@ class FedAvg():
             self.aggregate_parameters()
             self.evaluate_global(glob_iter)
             self.evaluate_local(glob_iter)
-            self.save_model(glob_iter)
+            # self.save_model(glob_iter)
         self.save_results()
 
     def test(self):
@@ -313,6 +321,12 @@ class FedAvg():
         info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
         print("%.02f %.02f %.02f %.02f %.02f" % (info_prec, info_rec, info_f1, info_cmae, info_mae))
 
+    def convert_numpy(self, obj):
+        if isinstance(obj, (np.integer, np.floating)):
+            return obj.item()
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
     def save_results(self):
         for user in self.users:

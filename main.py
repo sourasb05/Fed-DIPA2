@@ -4,16 +4,18 @@ warnings.filterwarnings("ignore")
 from src.Fedavg.FedAvgServer import FedAvg
 from src.Fedmem.FedMEMServer import Fedmem
 from src.FedDCPrivacy.server import Server
-from src.dynamic_FedDCPrivacy.dynamic_server import Server
+# from src.dynamic_FedDCPrivacy.dynamic_server import Server
 from src.Siloed.SiloedServer import Siloedserver
 from src.ClusteredFedDC.clustered_server import C_server
 from src.apriori_FedDCPrivacy.server import Server as AprioriFedDCServer
+from src.FedProx.FedProxServer import FedProxServer
 #from src.ClusteredFedRep.server import ClusteredFedRepServer
 
 from src.TrainModels.trainmodels import *
 from src.utils.options import args_parser
 import torch
 import os
+import wandb
 
 torch.manual_seed(0)
 
@@ -30,9 +32,11 @@ def main(args):
                 server = Siloedserver(device, args,i, current_directory)
             if args.algorithm == "FedAvg":
                 server = FedAvg(device, args,i, current_directory)
+            if args.algorithm == "FedProx":
+                server = FedProxServer(device, args,i, current_directory)
             elif args.algorithm == "Fedmem": 
                 server = Fedmem(device, args, i, current_directory)
-            elif args.algorithm == "FedDcprivacy":
+            elif args.algorithm == "FedDC":
                 server = Server(device, args, i, current_directory)
             elif args.algorithm == "dynamic_FedDcprivacy":
                 server = Server(device, args, i, current_directory)

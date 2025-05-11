@@ -6,6 +6,7 @@ import torch.optim as optim
 from torchvision import transforms
 from torchvision.models import resnet50
 import torchvision.models as models
+from src.utils.results_utils import CalculateMetrics, InformativenessMetrics
 
 import copy
 import pandas as pd
@@ -23,35 +24,46 @@ from sklearn.metrics import mean_absolute_error
 import wandb
 import sys
 import os
+import math
+
+
 class User():
 
     def __init__(self,device, args, id, exp_no, current_directory, wandb):
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
         self.device = device
         self.wandb = wandb
+        """
+        Hyperparameters
+        """
+        self.algorithm = args.algorithm
         self.id = id  # integer
         self.batch_size = args.batch_size
         self.exp_no = exp_no
         self.current_directory = current_directory
-        self.num_glob_iters = args.num_global_iters
         """
         Hyperparameters
         """
         self.learning_rate = args.alpha
         self.local_iters = args.local_iters
+        self.num_glob_iters = args.num_global_iters
         self.eta = args.eta
         self.algorithm = args.algorithm
-        self.country = "japan"
+        self.fixed_user_id = args.fixed_user_id
+        self.country = args.country
+        self.minimum_test_loss = float('inf')
         self.distance = 0.0
+        self.send_to_server = 0
+        self.flag = 0
+        self.lamda = args.lamda_sim_sta 
+        
         self.bigfives = ["extraversion", "agreeableness", "conscientiousness",
                          "neuroticism", "openness"]
         self.basic_info = [ "age", "gender", 'nationality', 'frequency']
         self.category = ['category']
         self.privacy_metrics = ['informationType', 'informativeness', 'sharingOwner', 'sharingOthers']
-        print(str(self.id))
         self.mega_table = pd.read_csv(current_directory + '/feature_clients/annotations_annotator' + str(self.id) + '.csv')
-        # print(self.mega_table)
-       
+        
         self.description = {'informationType': ['It tells personal information', 
                                                 'It tells location of shooting',
                                                 'It tells individual preferences/pastimes',
@@ -93,33 +105,78 @@ class User():
         self.output_name = self.privacy_metrics
         self.output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
 
+        image_size = (224, 224)
 
-        self.local_model = PrivacyModel(input_dim=self.input_dim).to(self.device)
+        # Dataset Allocation
+        num_rows = len(self.mega_table)
+
+        if num_rows <= 3:
+            self.valid = False
+            return None
+        else:
+            self.valid = True
+
+        train_per, val_per, test_per = 65, 10, 25
+        train_size = math.floor((train_per/100.0) * num_rows)
+        val_size = math.ceil((val_per/100.0) * num_rows)
+        test_size = num_rows - train_size - val_size
+
+        train_df = self.mega_table.sample(n=train_size, random_state=0)
+        rem_df = self.mega_table.drop(train_df.index)
+        val_df = rem_df.sample(n=val_size, random_state=0)
+        test_df = rem_df.drop(val_df.index)
+
+        dataset_files_dir = "dataset_files/%s/" % self.algorithm
+        os.makedirs(dataset_files_dir, exist_ok=True)
+
+        train_df.to_csv("%s/train_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
+        val_df.to_csv("%s/val_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
+        test_df.to_csv("%s/test_%d.csv" % (dataset_files_dir, int(self.id)), index=False)
+
+    
+        if not args.test:
+            train_dataset = ImageMaskDataset(train_df, args.model_name, self.input_channel, image_size, flip = True)
+            val_dataset = ImageMaskDataset(val_df, args.model_name, self.input_channel, image_size)
+            #print(len(val_dataset))
+            #print(len(train_dataset))
+            #input("press")
+            self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
+            self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'), shuffle=True)
+            self.val_loader = DataLoader(val_dataset, generator=torch.Generator(device='cuda'), batch_size=len(val_dataset))
+
+        test_dataset = ImageMaskDataset(test_df, args.model_name, self.input_channel, image_size)
+        self.test_loader = DataLoader(test_dataset, generator=torch.Generator(device='cuda'), batch_size=16) #len(test_dataset))
+        # Dataset Allocation ends
+
+        self.local_model = PrivacyModel(input_dim=self.input_dim,
+                                        max_bboxes=test_dataset.max_bboxes,
+                                        features_dim=test_dataset.features_dim).to(self.device)
+        
+        self.eval_model = copy.deepcopy(self.local_model)
         self.exchange_model = copy.deepcopy(self.local_model)
 
         image_size = (224, 224)
         feature_folder = self.current_directory + '/object_features/resnet50/'
 
+        # Dataset Allocation
         num_rows = len(self.mega_table)
-        train_size = int(0.8 * num_rows)
-        test_size = num_rows - train_size
-        self.train_samples = train_size
-        self.test_samples = test_size
-        self.samples = train_size + test_size
-        # Split the dataframe into two
-        train_df = self.mega_table.sample(n=train_size, random_state=0)
-        val_df = self.mega_table.drop(train_df.index)
 
-        train_dataset = ImageMaskDataset(train_df, feature_folder, self.input_channel, image_size, flip = True)
-        val_dataset = ImageMaskDataset(val_df, feature_folder, self.input_channel, image_size)    
+        if num_rows <= 3:
+            self.valid = False
+            return None
+        else:
+            self.valid = True
 
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, generator=torch.Generator(device='cuda'), shuffle=True)
-        self.val_loader = DataLoader(val_dataset, batch_size=len(val_dataset), generator=torch.Generator(device='cuda'))
-        self.trainloaderfull = DataLoader(train_dataset, batch_size=len(train_dataset), generator=torch.Generator(device='cuda'))
         
-        # self.optimizer = Fedmem(self.local_model.parameters(), lr=self.learning_rate)
-        self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
+        self.optimizer= torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
         self.exchange_optimizer= torch.optim.Adam(self.exchange_model.parameters(), lr=self.learning_rate)
+
+        self.train_samples = train_size
+        self.val_samples = val_size
+        self.samples = train_size + val_size
+
+        #print(f"uid {self.id} samples {self.samples}")
+
         
         # metrics
 
@@ -147,16 +204,20 @@ class User():
         self.global_conf = [ConfusionMatrix(task="multilabel", num_labels=output_dim) \
                 for i, (output_name, output_dim) in enumerate(self.output_channel.items())]
         
-        # print(self.global_acc)
+
+
+        self.val_round_result_dict = {}
+        self.val_global_round_result_dict = {}
         
-        self.minimum_test_loss = 10000000.0
-
-
+        self.train_round_result_dict = {}
+        self.train_global_round_result_dict = {}
+        
+        self.test_round_result_dict = {}
+        self.test_global_round_result_dict = {}
+        
         if args.test:
-            self.testing = True
             self.load_model()
-        else:
-            self.testing = False
+
     
     def load_model(self):
         models_dir = "./models/FedDcprivacy/local_model/"
@@ -165,7 +226,7 @@ class User():
         self.local_model.eval()
         
     def set_parameters(self, global_model):
-        for param, glob_param in zip(self.local_model.parameters(), global_model):
+        for param, glob_param in zip(self.local_model.parameters(), global_model.parameters()):
             param.data = glob_param.data.clone()
             # print(f"user {self.id} parameters : {param.data}")
             
@@ -215,7 +276,7 @@ class User():
             mae = mean_absolute_error(true_values, predicted_values)
             distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
             
-            print(f"i : {i}")
+            # print(f"i : {i}")
         
         pandas_data = {'Accuracy' : [i.compute().detach().cpu().numpy() for i in self.global_acc], 
                     'Precision' : [i.compute().detach().cpu().numpy() for i in self.global_pre], 
@@ -359,11 +420,13 @@ class User():
 
         self.save_model(t,epoch, avg_loss)
 
-    def save_model(self, glob_iter, epoch, current_loss):
+    def save_model(self, glob_iter, current_loss):
+        model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/_user_" + str(self.id) + "/"
+            
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+
         if glob_iter == self.num_glob_iters-1:
-            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"
-            if not os.path.exists(model_path):
-                os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
                         'model_state_dict': self.local_model.state_dict(),
                         'loss': self.minimum_test_loss
@@ -371,15 +434,335 @@ class User():
             torch.save(checkpoint, os.path.join(model_path, "local_checkpoint_GR" + str(glob_iter) + ".pt"))
             
         if current_loss < self.minimum_test_loss:
+            if self.flag == 0:
+                self.send_to_server+=1
+                self.flag = 1
             self.minimum_test_loss = current_loss
-            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"
-            if not os.path.exists(model_path):
-                os.makedirs(model_path)
+        
             checkpoint = {'GR': glob_iter,
                         'model_state_dict': self.local_model.state_dict(),
                         'loss': self.minimum_test_loss
                         }
             torch.save(checkpoint, os.path.join(model_path, "best_local_checkpoint" + ".pt"))
+
+        
+    def evaluate_model(self, t, epoch):
+        self.local_model.eval()
+        total_loss=0.0
+
+        informativeness_gt = []
+        informativeness_pred = []
+        for i, vdata in enumerate(self.val_loader):
+            features, additional_information, information, informativeness, sharingOwner, sharingOthers = vdata
+            y_preds = self.local_model(features.to(self.device), additional_information.to(self.device))
+            loss = self.local_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
+            total_loss += loss.item()
+
+        avg_loss = total_loss / len(self.val_loader)
+
+        self.save_model(t, avg_loss)
+
+    def test_global_model_test(self, global_model):
+       
+        self.set_parameters(global_model)
+        self.local_model.eval()
+
+        results = []
+        for i, vdata in enumerate(self.test_loader):
+            vdata = [x.to('cuda') for x in vdata]
+            features, additional_info, information, informativeness, sharingOwner, sharingOthers = vdata
+            with torch.no_grad():
+                y_preds = self.local_model(features, additional_info)
+            results.append([information, informativeness, sharingOwner, sharingOthers, y_preds])
+
+            
+        output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+        threshold = 0.5
+        average_method = 'weighted'
+        metrics = [Accuracy, Precision, Recall, F1Score]
+        metrics_data = {}
+        for metric in metrics:
+            metrics_data[metric.__name__] = [metric(task="multilabel",
+                                                    num_labels=output_dim,
+                                                    threshold = threshold,
+                                                    average=average_method,
+                                                    ignore_index = output_dim - 1) \
+                                                    for i, (output_name, output_dim) in enumerate(output_channel.items())]
+        informativeness_scores = [[], []]
+
+        for result in results:
+            information, informativeness, sharingOwner, sharingOthers, y_preds = result
+            gt = [information, sharingOwner, sharingOthers]
+            output_dims = output_channel.values()
+            for o, (output_dim, gt) in enumerate(zip(output_dims, gt)):
+                start_dim = o*(output_dim)
+                end_dim = o*(output_dim)+output_dim
+                for metric_name in metrics_data.keys():
+                    metrics_data[metric_name][o].update(y_preds[:, start_dim:end_dim], gt)
+            informativeness_scores[0].extend(informativeness.detach().cpu().numpy().tolist())
+            informativeness_scores[1].extend(y_preds[:, 6].detach().cpu().numpy().tolist())
+        results_data = {}
+        for metric_name in metrics_data.keys():
+            results_data[metric_name] = [i.compute().detach().cpu().numpy() for i in metrics_data[metric_name]]
+
+        result_dict = { key: [float(val) for val in value] for key, value in results_data.items()}
+
+        
+        # print(result_dict)
+        
+
+        # for i, k in enumerate(output_channel.keys()):
+        #     for metric, values in results_data.items():
+        #         print("%.02f " % values[i], end="")
+
+        info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
+        print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
+
+        # Check if it's the first round (i.e., the result_round_dict is empty)
+        if not self.test_global_round_result_dict:
+        # Initialize by converting each list into a list of lists
+            self.test_global_round_result_dict = {k: [v] for k, v in result_dict.items()}
+            self.test_global_round_result_dict.update({ 'info_prec': [info_prec],
+                                            'info_rec': [info_rec],
+                                            'info_f1': [info_f1],
+                                            'info_cmae': [info_cmae],
+                                            'info_mae': [info_mae]})
+        else:
+        # Append new values to the existing lists
+            for k in result_dict:
+                self.test_round_result_dict[k].append(result_dict[k])
+            self.test_global_round_result_dict['info_prec'].append(info_prec)
+            self.test_global_round_result_dict['info_rec'].append(info_rec)
+            self.test_global_round_result_dict['info_f1'].append(info_f1)
+            self.test_global_round_result_dict['info_cmae'].append(info_cmae)
+            self.test_global_round_result_dict['info_mae'].append(info_mae)
+
+
+        return info_prec, info_rec, info_f1, info_cmae, info_mae, result_dict
+
+
+    def test_global_model_val(self, global_model):
+
+        self.set_parameters(global_model)
+        self.local_model.eval()
+
+        results = []
+        for i, vdata in enumerate(self.val_loader):
+            vdata = [x.to('cuda') for x in vdata]
+            features, additional_info, information, informativeness, sharingOwner, sharingOthers = vdata
+            with torch.no_grad():
+                y_preds = self.local_model(features, additional_info)
+            results.append([information, informativeness, sharingOwner, sharingOthers, y_preds])
+        
+        output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+        threshold = 0.5
+        average_method = 'weighted'
+        metrics = [Accuracy, Precision, Recall, F1Score]
+        metrics_data = {}
+        for metric in metrics:
+            metrics_data[metric.__name__] = [metric(task="multilabel",
+                                                    num_labels=output_dim,
+                                                    threshold = threshold,
+                                                    average=average_method,
+                                                    ignore_index = output_dim - 1) \
+                                                    for i, (output_name, output_dim) in enumerate(output_channel.items())]
+        informativeness_scores = [[], []]
+
+        for result in results:
+            information, informativeness, sharingOwner, sharingOthers, y_preds = result
+            gt = [information, sharingOwner, sharingOthers]
+            output_dims = output_channel.values()
+            for o, (output_dim, gt) in enumerate(zip(output_dims, gt)):
+                start_dim = o*(output_dim)
+                end_dim = o*(output_dim)+output_dim
+                for metric_name in metrics_data.keys():
+                    metrics_data[metric_name][o].update(y_preds[:, start_dim:end_dim], gt)
+            informativeness_scores[0].extend(informativeness.detach().cpu().numpy().tolist())
+            informativeness_scores[1].extend(y_preds[:, 6].detach().cpu().numpy().tolist())
+        results_data = {}
+        for metric_name in metrics_data.keys():
+            results_data[metric_name] = [i.compute().detach().cpu().numpy() for i in metrics_data[metric_name]]
+
+        result_dict = { key: [float(val) for val in value] for key, value in results_data.items()}
+
+        
+        info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
+        print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
+
+        # Check if it's the first round (i.e., the result_round_dict is empty)
+        if not self.val_global_round_result_dict:
+        # Initialize by converting each list into a list of lists
+            self.val_global_round_result_dict = {k: [v] for k, v in result_dict.items()}
+            self.val_global_round_result_dict.update({ 'info_prec': [info_prec],
+                                            'info_rec': [info_rec],
+                                            'info_f1': [info_f1],
+                                            'info_cmae': [info_cmae],
+                                            'info_mae': [info_mae]})
+        else:
+        # Append new values to the existing lists
+            for k in result_dict:
+                self.val_global_round_result_dict[k].append(result_dict[k])
+            self.val_global_round_result_dict['info_prec'].append(info_prec)
+            self.val_global_round_result_dict['info_rec'].append(info_rec)
+            self.val_global_round_result_dict['info_f1'].append(info_f1)
+            self.val_global_round_result_dict['info_cmae'].append(info_cmae)
+            self.val_global_round_result_dict['info_mae'].append(info_mae)
+
+
+        return info_prec, info_rec, info_f1, info_cmae, info_mae, result_dict    
+    
+
+
+
+
+
+    def test_local_model_test(self):
+       
+        self.local_model.eval()
+
+        results = []
+        for i, vdata in enumerate(self.test_loader):
+            vdata = [x.to('cuda') for x in vdata]
+            features, additional_info, information, informativeness, sharingOwner, sharingOthers = vdata
+            with torch.no_grad():
+                y_preds = self.local_model(features, additional_info)
+            results.append([information, informativeness, sharingOwner, sharingOthers, y_preds])
+
+            
+        output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+        threshold = 0.5
+        average_method = 'weighted'
+        metrics = [Accuracy, Precision, Recall, F1Score]
+        metrics_data = {}
+        for metric in metrics:
+            metrics_data[metric.__name__] = [metric(task="multilabel",
+                                                    num_labels=output_dim,
+                                                    threshold = threshold,
+                                                    average=average_method,
+                                                    ignore_index = output_dim - 1) \
+                                                    for i, (output_name, output_dim) in enumerate(output_channel.items())]
+        informativeness_scores = [[], []]
+
+        for result in results:
+            information, informativeness, sharingOwner, sharingOthers, y_preds = result
+            gt = [information, sharingOwner, sharingOthers]
+            output_dims = output_channel.values()
+            for o, (output_dim, gt) in enumerate(zip(output_dims, gt)):
+                start_dim = o*(output_dim)
+                end_dim = o*(output_dim)+output_dim
+                for metric_name in metrics_data.keys():
+                    metrics_data[metric_name][o].update(y_preds[:, start_dim:end_dim], gt)
+            informativeness_scores[0].extend(informativeness.detach().cpu().numpy().tolist())
+            informativeness_scores[1].extend(y_preds[:, 6].detach().cpu().numpy().tolist())
+        results_data = {}
+        for metric_name in metrics_data.keys():
+            results_data[metric_name] = [i.compute().detach().cpu().numpy() for i in metrics_data[metric_name]]
+
+        result_dict = { key: [float(val) for val in value] for key, value in results_data.items()}
+
+        
+        # print(result_dict)
+        
+
+        # for i, k in enumerate(output_channel.keys()):
+        #     for metric, values in results_data.items():
+        #         print("%.02f " % values[i], end="")
+
+        info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
+        print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
+
+        # Check if it's the first round (i.e., the result_round_dict is empty)
+        if not self.test_round_result_dict:
+        # Initialize by converting each list into a list of lists
+            self.test_round_result_dict = {k: [v] for k, v in result_dict.items()}
+            self.test_round_result_dict.update({ 'info_prec': [info_prec],
+                                            'info_rec': [info_rec],
+                                            'info_f1': [info_f1],
+                                            'info_cmae': [info_cmae],
+                                            'info_mae': [info_mae]})
+        else:
+        # Append new values to the existing lists
+            for k in result_dict:
+                self.test_round_result_dict[k].append(result_dict[k])
+            self.test_round_result_dict['info_prec'].append(info_prec)
+            self.test_round_result_dict['info_rec'].append(info_rec)
+            self.test_round_result_dict['info_f1'].append(info_f1)
+            self.test_round_result_dict['info_cmae'].append(info_cmae)
+            self.test_round_result_dict['info_mae'].append(info_mae)
+
+
+        return info_prec, info_rec, info_f1, info_cmae, info_mae, result_dict
+
+
+    def test_local_model_val(self):
+      
+        self.local_model.eval()
+
+        results = []
+        for i, vdata in enumerate(self.val_loader):
+            vdata = [x.to('cuda') for x in vdata]
+            features, additional_info, information, informativeness, sharingOwner, sharingOthers = vdata
+            with torch.no_grad():
+                y_preds = self.local_model(features, additional_info)
+            results.append([information, informativeness, sharingOwner, sharingOthers, y_preds])
+        
+        output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}
+        threshold = 0.5
+        average_method = 'weighted'
+        metrics = [Accuracy, Precision, Recall, F1Score]
+        metrics_data = {}
+        for metric in metrics:
+            metrics_data[metric.__name__] = [metric(task="multilabel",
+                                                    num_labels=output_dim,
+                                                    threshold = threshold,
+                                                    average=average_method,
+                                                    ignore_index = output_dim - 1) \
+                                                    for i, (output_name, output_dim) in enumerate(output_channel.items())]
+        informativeness_scores = [[], []]
+
+        for result in results:
+            information, informativeness, sharingOwner, sharingOthers, y_preds = result
+            gt = [information, sharingOwner, sharingOthers]
+            output_dims = output_channel.values()
+            for o, (output_dim, gt) in enumerate(zip(output_dims, gt)):
+                start_dim = o*(output_dim)
+                end_dim = o*(output_dim)+output_dim
+                for metric_name in metrics_data.keys():
+                    metrics_data[metric_name][o].update(y_preds[:, start_dim:end_dim], gt)
+            informativeness_scores[0].extend(informativeness.detach().cpu().numpy().tolist())
+            informativeness_scores[1].extend(y_preds[:, 6].detach().cpu().numpy().tolist())
+        results_data = {}
+        for metric_name in metrics_data.keys():
+            results_data[metric_name] = [i.compute().detach().cpu().numpy() for i in metrics_data[metric_name]]
+
+        result_dict = { key: [float(val) for val in value] for key, value in results_data.items()}
+
+        
+        info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
+        print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
+
+        # Check if it's the first round (i.e., the result_round_dict is empty)
+        if not self.val_round_result_dict:
+        # Initialize by converting each list into a list of lists
+            self.val_round_result_dict = {k: [v] for k, v in result_dict.items()}
+            self.val_round_result_dict.update({ 'info_prec': [info_prec],
+                                            'info_rec': [info_rec],
+                                            'info_f1': [info_f1],
+                                            'info_cmae': [info_cmae],
+                                            'info_mae': [info_mae]})
+        else:
+        # Append new values to the existing lists
+            for k in result_dict:
+                self.val_round_result_dict[k].append(result_dict[k])
+            self.val_round_result_dict['info_prec'].append(info_prec)
+            self.val_round_result_dict['info_rec'].append(info_rec)
+            self.val_round_result_dict['info_f1'].append(info_f1)
+            self.val_round_result_dict['info_cmae'].append(info_cmae)
+            self.val_round_result_dict['info_mae'].append(info_mae)
+
+
+        return info_prec, info_rec, info_f1, info_cmae, info_mae, result_dict    
+
             
     def train(self, t):
         
