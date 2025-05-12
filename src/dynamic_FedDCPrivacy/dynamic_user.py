@@ -35,11 +35,12 @@ class User():
         self.exp_no = exp_no
         self.current_directory = current_directory
         self.num_glob_iters = args.num_global_iters
-        self.delta=args.delta
-        self.kappa=args.kappa
-        self.lamda=args.lamda_sim_sta
+        self.delta=args.delta    
+        self.kappa=args.kappa    
+        self.lamda=args.lamda_sim_sta  ##tradeoff between similarity and stability
         self.send_to_server=0
         self.flag=0
+        self.cluster_number = args.num_teams
         """
         Hyperparameters
         """
@@ -383,12 +384,24 @@ class User():
         self.save_rl_model(t, avg_loss, rl_user)
 
     def save_rl_model(self, glob_iter, current_loss, rl_user):
-        if glob_iter == rl_user.num_glob_iters-1:
-            model_path = rl_user.current_directory + "/models/" + rl_user.algorithm + "/local_model/" + str(rl_user.id) + "/"  + "delta_" + str(rl_user.delta) + "_kappa_" + str(rl_user.kappa) + "_lambda_" + str(rl_user.lamda) + "_GE_" + str(rl_user.num_glob_iters) + "_LE_" + str(rl_user.local_iters)
-            #model_path = self.current_directory + "/models/FedMEM" + "/local_model/" + str(self.id) + "/"  + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters)
+      
+        model_dir = os.path.join( rl_user.current_directory,
+                                 "models",
+                                 rl_user.algorithm,
+                                 "local_model",
+                                 str(rl_user.id),
+                                 "cluster_" + str(rl_user.cluster_number)
+                                 )
+
+        model_filename = f"delta_{rl_user.delta}_kappa_{rl_user.kappa}_lambda_{rl_user.lamda}_GE_{rl_user.num_glob_iters}_LE_{rl_user.local_iters}"
+
+        model_path = os.path.join(model_dir, model_filename)
+
+
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
             
-            if not os.path.exists(model_path):
-                os.makedirs(model_path)
+        if glob_iter == rl_user.num_glob_iters-1:
             checkpoint = {'GR': glob_iter,
                         'model_state_dict': rl_user.local_model.state_dict(),
                         'loss': rl_user.minimum_test_loss
@@ -400,11 +413,7 @@ class User():
                 self.send_to_server+=1
                 self.flag = 1
             self.minimum_test_loss = current_loss
-            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) 
-            #model_path = self.current_directory + "/models/FedMEM" + "/local_model/" + str(self.id) + "/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) 
             
-            if not os.path.exists(model_path):
-                os.makedirs(model_path)
             checkpoint = {'GR': glob_iter,
                         'model_state_dict': self.local_model.state_dict(),
                         'loss': self.minimum_test_loss
@@ -434,12 +443,28 @@ class User():
         self.save_model(t,epoch, avg_loss)
 
     def save_model(self, glob_iter, epoch, current_loss):
-        if glob_iter == self.num_glob_iters-1:
-            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/"  + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters)
-            #model_path = self.current_directory + "/models/FedMEM" + "/local_model/" + str(self.id) + "/"  + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters)
+        model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/CFedDC_rl1_C3/" + str(self.id) + "/"  + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters)
             
-            if not os.path.exists(model_path):
-                os.makedirs(model_path)
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+            
+        model_dir = os.path.join( self.current_directory, 
+                                 "models",
+                                 self.algorithm,
+                                 "local_model",
+                                 str(self.id),
+                                 "cluster_" + str(self.cluster_number)
+            )
+
+        model_subdir = f"delta_{self.delta}_kappa_{self.kappa}_lambda_{self.lamda}_GE_{self.num_glob_iters}_LE_{self.local_iters}"
+        model_path = os.path.join(model_dir, model_subdir)
+
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+
+
+
+        if glob_iter == self.num_glob_iters-1:
             checkpoint = {'GR': glob_iter,
                         'model_state_dict': self.local_model.state_dict(),
                         'loss': self.minimum_test_loss
@@ -451,11 +476,7 @@ class User():
                 self.send_to_server+=1
                 self.flag = 1
             self.minimum_test_loss = current_loss
-            model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/" + str(self.id) + "/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) 
-            #model_path = self.current_directory + "/models/FedMEM" + "/local_model/" + str(self.id) + "/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) 
-            
-            if not os.path.exists(model_path):
-                os.makedirs(model_path)
+
             checkpoint = {'GR': glob_iter,
                         'model_state_dict': self.local_model.state_dict(),
                         'loss': self.minimum_test_loss

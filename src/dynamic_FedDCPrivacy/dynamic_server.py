@@ -44,7 +44,7 @@ class Server():
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
-            self.user_ids = args.user_ids[3]
+            self.user_ids = args.user_ids[3][:30]
         else:
             self.user_ids = args.user_ids[2]
         
@@ -652,7 +652,7 @@ class Server():
                 # print(f"rf_users_in_cluster : {rf_users_in_cluster}")
                 # rl_to_rf_selections[rl_user.id] = rf_users_in_cluster[:2] if rf_users_in_cluster else None
                 if rf_users_in_cluster:
-                    self.rl_to_rf_selections[rl_user.id] = random.sample(rf_users_in_cluster, min(2, len(rf_users_in_cluster)))
+                    self.rl_to_rf_selections[rl_user.id] = random.sample(rf_users_in_cluster, min(1, len(rf_users_in_cluster)))
                 else:
                     self.rl_to_rf_selections[rl_user.id] = None
 
@@ -691,9 +691,11 @@ class Server():
                 user_cat = "Resourceless user"
 
             user_id = str(user.id)
-            val_json_path = f"results/client_level/val/user_{user_id}_val_round_results.json"
-            test_json_path = f"results/client_level/test/user_{user_id}_test_round_results.json"
+            val_json_path = f"results/client_level/CFedDC_rl1_C3/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/CFedDC_rl1_C3/local_test/user_{user_id}_test_round_results.json"
 
+            os.makedirs(os.path.dirname(val_json_path), exist_ok=True)
+            os.makedirs(os.path.dirname(test_json_path), exist_ok=True)
             print(f"Saving to {val_json_path} (Category: {user_cat})")
             print(f"Saving to {test_json_path} (Category: {user_cat})")
 
@@ -749,14 +751,11 @@ class Server():
             
             for user in tqdm(self.selected_rf_users, desc=f"selected users from resourceful {len(self.selected_rf_users)}"):
                 clust_id = self.find_cluster_id(user.id)
-                # print(f"clust_id : {clust_id}")
 
                 if clust_id is not None:
-                    # user.flag = 0
                     user.train(self.c[clust_id],t)
                     
                 else:
-                    # user.flag = 0
                     user.train(self.global_model.parameters(),t)
 
             # for user in tqdm(self.selected_rl_users, desc=f"total selected users  from resourceless {len(self.selected_rl_users)}"):
