@@ -136,7 +136,7 @@ class Fedmem():
         for clust_id in range(self.num_teams):
             users = np.array(self.cluster_dict[clust_id])
             users_id = np.array(self.cluster_dict_user_id[clust_id])
-            print(f"cluster {clust_id} model has been sent to {len(users_id)} users {users_id}")
+            # print(f"cluster {clust_id} model has been sent to {len(users_id)} users {users_id}")
             """if len(users) != 0:
                 for param in self.c[clust_id]:
                     print(f" cluster {clust_id} parameters :{param.data}")
@@ -184,7 +184,7 @@ class Fedmem():
 
     def select_n_1_users(self, round, subset_users):
         # Filter out the permanent user from the list of users
-        print(f"fixed client : {self.fixed_user.id}")
+        # print(f"fixed client : {self.fixed_user.id}")
         filtered_users = [user for user in self.users if user != self.fixed_user]
     
         # Set the random seed for reproducibility
@@ -372,7 +372,7 @@ class Fedmem():
                         }
             torch.save(checkpoint, os.path.join(model_path, "best_server_checkpoint" + ".pt"))
         cluster_path = self.current_directory + "/models/" + self.algorithm + "/global_model/"
-        print(f"cluster path :", cluster_path)
+        # print(f"cluster path :", cluster_path)
         if not os.path.exists(cluster_path):
             os.makedirs(cluster_path)
         with open(os.path.join(cluster_path, self.cluster_save_path), 'wb') as handle:
@@ -409,10 +409,10 @@ class Fedmem():
         self.local_train_distance.append(avg_distance)
         self.local_train_mae.append(avg_mae)
 
-        print(f"Global round {t} Local :: Train ::")           
-        print(f"Train loss {avg_loss} avg distance {avg_distance}") 
-        print(f"Train Performance metric : {average_dict}")
-        print(f"Train global mae : {avg_mae}")
+        # print(f"Global round {t} Local :: Train ::")           
+        # print(f"Train loss {avg_loss} avg distance {avg_distance}") 
+        # print(f"Train Performance metric : {average_dict}")
+        # print(f"Train global mae : {avg_mae}")
 
 
 
@@ -445,10 +445,10 @@ class Fedmem():
         self.local_test_distance.append(avg_distance)
         self.local_test_mae.append(avg_mae)
 
-        print(f"Global round {t} Local :: Test ::")           
-        print(f"test loss {avg_loss} avg distance {avg_distance}") 
-        print(f"test Performance metric : {average_dict}")
-        print(f"test global mae : {avg_mae}")
+        # print(f"Global round {t} Local :: Test ::")           
+        # print(f"test loss {avg_loss} avg distance {avg_distance}") 
+        # print(f"test Performance metric : {average_dict}")
+        # print(f"test global mae : {avg_mae}")
 
     def eval_train(self, t):
         avg_loss = 0.0
@@ -472,9 +472,9 @@ class Fedmem():
         self.global_train_mae.append(avg_mae)
 
                     
-        print(f"Global round {t} Global Train loss {avg_loss} avg distance {avg_distance}") 
-        print(f"Train Performance metric : {average_dict}")
-        print(f"Train global mae : {avg_mae}")
+        # print(f"Global round {t} Global Train loss {avg_loss} avg distance {avg_distance}") 
+        # print(f"Train Performance metric : {average_dict}")
+        # print(f"Train global mae : {avg_mae}")
 
 
 
@@ -508,18 +508,38 @@ class Fedmem():
         self.global_test_mae.append(avg_mae)
             
                     
-        print(f"Global round {t} Global Test loss {avg_loss} avg distance {avg_distance}") 
-        print(f"Test Performance metric : {average_dict}")
-        print(f"Test global mae : {avg_mae}")
+        # print(f"Global round {t} Global Test loss {avg_loss} avg distance {avg_distance}") 
+        # print(f"Test Performance metric : {average_dict}")
+        # print(f"Test global mae : {avg_mae}")
 
 
     def evaluate(self, t):
         self.eval_test(t)
         self.eval_train(t)
 
-    def evaluate_local(self, t):
+    """def evaluate_local(self, t):
         self.eval_test_local(t)
-        self.eval_train_local(t)
+        self.eval_train_local(t)"""
+    
+    def evaluate_local(self, t):
+        val_avg_mae = 0.0
+        val_avg_cmae = 0.0
+        test_avg_mae = 0.0
+        test_avg_cmae = 0.0
+        for c in self.users:
+            info_prec, info_rec, info_f1, info_cmae, info_mae, result_dict = c.test_local_model_val()
+            test_info_prec, test_info_rec, test_info_f1, test_info_cmae, test_info_mae, test_result_dict = c.test_local_model_test()
+            
+            # print(f"info_prec {info_prec}, info_rec {info_rec}, info_f1 {info_f1}, info_cmae {info_cmae}, info_mae {info_mae}")
+            
+            val_avg_mae += (1/len(self.selected_users))*info_mae
+            val_avg_cmae += (1/len(self.selected_users))*info_cmae
+            test_avg_mae += (1/len(self.selected_users))*test_info_mae
+            test_avg_cmae += (1/len(self.selected_users))*test_info_cmae
+        
+        print(f"\033[92m\n Global round {t} : Local val cmae {val_avg_cmae} Local val mae : {val_avg_mae} \n\033[0m")   # Green
+        print(f"\033[93m\n Global round {t} : Local Test cmae {test_avg_cmae} Local Test mae : {test_avg_mae} \n\033[0m")  # Yellow
+
 
 
     
@@ -528,24 +548,80 @@ class Fedmem():
             if user_id in values:
                 return key
         return None
+    
+    def convert_numpy(self, obj):
+        if isinstance(obj, (np.integer, np.floating)):
+            return obj.item()
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+    
+    def save_local_results(self):
+        for user in self.users:
+            val_dict = user.val_round_result_dict
+            test_dict = user.test_round_result_dict
+            """if user in self.selected_rf_users:
+                user_cat = "Resourceful user"
+            else:
+                user_cat = "Resourceless user"
+            """
+            user_id = str(user.id)
+            ####### Cluster ablation 
+            # val_json_path = f"results/client_level/CFedDC_rl1_C{self.n_clusters}/local_val/user_{user_id}_val_round_results.json"
+            # test_json_path = f"results/client_level/CFedDC_rl1_C{self.n_clusters}/local_test/user_{user_id}_test_round_results.json"
+            ####### kappa and delta ablation
+            val_json_path = f"results/client_level/FedMEM_{self.lambda_1}_kappa_{self.lambda_2}/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/FedMEM_{self.lambda_1}_kappa_{self.lambda_2}/local_test/user_{user_id}_test_round_results.json"
+            os.makedirs(os.path.dirname(val_json_path), exist_ok=True)
+            os.makedirs(os.path.dirname(test_json_path), exist_ok=True)
+            # print(f"Saving to {val_json_path} (Category: {user_cat})")
+            # print(f"Saving to {test_json_path} (Category: {user_cat})")
+
+
+            # Combine resource category and val_dict into one JSON object
+            val_full_output = {
+              #  "resource_category": user_cat,
+                "validation_results": val_dict
+            }
+
+            test_full_output = {
+              #  "resource_category": user_cat,
+                "validation_results": test_dict
+            }
+
+            # Ensure the parent folder exists
+            os.makedirs(os.path.dirname(val_json_path), exist_ok=True)
+            os.makedirs(os.path.dirname(test_json_path), exist_ok=True)
+
+
+            # Save to JSON file (overwrite if it exists)
+            with open(val_json_path, 'w') as f:
+                json.dump(val_full_output, f, indent=2, default=self.convert_numpy)
+            # Save to JSON file (overwrite if it exists)
+            with open(test_json_path, 'w') as f:
+                json.dump(test_full_output, f, indent=2, default=self.convert_numpy)
+
+
 
 
     def train(self):
         loss = []
         
         for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} cluster type : {self.cluster_type} number of clients: {self.num_users} Global Rounds :"):
+
+            
             self.samples = 0.0
             self.selected_users = self.select_users(t, int(self.num_users)).tolist()
             list_user_id = []
             for user in self.selected_users:
                 list_user_id.append(user.id)
                 self.samples += user.train_samples
-            print(f"selected users : {list_user_id}")
+            # print(f"selected users : {list_user_id}")
             
             
             for user in tqdm(self.selected_users, desc=f"total selected users {len(self.selected_users)}"):
                 clust_id = self.find_cluster_id(user.id)
-                print(f"clust_id : {clust_id}")
+                # print(f"clust_id : {clust_id}")
                 if clust_id is not None:
                     user.train(self.c[clust_id],t)
                 else:
@@ -553,15 +629,16 @@ class Fedmem():
 
             similarity_matrix = self.similarity_check()
             clusters = self.spectral(similarity_matrix, self.n_clusters).tolist()
-            print(clusters)
+            print(f"Global round {t} clusters : {clusters}")
             self.combine_cluster_user(clusters)
             # self.save_clusters(t)
             
             self.aggregate_clusterhead()
             self.global_update()
 
-            #self.evaluate_localmodel(t)
-            #self.evaluate(t)
+            self.evaluate_local(t)
+            # self.evaluate(t)
+        self.save_local_results()
         
     def test(self):
         output_channel = {'informationType': 6, 'sharingOwner': 7, 'sharingOthers': 7}

@@ -204,7 +204,11 @@ class User():
         # models_dir = "./models/dynamic_FedDcprivacy/global_model/delta_1.0_kappa_1.0_GE_25_LE_2"
         # model_state_dict = torch.load(os.path.join(models_dir, "delta_0.1_kappa_0.1", "server_checkpoint_GR19.pt"))["model_state_dict"]
 
-        models_dir = "./models/dynamic_FedDcprivacy/local_model/" + str(self.id) + "/delta_1.0_kappa_1.0_lambda_0.3_GE_5_LE_10"
+        # models_dir = "./models/dynamic_FedDcprivacy/local_model/" + str(self.id) + "/delta_1.0_kappa_1.0_lambda_0.3_GE_5_LE_10"
+        #####  Cluster ablation
+        # models_dir = f"./models/dynamic_FedDcprivacy/local_model/cluster_{self.cluster_number}/{self.id}/delta_1.0_kappa_1.0_lambda_0.3_GE_5_LE_10"
+        # kappa delta ablation
+        models_dir = f"./models/dynamic_FedDcprivacy/local_model/cluster_{self.cluster_number}/{self.id}/delta_1.0_kappa_1.0_lambda_0.5_GE_50_LE_1"
         # models_dir = "./models/FedMEM/local_model/" + str(71) + "/delta_1.0_kappa_1.0_lambda_0.5_GE_50_LE_1"
         
         # model_path = os.path.join(models_dir, str(self.id), "delta_%s_kappa_%s" % (self.delta, self.kappa), "local_checkpoint_GR19.pt")
@@ -443,8 +447,9 @@ class User():
         self.save_model(t,epoch, avg_loss)
 
     def save_model(self, glob_iter, epoch, current_loss):
-        model_path = self.current_directory + "/models/" + self.algorithm + "/local_model/CFedDC_rl1_C3/" + str(self.id) + "/"  + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_lambda_" + str(self.lamda) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters)
             
+        model_path = ( f"{self.current_directory}/models/{self.algorithm}/local_model/CFedDC_rl1_C{self.cluster_number}/{self.id}/delta_{self.delta}_kappa_{self.kappa}_lambda_{self.lamda}_GE_{self.num_glob_iters}_LE_{self.local_iters}"
+)
         if not os.path.exists(model_path):
             os.makedirs(model_path)
             

@@ -37,6 +37,7 @@ class Server():
         self.gamma=args.gamma
         self.lambda_1=args.lambda_1
         self.lambda_2=args.lambda_2
+        self.lamda=args.lamda_sim_sta
 
         self.country = args.country
         if args.country == "japan":
@@ -44,7 +45,7 @@ class Server():
         elif args.country == "uk":
             self.user_ids = args.user_ids[1]
         elif args.country == "both":
-            self.user_ids = args.user_ids[3][:30]
+            self.user_ids = args.user_ids[3]
         else:
             self.user_ids = args.user_ids[2]
         
@@ -138,7 +139,7 @@ class Server():
         self.total_users = len(self.users) 
         self.num_users = self.total_users * args.users_frac    #selected users
         
-        print("Total Users Present :", self.total_users)
+        ("Total Users Present :", self.total_users)
 
         self.global_model = copy.deepcopy(self.users[0].local_model)
         self.cluster_model = copy.deepcopy(self.global_model)
@@ -220,7 +221,7 @@ class Server():
    
     def save_global_model(self, glob_iter, current_loss):
         if glob_iter == self.num_glob_iters-1:
-            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/cluster_" + str(self.n_clusters) + "_delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
             #model_path = self.current_directory + "/models/FedMEM"  + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
             
             if not os.path.exists(model_path):
@@ -691,9 +692,12 @@ class Server():
                 user_cat = "Resourceless user"
 
             user_id = str(user.id)
-            val_json_path = f"results/client_level/CFedDC_rl1_C3/local_val/user_{user_id}_val_round_results.json"
-            test_json_path = f"results/client_level/CFedDC_rl1_C3/local_test/user_{user_id}_test_round_results.json"
-
+            ####### Cluster ablation 
+            # val_json_path = f"results/client_level/CFedDC_rl1_C{self.n_clusters}/local_val/user_{user_id}_val_round_results.json"
+            # test_json_path = f"results/client_level/CFedDC_rl1_C{self.n_clusters}/local_test/user_{user_id}_test_round_results.json"
+            ####### kappa and delta ablation
+            val_json_path = f"results/client_level/CFedDC_lambda_{self.lamda}_kappa_{self.kappa}_delta_{self.delta}/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/CFedDC_lambda_{self.lamda}_kappa_{self.kappa}_delta_{self.delta}/local_test/user_{user_id}_test_round_results.json"
             os.makedirs(os.path.dirname(val_json_path), exist_ok=True)
             os.makedirs(os.path.dirname(test_json_path), exist_ok=True)
             print(f"Saving to {val_json_path} (Category: {user_cat})")
@@ -863,6 +867,8 @@ class Server():
             self.aggregate_clusterhead()
             # self.evaluate_cluster(t)
             self.global_update()
+
+            print(f"cluster_dict of global round {t}: {self.cluster_dict}")
             # self.evaluate_global(t)
         self.save_local_results()
            
@@ -938,7 +944,7 @@ class Server():
         
         # Iterate over each user and evaluate
         for user in self.users:
-            print(f"User ID: {user.id}")  # Assuming each user object has an 'id' attribute
+            #print(f"User ID: {user.id}")  # Assuming each user object has an 'id' attribute
             results = user.test_eval()  # Get the evaluation results for the user
             
             # Iterate through the results
