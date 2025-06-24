@@ -4,7 +4,7 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--algorithm", type=str, default="Fedmem",
+    parser.add_argument("--algorithm", type=str, default="FedDcprivacy_KT_RL",
                         choices=["FedAvg",
                                 "Fedmem", 
                                 "FedProx", 
@@ -13,15 +13,16 @@ def args_parser():
                                 "Clustered_FedDC", 
                                 "dynamic_FedDcprivacy", 
                                 "apriori_FedDcprivacy", 
-                                "ClusteredFedRep"])
+                                "ClusteredFedRep",
+                                "FedDcprivacy_KT_RL"])
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--num_teams", type=int, default=2)
-    parser.add_argument("--lamda_sim_sta", type=float, default=0.5, help="hyperparameter for similarity and stability in CFedDC and FedProx")
+    parser.add_argument("--lamda_sim_sta", type=float, default=0, help="hyperparameter for similarity and stability in CFedDC and FedProx")
     parser.add_argument("--gamma", type=float, default=1.0)
-    parser.add_argument("--lambda_1", type=float, default=0.5, 
-                        help="Regularization term lambda_1")
-    parser.add_argument("--lambda_2", type=float, default=0.5, 
-                        help="Regularization term lambda_2")
+    parser.add_argument("--lambda_1", type=float, default=0.1, 
+                        help="Regularization term lambda_1/ lambda_min")
+    parser.add_argument("--lambda_2", type=float, default=0.9, 
+                        help="Regularization term lambda_2/ lamnbda_max")
     parser.add_argument("--cluster", type = str, default="dynamic", choices=["apriori_hsgd", "dynamic", "apriori"])
     parser.add_argument("--users_frac", type=float, default=1.0)
     

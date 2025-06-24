@@ -35,8 +35,8 @@ class Server():
         self.kappa = args.kappa
         self.delta = args.delta
         self.gamma=args.gamma
-        self.lambda_1=args.lambda_1
-        self.lambda_2=args.lambda_2
+        self.lambda_min=args.lambda_1
+        self.lambda_max=args.lambda_2
         self.lamda=args.lamda_sim_sta
 
         self.country = args.country
@@ -460,31 +460,9 @@ class Server():
             params.append(param.view(-1))
         return torch.cat(params)
     
-    def find_similarity(self, similarity_metric, params1, params2, params_g, params_c):
-                            
-        if similarity_metric == "cosign similarity":
-            similarity = torch.nn.functional.cosine_similarity(params1.unsqueeze(0), params2.unsqueeze(0))
-        elif similarity_metric == "euclidian":
-            similarity_u =  torch.exp(-self.gamma * torch.sqrt(torch.sum((params1 - params2) ** 2)))
-            similarity_g =  torch.exp(-self.gamma * torch.sqrt(torch.sum((params1 + params2 - 2* params_g) ** 2)))
-            similarity_c = torch.exp(-self.gamma * torch.sqrt(torch.sum((params1 + params2 - 2*params_c) ** 2)))
-            
-            similarity = (1-self.lambda_1 - self.lambda_2)*similarity_u + self.lambda_1*similarity_g + self.lambda_2*similarity_c
-            # print(f"similarity_u : {similarity_u}, similarity_g : {similarity_g}, similarity : {similarity}")
-            # print("RBF: ",similarity.item())
+    
 
-            #simi = torch.sqrt(torch.sum((params1 - params2) ** 2))
-
-            
-        elif similarity_metric == "manhattan":
-            similarity = torch.sum(torch.abs(params1 - params2))
-        elif similarity_metric == "pearson_correlation":
-            similarity = self.pearson_correlation(params1, params2)
-
-        return similarity
-
-
-    def similarity_check(self):
+    """def similarity_check(self):
         clust_id = 0
         similarity_matrix = {}
         # similarity_metric = "manhattan"
@@ -524,7 +502,7 @@ class Server():
                 
         
         return similarity_matrix
-
+"""
     def reassign_to_new_cluster(self, key, value):
         found_key = None
         # print(f"client_id : {value.id}")
@@ -696,8 +674,8 @@ class Server():
             # val_json_path = f"results/client_level/CFedDC_rl1_C{self.n_clusters}/local_val/user_{user_id}_val_round_results.json"
             # test_json_path = f"results/client_level/CFedDC_rl1_C{self.n_clusters}/local_test/user_{user_id}_test_round_results.json"
             ####### kappa and delta ablation
-            val_json_path = f"results/client_level/CFedDC_lambda_{self.lamda}_kappa_{self.kappa}_delta_{self.delta}/local_val/user_{user_id}_val_round_results.json"
-            test_json_path = f"results/client_level/CFedDC_lambda_{self.lamda}_kappa_{self.kappa}_delta_{self.delta}/local_test/user_{user_id}_test_round_results.json"
+            val_json_path = f"results/client_level/CFedDC_lambda_min_{self.lambda_min}_lambda_max_{self.lambda_max}_kappa_{self.kappa}_delta_{self.delta}/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/CFedDC_lambda_min_{self.lambda_min}_lambda_max_{self.lambda_max}_kappa_{self.kappa}_delta_{self.delta}/local_test/user_{user_id}_test_round_results.json"
             os.makedirs(os.path.dirname(val_json_path), exist_ok=True)
             os.makedirs(os.path.dirname(test_json_path), exist_ok=True)
             print(f"Saving to {val_json_path} (Category: {user_cat})")

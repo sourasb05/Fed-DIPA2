@@ -9,6 +9,7 @@ from src.Siloed.SiloedServer import Siloedserver
 from src.ClusteredFedDC.clustered_server import C_server
 from src.apriori_FedDCPrivacy.server import Server as AprioriFedDCServer
 from src.FedProx.FedProxServer import FedProxServer
+from src.FedDCPrivacy_KT_RL.dynamic_server_KT import FedDCPrivacy_KT_RL_Server
 #from src.ClusteredFedRep.server import ClusteredFedRepServer
 
 from src.TrainModels.trainmodels import *
@@ -44,6 +45,8 @@ def main(args):
                 server = C_server(device, args, i, current_directory)
             elif args.algorithm == "apriori_FedDcprivacy":
                 server = AprioriFedDCServer(device, args, i, current_directory)
+            elif args.algorithm == "FedDcprivacy_KT_RL":
+                server = FedDCPrivacy_KT_RL_Server(device, args, i, current_directory)
             #elif args.algorithm == "ClusteredFedRep":
             #    server = ClusteredFedRepServer(device, args, i, current_directory)
 

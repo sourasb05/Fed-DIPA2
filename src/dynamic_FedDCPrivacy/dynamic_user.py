@@ -36,11 +36,14 @@ class User():
         self.current_directory = current_directory
         self.num_glob_iters = args.num_global_iters
         self.delta=args.delta    
-        self.kappa=args.kappa    
+        self.kappa=args.kappa
+        self.lambda_min=args.lambda_1
+        self.lambda_max=args.lambda_2    
         self.lamda=args.lamda_sim_sta  ##tradeoff between similarity and stability
         self.send_to_server=0
         self.flag=0
         self.cluster_number = args.num_teams
+        self.T = args.num_global_iters
         """
         Hyperparameters
         """
@@ -536,6 +539,7 @@ class User():
                 loss1 = self.calculate_similarity(cluster_model)
                 loss2 = self.calculate_stability()
                 self.set_parameters_old()
+                self.lamda = self.lambda_min + (self.lambda_max - self.lambda_min)*(t/self.T)
                 loss = loss + self.lamda*loss1 + (1-self.lamda)*loss2
                 loss.backward()
                 self.optimizer.step()
