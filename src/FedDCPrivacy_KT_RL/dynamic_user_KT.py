@@ -912,7 +912,7 @@ class FedDCPrivacy_KT_RL_User():
         #         print("%.02f " % values[i], end="")
 
         info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
-        print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
+        # print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
 
         # Check if it's the first round (i.e., the result_round_dict is empty)
         if not self.test_round_result_dict:
@@ -982,7 +982,7 @@ class FedDCPrivacy_KT_RL_User():
 
         
         info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
-        print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
+        # print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
 
         # Check if it's the first round (i.e., the result_round_dict is empty)
         if not self.val_round_result_dict:

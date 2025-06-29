@@ -674,12 +674,12 @@ class FedDCPrivacy_KT_RL_Server():
             # val_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/local_val/user_{user_id}_val_round_results.json"
             # test_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/local_test/user_{user_id}_test_round_results.json"
             ####### kappa and delta ablation
-            # val_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_lambda_min_{self.lambda_min}_lambda_max_{self.lambda_max}_kappa_{self.kappa}_delta_{self.delta}/local_val/user_{user_id}_val_round_results.json"
-            # test_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_lambda_min_{self.lambda_min}_lambda_max_{self.lambda_max}_kappa_{self.kappa}_delta_{self.delta}/local_test/user_{user_id}_test_round_results.json"
+            val_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_lambda_min_{self.lambda_min}_lambda_max_{self.lambda_max}_kappa_{self.kappa}_delta_{self.delta}_{self.num_glob_iters}/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_lambda_min_{self.lambda_min}_lambda_max_{self.lambda_max}_kappa_{self.kappa}_delta_{self.delta}_{self.num_glob_iters}/local_test/user_{user_id}_test_round_results.json"
             ###### Without consensus and inertia regularization
 
-            val_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_no_lambda_kappa_{self.kappa}_delta_{self.delta}/local_val/user_{user_id}_val_round_results.json"
-            test_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_no_lambda_kappa_{self.kappa}_delta_{self.delta}/local_test/user_{user_id}_test_round_results.json"
+            # val_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_no_lambda_kappa_{self.kappa}_delta_{self.delta}/local_val/user_{user_id}_val_round_results.json"
+            # test_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_no_lambda_kappa_{self.kappa}_delta_{self.delta}/local_test/user_{user_id}_test_round_results.json"
             
             
             os.makedirs(os.path.dirname(val_json_path), exist_ok=True)

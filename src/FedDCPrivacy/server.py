@@ -12,7 +12,7 @@ import sys
 import wandb
 import datetime
 import json
-
+import sys
 from torchmetrics import Precision, Recall, F1Score
 from src.utils.results_utils import InformativenessMetrics
 
@@ -46,7 +46,6 @@ class Server():
         self.exp_no = exp_no
         self.current_directory = current_directory
         self.algorithm = args.algorithm
-        self.fix_client_every_GR = args.fix_client_every_GR
 
 
         self.global_metric = []
@@ -104,48 +103,7 @@ class Server():
 
         self.global_model = copy.deepcopy(self.users[0].local_model)
 
-    
-        for user in self.users:
-                
-            self.data_frac.append([user, user.id, user.samples/self.total_samples])
-            # print(f"data available {self.data_frac}")
-
-            # Step 2: Sort the list in descending order
-            self.data_frac = sorted(self.data_frac, key=lambda x: x[2], reverse=True)
-            # print(self.data_frac)
             
-            resourceful = []
-            cum_sum = 0.0
-            for value in self.data_frac:
-                # print(value[2])
-                cum_sum += value[2]
-                resourceful.append(value[0])
-
-                if cum_sum >= 0.5:
-                    break
-            
-            resourceless = [x for x in self.users if x not in resourceful]
-            
-            # print(len(resourceful))
-            # print(len(resourceless))
-
-       # print(resourceful)
-       # print(resourceless)
-        self.participated_rf_clients = self.kappa*len(resourceful)  #selected resourceful users
-        self.participated_rl_clients = self.delta*len(resourceless) #selected resourceful users
-        self.num_users = self.participated_rf_clients + self.participated_rl_clients
-
-        # cluster formation
-        self.clusters = [resourceful, resourceless] 
-       # print(self.clusters)
-        
-
-        for user in self.clusters[0]:
-            self.data_in_cluster[0] += user.samples
-            
-        for user in self.clusters[1]:
-            self.data_in_cluster[1] += user.samples
-        
     def __del__(self):
         self.wandb.finish()
         
@@ -171,16 +129,9 @@ class Server():
             self.add_parameters(user, user.train_samples / total_train)
 
             
-    def select_users(self, round, switch, num_subset_users):
-        if switch == 0:
-            np.random.seed(round)
-            return np.random.choice(self.clusters[0], num_subset_users, replace=False) 
-        elif switch == 1:
-            np.random.seed(round)
-            return np.random.choice(self.clusters[1], num_subset_users, replace=False)
-        else: 
-            assert (switch > 1)
-            
+    def select_users(self, round, num_subset_users):
+        np.random.seed(round)
+        return np.random.choice(self.users, num_subset_users, replace=False)     
     
     def initialize_or_add(self, dest, src):
     
@@ -293,7 +244,7 @@ class Server():
             info_prec, info_rec, info_f1, info_cmae, info_mae, results = c.test_global_model_val(self.global_model)
             test_info_prec, test_info_rec, test_info_f1, test_info_cmae, test_info_mae, test_results = c.test_global_model_test(self.global_model)
 
-            print(f"info_prec {info_prec}, info_rec {info_rec}, info_f1 {info_f1}, info_cmae {info_cmae}, info_mae {info_mae}")
+            # print(f"info_prec {info_prec}, info_rec {info_rec}, info_f1 {info_f1}, info_cmae {info_cmae}, info_mae {info_mae}")
             
             avg_mae += (1/len(self.selected_users))*info_mae
             avg_cmae += (1/len(self.selected_users))*info_cmae
@@ -450,44 +401,42 @@ class Server():
 
     def train(self):
         loss = []
-
-        for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} number of clients: {self.num_users} / Global Rounds :"):
-            subset_rf = len(self.clusters[0])
-            subset_rl = len(self.clusters[1])
-            
-            self.selected_rf_users = self.select_users(t,0, subset_rf).tolist()
-            self.selected_rl_users = self.select_users(t,1, subset_rl).tolist()
-            self.selected_users = self.selected_rf_users + self.selected_rl_users
-            exchange_dict = {key: random.sample(self.selected_rl_users, 1) for key in self.selected_rl_users} 
-
-
-            # exchange_dict = { key: random.sample([u for u in self.selected_rl_users if u != key], 2) 
-            # for key in self.selected_rl_users }
-
-            list_user_id = [[],[]]
-            for user in self.selected_rf_users:
-                #print(f"rf : {user.id}")
-                list_user_id[0].append(user.id)
-            for user in self.selected_rl_users:
-                #print(f"rl : {user.id}")
-                list_user_id[1].append(user.id)
-            
-            # print(f"selected users : {list_user_id}")
-            
-            for user in tqdm(self.selected_rf_users, desc=f"selected users from resourceful cluster {len(self.selected_rf_users)}"):
+        d=2
+        b=3
+        for t in trange(self.num_glob_iters, desc=f" exp no : {self.exp_no} number of clients: {len(self.users)} / Global Rounds :"):
+            self.selected_users = self.select_users(t, len(self.users)).tolist()
+            if t%b == b-1:
+                self.send_parameters()
+            for user in tqdm(self.selected_users, desc=f"selected users {len(self.selected_users)}"):
                  user.train(t)
-            # for user in tqdm(self.selected_rl_users, desc=f"total selected users  from resourceless cluster {len(self.selected_rl_users)}"):
-            #     user.train(t)
             
-            for user in tqdm(self.selected_rl_users, desc=f"model exchange training"):
-                user.exchange_train(exchange_dict[user], t)
-            
+        
+            if t%d == d-1:
+                # (self.selected_users)
+                # assume self.selected_users is a list of User objects
+                user_list = self.selected_users.copy()
+                random.shuffle(user_list)
 
+                exchange_dict = {}
 
-            self.aggregate_parameters()
+                # pair consecutive users
+                for i in range(0, len(user_list) - 1, 2):
+                    exchange_dict[user_list[i]] = user_list[i+1]
+
+                # if odd user, last one sits out (no entry in dict)
+                if len(user_list) % 2 != 0:
+                    print(f"User {user_list[-1].id} is sitting out this daisy-chain round.")
+                # print(f"Exchange dict : {exchange_dict}")
+                for user, exchange_user in exchange_dict.items():
+                    # print(f"User {user.id} is exchanging parameters with User {exchange_user.id}")
+                    # print(f"exchange user : {exchange_user}")
+                    user.exchange_parameters(exchange_user)
+                
+            elif t%b == b-1:
+                self.aggregate_parameters()
             
             self.evaluate_local(t)
-            self.evaluate_global(t)
+            # self.evaluate_global(t)
         self.save_results()
 
     def test(self):

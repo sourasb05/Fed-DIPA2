@@ -152,8 +152,8 @@ class User():
                                         max_bboxes=test_dataset.max_bboxes,
                                         features_dim=test_dataset.features_dim).to(self.device)
         
-        self.eval_model = copy.deepcopy(self.local_model)
-        self.exchange_model = copy.deepcopy(self.local_model)
+        # self.eval_model = copy.deepcopy(self.local_model)
+        self.old_model = copy.deepcopy(self.local_model)
 
         image_size = (224, 224)
         feature_folder = self.current_directory + '/object_features/resnet50/'
@@ -169,7 +169,6 @@ class User():
 
         
         self.optimizer= torch.optim.Adam(self.local_model.parameters(), lr=self.learning_rate)
-        self.exchange_optimizer= torch.optim.Adam(self.exchange_model.parameters(), lr=self.learning_rate)
 
         self.train_samples = train_size
         self.val_samples = val_size
@@ -340,9 +339,9 @@ class User():
 
             true_values = informativeness.cpu().detach().numpy()
             predicted_values = y_preds[:, 6].cpu().detach().numpy()
-            print(f"true :, {true_values}")
-            print(f"predicted :, {predicted_values}")
-            print(f"user id: {self.id}")
+            # print(f"true :, {true_values}")
+            # print(f"predicted :, {predicted_values}")
+            # print(f"user id: {self.id}")
             
             mae = mean_absolute_error(true_values, predicted_values)
             distance += self.l1_distance_loss(informativeness.detach().cpu().numpy(), y_preds[:,6].detach().cpu().numpy())/len(features)
@@ -516,7 +515,7 @@ class User():
         #         print("%.02f " % values[i], end="")
 
         info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
-        print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
+        # print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
 
         # Check if it's the first round (i.e., the result_round_dict is empty)
         if not self.test_global_round_result_dict:
@@ -587,7 +586,7 @@ class User():
 
         
         info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
-        print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
+        # print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
 
         # Check if it's the first round (i.e., the result_round_dict is empty)
         if not self.val_global_round_result_dict:
@@ -669,7 +668,7 @@ class User():
         #         print("%.02f " % values[i], end="")
 
         info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
-        print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
+        # print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
 
         # Check if it's the first round (i.e., the result_round_dict is empty)
         if not self.test_round_result_dict:
@@ -739,7 +738,7 @@ class User():
 
         
         info_prec, info_rec, info_f1, info_cmae, info_mae = InformativenessMetrics(informativeness_scores[0], informativeness_scores[1])
-        print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
+        # print("User ID: %s %.02f %.02f %.02f %.02f %.02f" % (self.id, info_prec, info_rec, info_f1, info_cmae, info_mae))
 
         # Check if it's the first round (i.e., the result_round_dict is empty)
         if not self.val_round_result_dict:
@@ -782,44 +781,15 @@ class User():
             self.evaluate_model(t,iter)
 
            
-    def exchange_parameters(self, rl_model):
-        #print(self.exchange_model.parameters())
-        # print(rl_model)
-        for param, rl_param in zip(self.exchange_model.parameters(), rl_model):
-            #print(f"param :", param.data)
-            #print(f"rl_param :", rl_param.data)
-            param.data = rl_param.data.clone()
-    
-    
-    def transfer_model(self, rl_user):
-        for rl_param, param in zip(rl_user, self.exchange_model.parameters()):
-            rl_param.data = param.data.clone()
-           # rl_param.grad.data = param.grad.data.clone()
-            # print(f"rl_param :", rl_param.data)
-            # print(f"exchange_param :", param.data)
+    def exchange_parameters(self, exchange_user):
+        for old_local_param, current_local_param in zip(self.old_model.parameters(), self.local_model.parameters()):
+            old_local_param.data = current_local_param.data.clone()
 
+        for param, exchange_param in zip(self.local_model.parameters(), exchange_user.local_model.parameters()):
+            param.data = exchange_param.data.clone()
 
-    def exchange_train(self, exchange_dict_users, t):
-        for rl_user in exchange_dict_users:
-            # print(f"low resource user id : {rl_user.id} and exchanged with user id : {self.id}")
-            #print(rl_user.local_model)
-            self.exchange_parameters(rl_user.local_model.parameters())
-            
-            self.exchange_model.train()
-            for iter in range(self.local_iters):
-                mae = 0
-                for batch in self.train_loader:
-                    features, additional_information, information, informativeness, sharingOwner, sharingOthers = batch
-                    self.exchange_optimizer.zero_grad()
-                    y_preds = self.exchange_model(features.to(self.device), additional_information.to(self.device))
-                    criterion = self.exchange_model.compute_loss(y_preds, information, informativeness, sharingOwner, sharingOthers)
-                    criterion.backward()
-                    self.exchange_optimizer.step()
-                    # print(f"RL_user : {rl_user.id} and RF_user : {self.id} During exchange Epoch : {iter} Training loss : {criterion.item()}")
-                    
-            self.transfer_model(rl_user.local_model.parameters())
-
-            self.evaluate_model(t, iter)
+        for exchange_param, old_param in zip(exchange_user.local_model.parameters(), self.old_model.parameters()):
+            exchange_param.data = old_param.data.clone()
     
     def test_eval(self):
         self.local_model.eval()

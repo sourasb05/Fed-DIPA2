@@ -4,7 +4,7 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--algorithm", type=str, default="FedDcprivacy_KT_RL",
+    parser.add_argument("--algorithm", type=str, default="FedDC",
                         choices=["FedAvg",
                                 "Fedmem", 
                                 "FedProx", 
@@ -17,7 +17,7 @@ def args_parser():
                                 "FedDcprivacy_KT_RL"])
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--num_teams", type=int, default=2)
-    parser.add_argument("--lamda_sim_sta", type=float, default=0, help="hyperparameter for similarity and stability in CFedDC and FedProx")
+    parser.add_argument("--lamda_sim_sta", type=float, default=1, help="hyperparameter for similarity and stability in CFedDC and FedProx/ Lambda controller for CFedDC_KT")
     parser.add_argument("--gamma", type=float, default=1.0)
     parser.add_argument("--lambda_1", type=float, default=0.1, 
                         help="Regularization term lambda_1/ lambda_min")
@@ -129,8 +129,8 @@ def args_parser():
                         help="regularizer for resourceless clients")
     
     
-    parser.add_argument("--num_global_iters", type=int, default=3)
-    parser.add_argument("--local_iters", type=int, default=2)
+    parser.add_argument("--num_global_iters", type=int, default=30)
+    parser.add_argument("--local_iters", type=int, default=5)
     parser.add_argument("--optimizer", type=str, default="SGD")
     
     

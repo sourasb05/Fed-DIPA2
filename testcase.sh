@@ -40,10 +40,12 @@ python -W ignore main.py --algorithm=dynamic_FedDcprivacy --country=both --num_g
 python -W ignore main.py --algorithm=dynamic_FedDcprivacy --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.6 --lambda_2=0.4 --num_teams=2 --kappa=1.0 --delta=1.0 > CFedDC_lamda_min_0.6_max_0.4_GE_30.txt
 python -W ignore main.py --algorithm=dynamic_FedDcprivacy --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.2 --lambda_2=0.8 --num_teams=2 --kappa=1.0 --delta=1.0 > CFedDC_lamda_min_0.8_max_0.2_GE_30.txt
 
-python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.1 --lambda_2=0.9 --num_teams=2 --kappa=1.0 --delta=1.0 > FedDcprivacy_KT_RL_lamda_min_0.1_max_0.9_GE_30.txt
-python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.3 --lambda_2=0.7 --num_teams=2 --kappa=1.0 --delta=1.0 > FedDcprivacy_KT_RL_lamda_min_0.3_max_0.7_GE_30.txt
-python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_30.txt
-python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.5 --lambda_2=0.5 --num_teams=2 --kappa=1.0 --delta=1.0 > FedDcprivacy_KT_RL_lamda_min_0.5_max_0.5_GE_30.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=100 --local_iters=5 --lambda_1=0.1 --lambda_2=0.9 --num_teams=2 --kappa=1.0 --delta=1.0 > FedDcprivacy_KT_RL_lamda_min_0.1_max_0.9_GE_100.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=100 --local_iters=5 --lambda_1=0.2 --lambda_2=0.8 --num_teams=2 --kappa=1.0 --delta=1.0 > FedDcprivacy_KT_RL_lamda_min_0.2_max_0.8_GE_100.txt
+
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=100 --local_iters=5 --lambda_1=0.3 --lambda_2=0.7 --num_teams=2 --kappa=1.0 --delta=1.0 > FedDcprivacy_KT_RL_lamda_min_0.3_max_0.7_GE_100.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=100 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_100.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=100 --local_iters=5 --lambda_1=0.5 --lambda_2=0.5 --num_teams=2 --kappa=1.0 --delta=1.0 > FedDcprivacy_KT_RL_lamda_min_0.5_max_0.5_GE_100.txt
 
 
 python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.3 --lambda_2=0.7 --num_teams=5 --kappa=1.0 --delta=1.0 > FedDcprivacy_KT_RL_c_5_lamda_min_0.3_max_0.7_GE_30.txt
