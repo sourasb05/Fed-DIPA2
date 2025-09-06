@@ -18,6 +18,7 @@ from sklearn.decomposition import PCA
 import torch.nn as nn
 import pickle
 import json
+from sklearn.metrics import silhouette_score
 
 from torchmetrics import Precision, Recall, F1Score
 from src.utils.results_utils import CalculateMetrics, InformativenessMetrics
@@ -106,6 +107,7 @@ class FedDCPrivacy_KT_RL_Server():
         self.minimum_test_loss = 10000000.0
         self.min_c_loss = []
         
+        self.silhouette_score_list = []
 
         self.data_frac = []
 
@@ -769,6 +771,11 @@ class FedDCPrivacy_KT_RL_Server():
             # Cluster assignments
             labels = kmeans.labels_
 
+            score = silhouette_score(feature_matrix_pca, labels)
+            self.silhouette_score_list.append(score)
+            print(f"Silhouette Score for clustering: {score:.4f}")
+
+
             # Printing results
             self.cluster_dict = {}
             for user_id, label in zip(user_ids, labels):
@@ -837,15 +844,17 @@ class FedDCPrivacy_KT_RL_Server():
                 if clust_id is not None:
                     user.train("RL", self.c[clust_id],t)
             
-            self.evaluate_local(t) 
+            # self.evaluate_local(t) 
 
             self.aggregate_clusterhead()
             # self.evaluate_cluster(t)
             self.global_update()
 
-            print(f"cluster_dict of global round {t}: {self.cluster_dict}")
+            # print(f"cluster_dict of global round {t}: {self.cluster_dict}")
             # self.evaluate_global(t)
-        self.save_local_results()
+        # self.save_local_results()
+        print(f"Total number of clusters : {self.n_clusters}")
+        print(f"silhouette score list : {self.silhouette_score_list}")
            
             
         #for user in self.users:

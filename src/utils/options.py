@@ -4,7 +4,7 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--algorithm", type=str, default="FedDC",
+    parser.add_argument("--algorithm", type=str, default="FedDcprivacy_KT_RL",
                         choices=["FedAvg",
                                 "Fedmem", 
                                 "FedProx", 
@@ -129,7 +129,7 @@ def args_parser():
                         help="regularizer for resourceless clients")
     
     
-    parser.add_argument("--num_global_iters", type=int, default=30)
+    parser.add_argument("--num_global_iters", type=int, default=3)
     parser.add_argument("--local_iters", type=int, default=5)
     parser.add_argument("--optimizer", type=str, default="SGD")
     
