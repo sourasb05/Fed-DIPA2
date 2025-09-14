@@ -33,7 +33,6 @@ class Fedmem_user():
         """
         self.learning_rate = args.alpha
         self.local_iters = args.local_iters
-        self.eta = args.eta
         self.algorithm = args.algorithm
         self.cluster_type = args.cluster
         self.country = args.country
@@ -153,8 +152,6 @@ class Fedmem_user():
         self.val_samples = val_size
         self.samples = train_size + val_size
 
-        
-        #self.optimizer = Fedmem(self.local_model.parameters(), self.learning_rate, self.eta)
 
         # metrics
 

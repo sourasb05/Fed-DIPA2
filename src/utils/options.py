@@ -14,10 +14,13 @@ def args_parser():
                                 "dynamic_FedDcprivacy", 
                                 "apriori_FedDcprivacy", 
                                 "ClusteredFedRep",
-                                "FedDcprivacy_KT_RL"])
-    parser.add_argument("--batch_size", type=int, default=64)
+                                "FedDcprivacy_KT_RL",
+                                "PerFedAvg",
+                                "IFCA",
+                                "pFedMe"])
+    parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--num_teams", type=int, default=2)
-    parser.add_argument("--lamda_sim_sta", type=float, default=1, help="hyperparameter for similarity and stability in CFedDC and FedProx/ Lambda controller for CFedDC_KT")
+    parser.add_argument("--lamda_sim_sta", type=float, default=0.5, help="hyperparameter for similarity and stability in CFedDC and FedProx/ Lambda controller for CFedDC_KT")
     parser.add_argument("--gamma", type=float, default=1.0)
     parser.add_argument("--lambda_1", type=float, default=0.1, 
                         help="Regularization term lambda_1/ lambda_min")
@@ -120,15 +123,13 @@ def args_parser():
     parser.add_argument("--user_filter", type=str, default="resourceful", choices=["resourceful", "resourceless", "none"])
     
     parser.add_argument("--alpha", type=float, default=0.05, 
-                        help="learning rate for local models in fedmem")
-    parser.add_argument("--eta", type=float, default=0.05, 
-                        help="personalization parameter for Fedmem")
+                        help="learning rate for local models in Fedmem/FedAvg/FedProx")
+    parser.add_argument("--eta", type=float, default=0.5, 
+                        help="personalization parameter for Fedmem/Meta LR for pFedMe")
     parser.add_argument("--kappa", type=float, default=1.0, 
                         help="regularizer for resourceful and resourceful clients")
     parser.add_argument("--delta", type=float, default=1.0, 
                         help="regularizer for resourceless clients")
-    
-    
     parser.add_argument("--num_global_iters", type=int, default=3)
     parser.add_argument("--local_iters", type=int, default=5)
     parser.add_argument("--optimizer", type=str, default="SGD")
@@ -152,7 +153,12 @@ def args_parser():
 
     parser.add_argument("--exp_name", type=str, default="normal")
 
-    parser.add_argument("--model_name", type=str, default="openai_ViT-L/14@336px", choices=["openai_ViT-L/14@336px", "resnet50"])
+    parser.add_argument("--model_name", type=str, default="openai_ViT-L/14@336px", choices=["openai_ViT-L/14@336px", "timm_mobilevit"])
+
+    parser.add_argument("--cluster_k", type=int, default=10)         # K
+    parser.add_argument("--tau", type=int, default=2)                # estimation interval
+    parser.add_argument("--lamda_prox", type=float, default=1.0)     # lambda in proximal
+    parser.add_argument("--sigma", type=float, default=1e-4)         # delta smoother
 
     args = parser.parse_args()
 

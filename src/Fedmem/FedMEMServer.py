@@ -36,6 +36,10 @@ class Fedmem():
 
         self.cluster_save_path =  "_best_clusters.pickle"
 
+        if args.model_name == "openai_ViT-L/14@336px":
+            self.model_name = "ViT-L_14_336px"
+        else:
+            self.model_name = args.model_name
 
         self.total_users = len(self.user_ids)
         self.num_teams = args.num_teams
@@ -570,8 +574,8 @@ class Fedmem():
             # val_json_path = f"results/client_level/CFedDC_rl1_C{self.n_clusters}/local_val/user_{user_id}_val_round_results.json"
             # test_json_path = f"results/client_level/CFedDC_rl1_C{self.n_clusters}/local_test/user_{user_id}_test_round_results.json"
             ####### kappa and delta ablation
-            val_json_path = f"results/client_level/FedMEM_{self.lambda_1}_kappa_{self.lambda_2}/local_val/user_{user_id}_val_round_results.json"
-            test_json_path = f"results/client_level/FedMEM_{self.lambda_1}_kappa_{self.lambda_2}/local_test/user_{user_id}_test_round_results.json"
+            val_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedMEM/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedMEM/local_test/user_{user_id}_test_round_results.json"
             os.makedirs(os.path.dirname(val_json_path), exist_ok=True)
             os.makedirs(os.path.dirname(test_json_path), exist_ok=True)
             # print(f"Saving to {val_json_path} (Category: {user_cat})")

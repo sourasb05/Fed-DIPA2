@@ -32,6 +32,11 @@ class FedAvg():
         self.algorithm = args.algorithm
         
         self.current_directory = current_directory
+        
+        if args.model_name == "openai_ViT-L/14@336px":
+            self.model_name = "ViT-L_14_336px"
+        else:
+            self.model_name = args.model_name
 
         self.country = args.country
         if args.country == "japan":
@@ -337,10 +342,10 @@ class FedAvg():
         
 
             user_id = str(user.id)
-            val_json_path = f"results/client_level/FedAvg/local_val/user_{user_id}_val_round_results.json"
-            test_json_path = f"results/client_level/FedAvg/local_test/user_{user_id}_test_round_results.json"
-            val_global_json_path = f"results/client_level/FedAvg/global_val/user_{user_id}_val_round_results.json"
-            test_global_json_path = f"results/client_level/FedAvg/global_test/user_{user_id}_test_round_results.json"
+            val_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedAvg/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedAvg/local_test/user_{user_id}_test_round_results.json"
+            val_global_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedAvg/global_val/user_{user_id}_val_round_results.json"
+            test_global_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedAvg/global_test/user_{user_id}_test_round_results.json"
 
         
             # Combine resource category and val_dict into one JSON object

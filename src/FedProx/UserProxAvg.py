@@ -53,7 +53,6 @@ class UserProx():
         self.learning_rate = args.alpha
         self.local_iters = args.local_iters
         self.num_glob_iters = args.num_global_iters
-        self.eta = args.eta
         self.algorithm = args.algorithm
         self.fixed_user_id = args.fixed_user_id
         self.country = args.country

@@ -49,6 +49,11 @@ class FedProxServer():
             self.total_users = len(self.user_ids)
 
         print(f"total users : {self.total_users}")
+
+        if args.model_name == "openai_ViT-L/14@336px":
+            self.model_name = "ViT-L_14_336px"
+        else:
+            self.model_name = args.model_name
          
         self.users = []
         self.selected_users = []
@@ -319,10 +324,10 @@ class FedProxServer():
         
 
             user_id = str(user.id)
-            val_json_path = f"results/client_level/FedProx/local_val/user_{user_id}_val_round_results.json"
-            test_json_path = f"results/client_level/FedProx/local_test/user_{user_id}_test_round_results.json"
-            val_global_json_path = f"results/client_level/FedProx/global_val/user_{user_id}_val_round_results.json"
-            test_global_json_path = f"results/client_level/FedProx/global_test/user_{user_id}_test_round_results.json"
+            val_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedProx/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedProx/local_test/user_{user_id}_test_round_results.json"
+            val_global_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedProx/global_val/user_{user_id}_val_round_results.json"
+            test_global_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedProx/global_test/user_{user_id}_test_round_results.json"
 
         
             # Combine resource category and val_dict into one JSON object

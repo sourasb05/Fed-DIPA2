@@ -47,7 +47,10 @@ class Server():
         self.current_directory = current_directory
         self.algorithm = args.algorithm
 
-
+        if args.model_name == "openai_ViT-L/14@336px":
+            self.model_name = "ViT-L_14_336px"
+        else:
+            self.model_name = args.model_name
         self.global_metric = []
 
 
@@ -345,10 +348,10 @@ class Server():
         
 
             user_id = str(user.id)
-            val_json_path = f"results/client_level/FedDC/local_val/user_{user_id}_val_round_results.json"
-            test_json_path = f"results/client_level/FedDC/local_test/user_{user_id}_test_round_results.json"
-            val_global_json_path = f"results/client_level/FedDC/global_val/user_{user_id}_val_round_results.json"
-            test_global_json_path = f"results/client_level/FedDC/global_test/user_{user_id}_test_round_results.json"
+            val_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedDC/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedDC/local_test/user_{user_id}_test_round_results.json"
+            val_global_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedDC/global_val/user_{user_id}_val_round_results.json"
+            test_global_json_path = f"results/client_level/exp_{self.exp_no}_model_name_{self.model_name}_FedDC/global_test/user_{user_id}_test_round_results.json"
 
         
             # Combine resource category and val_dict into one JSON object
@@ -436,7 +439,7 @@ class Server():
                 self.aggregate_parameters()
             
             self.evaluate_local(t)
-            # self.evaluate_global(t)
+            self.evaluate_global(t)
         self.save_results()
 
     def test(self):

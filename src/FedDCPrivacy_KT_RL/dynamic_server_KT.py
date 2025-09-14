@@ -39,7 +39,7 @@ class FedDCPrivacy_KT_RL_Server():
         self.lambda_min=args.lambda_1
         self.lambda_max=args.lambda_2
         self.lamda=args.lamda_sim_sta
-
+        
         self.country = args.country
         if args.country == "japan":
             self.user_ids = args.user_ids[0]
@@ -50,7 +50,7 @@ class FedDCPrivacy_KT_RL_Server():
         else:
             self.user_ids = args.user_ids[2]
         
-        self.cluster_save_path =  "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_best_clusters.pickle"
+        self.cluster_save_path = "exp_" + str(exp_no) + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_best_clusters.pickle"
 
         self.total_users = len(self.user_ids)
         self.total_samples = 0
@@ -106,7 +106,10 @@ class FedDCPrivacy_KT_RL_Server():
         self.local_train_mae = []
         self.minimum_test_loss = 10000000.0
         self.min_c_loss = []
-        
+        if args.model_name == "openai_ViT-L/14@336px":
+            self.model_name = "ViT-L_14_336px"
+        else:
+            self.model_name = args.model_name
         self.silhouette_score_list = []
 
         self.data_frac = []
@@ -205,10 +208,10 @@ class FedDCPrivacy_KT_RL_Server():
         for user in self.users:
             user.set_parameters(self.global_model)
 
-    def add_parameters(self, user, ratio):
-        model = self.global_model.parameters()
-        for server_param, user_param in zip(self.global_model.parameters(), user.get_parameters()):
-            server_param.data = server_param.data + user_param.data.clone() * ratio
+    # def add_parameters(self, user, ratio):
+    #    model = self.global_model.parameters()
+    #    for server_param, user_param in zip(self.global_model.parameters(), user.get_parameters()):
+    #        server_param.data = server_param.data + user_param.data.clone() * ratio
 
     def aggregate_parameters(self):
         assert (self.users is not None and len(self.users) > 0)
@@ -223,7 +226,7 @@ class FedDCPrivacy_KT_RL_Server():
    
     def save_global_model(self, glob_iter, current_loss):
         if glob_iter == self.num_glob_iters-1:
-            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/cluster_" + str(self.n_clusters) + "_delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+            model_path = self.current_directory + "/models/exp_no_"+ str(self.exp_no) + "/" + self.model_name + "/" + self.algorithm + "/global_model/cluster_" + str(self.n_clusters) + "_delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
             #model_path = self.current_directory + "/models/FedMEM"  + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
             
             if not os.path.exists(model_path):
@@ -236,7 +239,7 @@ class FedDCPrivacy_KT_RL_Server():
             
         if current_loss < self.minimum_test_loss:
             self.minimum_test_loss = current_loss
-            model_path = self.current_directory + "/models/" + self.algorithm + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+            model_path = self.current_directory + "/models/exp_no_"+ str(self.exp_no) + "/" + self.model_name + "/" + self.algorithm + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
            # model_path = self.current_directory + "/models/FedMEM" + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
             
             # print(f"model path :", model_path)
@@ -257,7 +260,7 @@ class FedDCPrivacy_KT_RL_Server():
 
             if glob_iter == self.num_glob_iters-1:
                 
-                model_path = self.current_directory + "/models/" + self.algorithm + "/cluster_model/" + str(i) + "/delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+                model_path = self.current_directory + "/models/exp_no_"+ str(self.exp_no) + "/" + self.model_name + "/" + self.algorithm + "/cluster_model/" + str(i) + "/delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
                 
                 if not os.path.exists(model_path):
                     os.makedirs(model_path)
@@ -270,7 +273,7 @@ class FedDCPrivacy_KT_RL_Server():
             if current_loss < self.min_c_loss[i]:
                 self.min_c_loss[i] = current_loss
                 
-                model_path = self.current_directory + "/models/" + self.algorithm + "/cluster_model/" + str(i) + "/delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
+                model_path = self.current_directory + "/models/"+ self.model_name + "/" + self.algorithm + "/cluster_model/" + str(i) + "/delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "_GE_" + str(self.num_glob_iters) + "_LE_" + str(self.local_iters) + "/"
                 
                 # print(f"model path :", model_path)
                 if not os.path.exists(model_path):
@@ -423,39 +426,6 @@ class FedDCPrivacy_KT_RL_Server():
         
         print(f"\n Global round {t} : Local Test cmae {avg_cmae} Local Test mae : {avg_mae} \n")
         
-    def save_results(self):
-       
-        file = "exp_no_" + str(self.exp_no) + self.algorithm + "_GR_" + str(self.num_glob_iters) + "_BS_" + str(self.batch_size) + "_delta_" + str(self.delta) + "_kappa_" + str(self.kappa)
-        
-        # print(file)
-       
-        directory_name = str(self.algorithm) + "/" +"h5" + "/global_model/" + "delta_" + str(self.delta) + "_kappa_" + str(self.kappa) + "/" 
-        # Check if the directory already exists
-        if not os.path.exists(self.current_directory + "/results/"+ directory_name):
-        # If the directory does not exist, create it
-            os.makedirs(self.current_directory + "/results/" + directory_name)
-
-        json_test_metric = json.dumps(self.global_test_metric)
-        json_train_metric = json.dumps(self.global_train_metric)
-
-
-        with h5py.File(self.current_directory + "/results/" + directory_name + "/" + '{}.h5'.format(file), 'w') as hf:
-            hf.create_dataset('Global rounds', data=self.num_glob_iters)
-            hf.create_dataset('Local iters', data=self.local_iters)
-            hf.create_dataset('Learning rate', data=self.learning_rate)
-            hf.create_dataset('Batch size', data=self.batch_size)
-            hf.create_dataset('global_test_metric', data=[json_test_metric.encode('utf-8')])
-            hf.create_dataset('global_test_loss', data=self.global_test_loss)
-            hf.create_dataset('global_test_distance', data=self.global_test_distance)
-            hf.create_dataset('global_test_mae', data=self.global_test_mae)
-
-            hf.create_dataset('global_train_metric', data=[json_train_metric.encode('utf-8')])
-            hf.create_dataset('global_train_loss', data=self.global_train_loss)
-            hf.create_dataset('global_train_distance', data=self.global_train_distance)
-            hf.create_dataset('global_train_mae', data=self.global_train_mae)
-
-            hf.close()
-    
     def flatten_params(self, parameters):
         params = []
         for param in parameters:
@@ -676,8 +646,8 @@ class FedDCPrivacy_KT_RL_Server():
             # val_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/local_val/user_{user_id}_val_round_results.json"
             # test_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/local_test/user_{user_id}_test_round_results.json"
             ####### kappa and delta ablation
-            val_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_lambda_min_{self.lambda_min}_lambda_max_{self.lambda_max}_kappa_{self.kappa}_delta_{self.delta}_{self.num_glob_iters}/local_val/user_{user_id}_val_round_results.json"
-            test_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_lambda_min_{self.lambda_min}_lambda_max_{self.lambda_max}_kappa_{self.kappa}_delta_{self.delta}_{self.num_glob_iters}/local_test/user_{user_id}_test_round_results.json"
+            val_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}_{self.model_name}/exp_no_{self.exp_no}_CFedDC_KT_RL_lambda_min_{self.lambda_min}_lambda_max_{self.lambda_max}_kappa_{self.kappa}_delta_{self.delta}_{self.num_glob_iters}/local_val/user_{user_id}_val_round_results.json"
+            test_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}_{self.model_name}/exp_no_{self.exp_no}_CFedDC_KT_RL_lambda_min_{self.lambda_min}_lambda_max_{self.lambda_max}_kappa_{self.kappa}_delta_{self.delta}_{self.num_glob_iters}/local_test/user_{user_id}_test_round_results.json"
             ###### Without consensus and inertia regularization
 
             # val_json_path = f"results/client_level/CFedDC_KT_RL_rl1_C{self.n_clusters}/CFedDC_KT_RL_no_lambda_kappa_{self.kappa}_delta_{self.delta}/local_val/user_{user_id}_val_round_results.json"
@@ -844,7 +814,7 @@ class FedDCPrivacy_KT_RL_Server():
                 if clust_id is not None:
                     user.train("RL", self.c[clust_id],t)
             
-            # self.evaluate_local(t) 
+            self.evaluate_local(t) 
 
             self.aggregate_clusterhead()
             # self.evaluate_cluster(t)
@@ -852,17 +822,10 @@ class FedDCPrivacy_KT_RL_Server():
 
             # print(f"cluster_dict of global round {t}: {self.cluster_dict}")
             # self.evaluate_global(t)
-        # self.save_local_results()
+        self.save_local_results()
         print(f"Total number of clusters : {self.n_clusters}")
         print(f"silhouette score list : {self.silhouette_score_list}")
            
-            
-        #for user in self.users:
-        #    self.counter += user.send_to_server
-        #    print(f"user id : {user.id} : communicated to server : {user.send_to_server} times")
-        #print(f"Total communication {self.counter}")
-             
-        #self.save_results()
 
 
         
