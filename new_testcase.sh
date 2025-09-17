@@ -54,16 +54,16 @@
 #### FedMEM
 
 [done] python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=0 > Fedmem_exp_0.txt
-python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=1 > Fedmem_exp_1.txt
-python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=2 > Fedmem_exp_2.txt
-python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=3 > Fedmem_exp_3.txt
-python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=4 > Fedmem_exp_4.txt
+[done] python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=1 > Fedmem_exp_1.txt
+[done] python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=2 > Fedmem_exp_2.txt
+[done] python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=3 > Fedmem_exp_3.txt
+[done] python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=4 > Fedmem_exp_4.txt
 
 [done] python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > Fedmem_exp_0_mobilevit.txt
-python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=1 --model_name=timm_mobilevit > Fedmem_exp_1_mobilevit.txt
-python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=2 --model_name=timm_mobilevit > Fedmem_exp_2_mobilevit.txt
-python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=3 --model_name=timm_mobilevit > Fedmem_exp_3_mobilevit.txt
-python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=4 --model_name=timm_mobilevit > Fedmem_exp_4_mobilevit.txt
+[done] python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=1 --model_name=timm_mobilevit > Fedmem_exp_1_mobilevit.txt
+[done] python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=2 --model_name=timm_mobilevit > Fedmem_exp_2_mobilevit.txt
+[done] python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=3 --model_name=timm_mobilevit > Fedmem_exp_3_mobilevit.txt
+[done] python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=4 --model_name=timm_mobilevit > Fedmem_exp_4_mobilevit.txt
 
 
 #### IFCA
@@ -84,16 +84,16 @@ python -W ignore main.py --algorithm=Fedmem --country=both --num_global_iters=30
 ### pFedMe
 
 [done] python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=0 > pFedMe_exp_0.txt
-python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=1 > pFedMe_exp_1.txt
-python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=2 > pFedMe_exp_2.txt
-python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=3 > pFedMe_exp_3.txt
-python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=4 > pFedMe_exp_4.txt
+[done] python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=1 > pFedMe_exp_1.txt
+[done] python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=2 > pFedMe_exp_2.txt
+[done] python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=3 > pFedMe_exp_3.txt
+[done] python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=4 > pFedMe_exp_4.txt
 
 [done] python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=0 --model_name=timm_mobilevit > pFedMe_exp_0_mobilevit.txt
-python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=1 --model_name=timm_mobilevit > pFedMe_exp_1_mobilevit.txt
-python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=2 --model_name=timm_mobilevit > pFedMe_exp_2_mobilevit.txt
-python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=3 --model_name=timm_mobilevit > pFedMe_exp_3_mobilevit.txt
-python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=4 --model_name=timm_mobilevit > pFedMe_exp_4_mobilevit.txt
+[done] python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=1 --model_name=timm_mobilevit > pFedMe_exp_1_mobilevit.txt
+[done] python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=2 --model_name=timm_mobilevit > pFedMe_exp_2_mobilevit.txt
+[done] python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=3 --model_name=timm_mobilevit > pFedMe_exp_3_mobilevit.txt
+[done] python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30 --local_iters=5 --eta=0.6 --exp_start=4 --model_name=timm_mobilevit > pFedMe_exp_4_mobilevit.txt
 
 
 
@@ -113,5 +113,7 @@ python -W ignore main.py --algorithm=pFedMe --country=both --num_global_iters=30
 [done] python -W ignore main.py --algorithm=FedDC --country=both --num_global_iters=30 --local_iters=5 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_exp_0_mobilevit.txt
 [done] python -W ignore main.py --algorithm=FedDC --country=both --num_global_iters=30 --local_iters=5 --exp_start=1 --model_name=timm_mobilevit> FedDcprivacy_exp_1_mobilevit.txt
 [done] python -W ignore main.py --algorithm=FedDC --country=both --num_global_iters=30 --local_iters=5 --exp_start=2 --model_name=timm_mobilevit> FedDcprivacy_exp_2_mobilevit.txt
+[done] python -W ignore main.py --algorithm=FedDC --country=both --num_global_iters=30 --local_iters=5 --exp_start=3 --model_name=timm_mobilevit> FedDcprivacy_exp_3_mobilevit.txt
+[done] python -W ignore main.py --algorithm=FedDC --country=both --num_global_iters=30 --local_iters=5 --exp_start=4 --model_name=timm_mobilevit> FedDcprivacy_exp_4_mobilevit.txt
 
 
