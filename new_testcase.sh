@@ -117,3 +117,28 @@
 [done] python -W ignore main.py --algorithm=FedDC --country=both --num_global_iters=30 --local_iters=5 --exp_start=4 --model_name=timm_mobilevit> FedDcprivacy_exp_4_mobilevit.txt
 
 
+## CFedDC clustering
+
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=5 --kappa=1.0 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_30_exp_0_mobilevit_teams_5.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=10 --kappa=1.0 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_30_exp_0_mobilevit_teams_10.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=15 --kappa=1.0 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_30_exp_0_mobilevit_teams_15.txt
+
+
+
+# CFedDC with variable kappa and delta
+
+[done] python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=0.1 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_30_exp_0_mobilevit_kappa_01.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=0.5 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_30_exp_0_mobilevit_kappa_05.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=0.8 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_30_exp_0_mobilevit_kappa_08.txt
+[done] python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=0.1 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_30_exp_0_mobilevit_delta_01.txt
+[done] python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=0.5 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_30_exp_0_mobilevit_delta_05.txt
+[done] python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.4 --lambda_2=0.6 --num_teams=2 --kappa=1.0 --delta=0.8 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.4_max_0.6_GE_30_exp_0_mobilevit_delta_08.txt
+
+# CfedDC with variable lambda_1 and lambda_2
+
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.1 --lambda_2=0.9 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.1_max_0.9_GE_30_exp_0_mobilevit_teams_2.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.2 --lambda_2=0.8 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.2_max_0.8_GE_30_exp_0_mobilevit_teams_2.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.3 --lambda_2=0.7 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.3_max_0.7_GE_30_exp_0_mobilevit_teams_2.txt
+python -W ignore main.py --algorithm=FedDcprivacy_KT_RL --country=both --num_global_iters=30 --local_iters=5 --lambda_1=0.5 --lambda_2=0.5 --num_teams=2 --kappa=1.0 --delta=1.0 --exp_start=0 --model_name=timm_mobilevit > FedDcprivacy_KT_RL_lamda_min_0.5_max_0.5_GE_30_exp_0_mobilevit_teams_2.txt
+
+

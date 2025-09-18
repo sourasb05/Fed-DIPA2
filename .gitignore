@@ -31,3 +31,5 @@ models/
 wandb/
 results/*
 *.txt
+CFedDC_FMNIST/data/
+CFedDC_FMNIST/__pycache__/
