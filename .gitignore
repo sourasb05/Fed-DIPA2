@@ -33,3 +33,5 @@ results/*
 *.txt
 CFedDC_FMNIST/data/
 CFedDC_FMNIST/__pycache__/
+Movielens_CFedDC/data/
+Movielens_CFedDC/__pycache__/
