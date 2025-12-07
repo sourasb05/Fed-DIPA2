@@ -4,16 +4,24 @@ warnings.filterwarnings("ignore")
 from src.Fedavg.FedAvgServer import FedAvg
 from src.Fedmem.FedMEMServer import Fedmem
 from src.FedDCPrivacy.server import Server
-from src.dynamic_FedDCPrivacy.dynamic_server import Server
+# from src.dynamic_FedDCPrivacy.dynamic_server import Server
 from src.Siloed.SiloedServer import Siloedserver
 from src.ClusteredFedDC.clustered_server import C_server
-
+from src.apriori_FedDCPrivacy.server import Server as AprioriFedDCServer
+from src.FedProx.FedProxServer import FedProxServer
+from src.FedDCPrivacy_KT_RL.dynamic_server_KT import FedDCPrivacy_KT_RL_Server
+#from src.ClusteredFedRep.server import ClusteredFedRepServer
+from src.IFCA.ServerIFCA import ServerIFCA
+from src.PerFedAvg.ServerPerFedAvg import ServerPerFedAvg
+from src.pFedMe.ServerPFedMe import ServerPFedMe
+# from src.FedSoft.Server_FedSoft import FedSoftServer
 from src.TrainModels.trainmodels import *
 from src.utils.options import args_parser
 import torch
 import os
+import wandb
 
-torch.manual_seed(0)
+
 
 
 def main(args):
@@ -22,30 +30,47 @@ def main(args):
     current_directory = os.getcwd()
     print(current_directory)
     i = args.exp_start
-    while i < args.times:
-        try:
-            if args.algorithm == "Siloed":
-                server = Siloedserver(device, args,i, current_directory)
-            if args.algorithm == "FedAvg":
-                server = FedAvg(device, args,i, current_directory)
-            elif args.algorithm == "Fedmem": 
-                server = Fedmem(device, args, i, current_directory)
-            elif args.algorithm == "FedDcprivacy":
-                server = Server(device, args, i, current_directory)
-            elif args.algorithm == "dynamic_FedDcprivacy":
-                server = Server(device, args, i, current_directory)
-            elif args.algorithm == "Clustered_FedDC":
-                server = C_server(device, args, i, current_directory)
+    torch.manual_seed(i)
+    try:
+        if args.algorithm == "Siloed":
+            server = Siloedserver(device, args,i, current_directory)
+        if args.algorithm == "FedAvg":
+            server = FedAvg(device, args,i, current_directory)
+        if args.algorithm == "FedProx":
+            server = FedProxServer(device, args,i, current_directory)
+        elif args.algorithm == "Fedmem": 
+            server = Fedmem(device, args, i, current_directory)
+        elif args.algorithm == "FedDC":
+            server = Server(device, args, i, current_directory)
+        # elif args.algorithm == "dynamic_FedDcprivacy":
+        #    server = Server(device, args, i, current_directory)
+        elif args.algorithm == "Clustered_FedDC":
+            server = C_server(device, args, i, current_directory)
+        elif args.algorithm == "apriori_FedDcprivacy":
+            server = AprioriFedDCServer(device, args, i, current_directory)
+        elif args.algorithm == "FedDcprivacy_KT_RL":
+            server = FedDCPrivacy_KT_RL_Server(device, args, i, current_directory)
+        elif args.algorithm == "IFCA":
+            server = ServerIFCA(device, args, i, current_directory)
+        elif args.algorithm == "pFedMe":
+            server = ServerPFedMe(device, args, i, current_directory)
+        elif args.algorithm == "PerFedAvg":
+            server = ServerPerFedAvg(device, args, i, current_directory)
 
-        except ValueError:
-            raise ValueError("Wrong algorithm selected")
+        # elif args.algorithm == "FedSoft":
+        #    server = FedSoftServer(device, args, exp_no, current_directory)
+        
+        #elif args.algorithm == "ClusteredFedRep":
+        #    server = ClusteredFedRepServer(device, args, i, current_directory)
 
-        if args.test:
-            server.test()    
-        else:
-            server.train()
-        i+=1
+    except ValueError:
+        raise ValueError("Wrong algorithm selected")
 
+    if args.test:
+        server.test()    
+    else:
+        server.train()
+    
 if __name__ == "__main__":
     args = args_parser()
     

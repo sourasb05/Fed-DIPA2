@@ -165,7 +165,7 @@ class BaseModel(pl.LightningModule):
         x = self.fusion_fc3(x)
 
         return x
-            
+
         # x = self.net(torch.cat((image, mask), dim = 1))
         # x = self.dropout(x)
         # x = self.act(self.fc1(x))
